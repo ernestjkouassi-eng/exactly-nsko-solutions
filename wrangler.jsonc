@@ -1,0 +1,11 @@
+{
+  "name": "nsko-solutions",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "nskosolutions.co.uk", "custom_domain": true },
+    { "pattern": "www.nskosolutions.co.uk", "custom_domain": true }
+  ],
+  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "auto-trailing-slash", "run_worker_first": ["/api/*"] }
+}
