@@ -378,7 +378,7 @@ function resize() {
 addEventListener('resize', resize); resize();
 
 /* ---------- input ---------- */
-let playT = 0, playing = true, orbitX = 0, orbitY = 0, orbitXs = 0, orbitYs = 0, drag = null, scrub = false;
+let playT = 3, playing = true, orbitX = 0, orbitY = 0, orbitXs = 0, orbitYs = 0, drag = null, scrub = false;
 const seekTo = t => { playT = clamp(t, 0, DUR - .001); for (const k in manual) delete manual[k]; };
 $('play').onclick = () => { playing = !playing; $('pi').setAttribute('d', playing ? 'M2 1h3v10H2zM7 1h3v10H7z' : 'M3 1l8 5-8 5z'); };
 canvas.addEventListener('pointerdown', e => { drag = [e.clientX, e.clientY]; canvas.classList.add('drag'); canvas.setPointerCapture(e.pointerId); });

@@ -97,7 +97,7 @@ export function init(root, o = {}) {
     if (o.mode === 'pointer') wrap.style.opacity = (1 - seg(p, .45, 1) * .85).toFixed(3);
     if (rl) { rl.textContent = `${o.tag || 'NSKO'} · T+${(cur * 5).toFixed(2)}S`; rr.textContent = `X ${(spx * 100 | 0).toString().padStart(2, '0')} · Y ${(spy * 100 | 0).toString().padStart(2, '0')} · ${Math.round(p * 100)}%`; }
     drawLens(t);
-    if (items.length) { const n = items.length, act = Math.min(n - 1, Math.floor(clamp((p - .1) / .76) * n)); items.forEach((li, i) => { li.classList.toggle('on', i === act && p < .9); li.classList.toggle('past', i < act || p >= .9); li.style.opacity = seg(p, .02 + i * .02, .08 + i * .02); }); if (closeEl) closeEl.style.opacity = seg(p, .88, .95); }
+    if (items.length) { const n = items.length, act = Math.min(n - 1, Math.floor(clamp((p - .1) / .76) * n)); items.forEach((li, i) => { li.classList.toggle('on', i === act && (p < .9 || small)); li.classList.toggle('past', i < act || p >= .9); li.style.opacity = small ? 1 : seg(p, .02 + i * .02, .08 + i * .02); }); if (closeEl) closeEl.style.opacity = seg(p, .88, .95); }
     if (stepEls) {
       const S = o.steps, n = S.length, a0 = .1, a1 = .84, local = (p - a0) / (a1 - a0) * n, si = p < a0 ? -1 : p >= a1 ? n : Math.min(n - 1, Math.floor(local)), lp = local - si;
       stepEls.intro.style.opacity = 1 - seg(p, .05, .1); stepEls.outro.style.opacity = seg(p, .9, .96);
