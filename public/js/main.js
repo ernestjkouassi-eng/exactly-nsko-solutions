@@ -96,7 +96,7 @@ const counted = new Set();
 const ACT = {
   hero(p) { const o = 1 - seg(p, .05, .5); $('.hero-copy').style.opacity = o; $('.pill').style.opacity = o; $('.hero-hint').style.opacity = o; $('.scrollind').style.opacity = o; handles.hero && handles.hero.setProgress && handles.hero.setProgress(p); },
   manifesto(p) { const n = mfWords.length; mfWords.forEach((w, i) => { w.style.opacity = .12 + .88 * seg(p, .08 + i / n * .5, .18 + i / n * .5); }); rv($('.mf-sub'), seg(p, .55, .75), 20); $('.mf-in').style.opacity = 1 - seg(p, .88, 1); },
-  field(p) { $('#fcap').style.opacity = 1 - seg(p, .1, .3); const c = $('#fcta'); c.style.opacity = seg(p, .8, .95); c.style.pointerEvents = p > .85 ? 'auto' : 'none'; },
+  field(p) { const fk = seg(p, .11, .2), fc = $('#fcap'); fc.style.opacity = 1 - fk; fc.style.transform = 'translateY(' + (-28 * fk) + 'px)'; fc.style.filter = fk > 0 && fk < 1 ? 'blur(' + (6 * fk).toFixed(1) + 'px)' : ''; const c = $('#fcta'); c.style.opacity = seg(p, .8, .95); c.style.pointerEvents = p > .85 ? 'auto' : 'none'; },
   capabilities(p) { const a = $('.cap-a'), b = $('.cap-b'); const outA = 1 - seg(p, .5, .6), inB = seg(p, .58, .7);
     a.style.opacity = outA; a.style.pointerEvents = outA > .5 ? 'auto' : 'none'; $$('.cap', a).forEach((c, i) => { const t = seg(p, .04 + i * .035, .16 + i * .035); c.style.opacity = t; if (!c.matches(':hover')) c.style.transform = `translateY(${(1 - t) * 40}px) rotateX(${(1 - t) * 14}deg)`; });
     b.style.opacity = inB; b.style.pointerEvents = inB > .5 ? 'auto' : 'none'; $$('li', b).forEach((li, i) => { const t = seg(p, .62 + i * .018, .74 + i * .018); li.style.opacity = t; li.style.transform = `translateY(${(1 - t) * 20}px)`; });
