@@ -70,8 +70,8 @@
       "n": 9,
       "id": "marketing",
       "name": "Marketing",
-      "status": "Idle",
-      "task": "No task assigned this round.",
+      "status": "Queued",
+      "task": "Kickstarter: campaign plan, page draft, reward tiers (for your approval before launch)",
       "updated": "2026-11-22"
     },
     {
@@ -106,6 +106,14 @@
       "what": "Only people you invite will be able to see the website's code. The live website itself stays public.",
       "cost": "Free.",
       "risk": "Low. After the switch, check that Cloudflare still has access to the repo so updates keep publishing.",
+      "added": "2026-11-22"
+    },
+    {
+      "id": "kickstarter-launch",
+      "title": "Launch the first Kickstarter campaign",
+      "what": "Raise funds to build NSKO projects, starting with an in-house robot. The team prepares everything first: the campaign page, film, reward tiers, budget, delivery dates and risks. Launching makes it public and backers pay if it reaches its goal, so it needs your yes.",
+      "cost": "Kickstarter takes 5% of funds raised, plus payment fees of about 3\u20135%. Nothing is charged if the goal isn't met.",
+      "risk": "High. Backers are promised rewards, so goal, budget and delivery dates must be realistic. Hardware sold needs UKCA marking.",
       "added": "2026-11-22"
     }
   ],
@@ -153,6 +161,10 @@
     {
       "date": "2026-11-22",
       "text": "v3 film exported (16:9 and 9:16, 31 seconds)."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Kickstarter added: backer list on the site (saved to HQ inbox) and a launch approval in HQ."
     }
   ]
 }

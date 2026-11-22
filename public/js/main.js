@@ -115,3 +115,9 @@ if (siteKey) { const s = document.createElement('script'); s.src = 'https://chal
 cf.addEventListener('submit', async e => { e.preventDefault(); cfm.className = 'cf-msg'; const d = Object.fromEntries(new FormData(cf)); d.nda = cf.nda.checked;
   if (!d.name || !/^\S+@\S+\.\S+$/.test(d.email || '') || !d.message) { cfm.textContent = 'Please add your name, a valid email and a short message.'; cfm.classList.add('err'); return; }
   cfm.textContent = 'Sending…'; try { const r = await fetch('/api/contact', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(d)}); const j = await r.json(); if (!r.ok || !j.ok) throw new Error(j.error || 'failed'); cf.reset(); cfm.textContent = 'Received. Ernest will reply personally within one working day.'; } catch (err) { cfm.textContent = 'That did not send. Please try again in a moment.'; cfm.classList.add('err'); } });
+
+/* Kickstarter backer list: saved to HQ like a brief */
+const ksf = $('#ksf'), ksm = $('#ksm');
+if (ksf) ksf.addEventListener('submit', async e => { e.preventDefault(); ksm.className = 'ks-m mono'; const email = ksf.email.value.trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) { ksm.textContent = 'Please enter a valid email.'; ksm.classList.add('err'); return; }
+  ksm.textContent = 'Adding you…'; try { const r = await fetch('/api/contact', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({name:'Kickstarter backer list', email, project:'Kickstarter', message:'Wants an email when the first NSKO Kickstarter campaign opens.', website:ksf.website.value})}); const j = await r.json(); if (!r.ok || !j.ok) throw 0; ksf.reset(); ksm.textContent = 'You’re on the list. One email when the campaign opens, nothing else.'; } catch (err) { ksm.textContent = 'That didn’t go through. Please try again in a moment.'; ksm.classList.add('err'); } });
