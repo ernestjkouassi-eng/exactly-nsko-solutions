@@ -11,3 +11,4 @@
 - 2026-11-22 · Website v3 + HQ merged to main after local QA (deploys are not a hard stop).
 - 2026-11-22 · v3 film exported: 31s, 16:9 + 9:16, built from live site captures and machine footage; soundtrack synthesised in-house (no licence needed).
 - 2026-11-22 · Slogan changed to COMPLEX MADE REAL. everywhere (site, brand, tokens, HQ, film end card). Old line search: 0 left.
+- 2026-11-22 · Ernest picked design B (Command Deck): rebuilt site dark-by-default with light switch, menu + phone drawer, back-to-top, service panels, tabbed Machine Lab. Page ~4.5 screens on desktop.

@@ -2,30 +2,27 @@ const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [..
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const store = {get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }};
 
-/* ---------- theme: light by default, dark switch ---------- */
+/* theme: dark by default (Command Deck), light switch */
 const root = document.documentElement, tbtn = $('#theme');
 const applyTheme = t => { root.dataset.theme = t; tbtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); };
-applyTheme(store.get('nsko-theme') === 'dark' ? 'dark' : 'light');
+applyTheme(store.get('nsko-theme') === 'light' ? 'light' : 'dark');
 tbtn.onclick = () => { const t = root.dataset.theme === 'dark' ? 'light' : 'dark'; applyTheme(t); store.set('nsko-theme', t); };
 
-/* ---------- loader: counter driven by real bytes, boot log ---------- */
-let pct = 0, shown = 0, skipped = false, booted = false;
-const LOG = ['> linking perception', '> calibrating state estimate', '> loading planner', '> arming control loop', '> verifying trust chain', '> systems online'];
-let logN = 0; const ldlog = $('#ldlog');
-const assets = ['/vendor/three/three.module.js', '/js/cine.js', '/media/seq/hero/f20.webp', '/fonts/Inter.woff2'];
-(async () => { let total = 0, got = 0; const sizes = await Promise.all(assets.map(u => fetch(u, {method:'HEAD'}).then(r => +r.headers.get('content-length') || 60000).catch(() => 60000))); total = sizes.reduce((a, b) => a + b, 0);
+/* loader */
+let pct = 0, shown = 0, skipped = false, booted = false, logN = 0;
+const LOG = ['> linking perception', '> calibrating state estimate', '> loading planner', '> arming control loop', '> verifying trust chain', '> systems online'], ldlog = $('#ldlog');
+const assets = ['/js/cine.js', '/media/seq/hero/f20.webp', '/media/seq/drone/f00.webp', '/fonts/Inter.woff2'];
+(async () => { const sizes = await Promise.all(assets.map(u => fetch(u, {method:'HEAD'}).then(r => +r.headers.get('content-length') || 60000).catch(() => 60000))); const total = sizes.reduce((a, b) => a + b, 0); let got = 0;
   await Promise.all(assets.map(async u => { try { const r = await fetch(u); const rd = r.body.getReader(); for (;;) { const {done, value} = await rd.read(); if (done) break; got += value.length; pct = Math.min(99, got / total * 100); } } catch (e) {} })); pct = 100; })();
-const tick = () => { shown += (pct - shown) * .12; if (pct >= 100 && shown > 99.5) shown = 100; $('#ldc').textContent = String(Math.round(shown)).padStart(3, '0');
+const tick = () => { shown += (pct - shown) * .14; if (pct >= 100 && shown > 99.5) shown = 100; $('#ldc').textContent = String(Math.round(shown)).padStart(3, '0');
   const want = Math.min(LOG.length, Math.floor(shown / 100 * LOG.length) + 1); while (logN < want) { const d = document.createElement('div'); d.textContent = LOG[logN++] + (logN < LOG.length ? ' … ok' : ''); ldlog.append(d); }
   if (shown < 100 && !skipped) requestAnimationFrame(tick); else finish(); };
 const finish = () => { if (booted) return; booted = true; $('#loader').classList.add('out'); setTimeout(() => $('#loader').remove(), 700); boot(); };
-$('#ldskip').onclick = () => { skipped = true; pct = 100; };
-requestAnimationFrame(tick); setTimeout(() => { pct = 100; }, 9000);
+$('#ldskip').onclick = () => { skipped = true; pct = 100; }; requestAnimationFrame(tick); setTimeout(() => { pct = 100; }, 7000);
 
-/* ---------- scenes ---------- */
-const NOTE = 'Concept visualisation.';
+/* scenes */
 const CINE = {
-  hero: {seq:'/media/seq/hero', first:20, posY:.3, cls:'is-hero', tag:'OPERATOR'},
+  hero: {seq:'/media/seq/hero', first:20, posY:.28, cls:'is-hero', tag:'OPERATOR', tilt:1.6},
   lab: {seq:'/media/seq/drone', portraitZoom:1.85, portraitY:.42, cls:'is-drone', tag:'MACHINE LAB', kicker:'MACHINE LAB', intro:'We build the brain.', closing:'We code the mind and the system. Partners build the airframe.', tilt:2.4,
     timeMap:p => p < .1 ? 0 : p < .8 ? (p - .1) / .7 : p < .9 ? 1 : 1 - (p - .9) / .08,
         steps:[
@@ -40,64 +37,79 @@ const CINE = {
       {tag:'TRUST', file:'trust.ts', h:'It refuses bad <em>orders.</em>', d:'Every command is signed and checked against the geofence. If the link drops, it comes home on its own.',
        code:"// trust.ts · signed commands, safe defaults\nexport function accept(cmd: Command) {\n  if (!verify(cmd.sig, cmd.body, fleetKey)) return reject('signature');\n  if (cmd.seq <= lastSeq) return reject('replay');\n  if (!fence.contains(cmd.target)) return reject('geofence');\n  return execute(cmd);\n}\nlink.onLost(() => mission.returnHome());"},
     ]},
-  secure: {seq:'/media/seq/sweeps', posX:.3, cls:'is-def', tag:'NSKO SECURE', push:.14, kicker:'NSKO SECURE', headline:'Find what should not be there.', closing:'Protecting what we build, and our clients’ businesses.', note:'Sweeps are for spaces you own or control. ' + NOTE,
-    items:[{t:'Security Assessment', d:'We test your systems and code and report what an attacker could do, in order of risk.'},
-      {t:'TSCM bug sweeps', d:'Offices, boardrooms, vehicles, homes and hotels, swept discreetly, with a written report.'},
-      {t:'Secure by design', d:'Signed commands, encrypted links and least-privilege access in everything we build.'},
-      {t:'Phones and networks', d:'Rogue access points, odd traffic and compromised devices, found and documented.'}]},
 };
-const handles = {}, state = {};
-const MODS = {
-  top:    {load:() => import('/js/cine.js'), make:(m, el) => { const api = {}; const h = m.initHero(el, api, CINE.hero); api.start && api.start(); return h; }},
-  lab:    {load:() => import('/js/cine.js'), make:(m, el) => m.init(el, CINE.lab)},
-  secure: {load:() => import('/js/cine.js'), make:(m, el) => m.init(el, CINE.secure)},
-  field:  {load:() => import('/js/medusa.js'), make:(m, el) => { m.initMedusa($('#medusa')); }, on:'#medusa'},
-  desk:   {load:() => import('/js/nova.js'), make:(m, el) => { m.initNova(el, {}); }},
-};
+CINE.lab.timeMap = p => p < .1 ? 0 : p < .84 ? (p - .1) / .74 : 1;
 const webgl = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (e) { return false; } })();
-async function ensure(id) { if (state[id]) return; const M = MODS[id], el = document.getElementById(id); if (!M || !el) return; if (!webgl && (id === 'field' || id === 'desk')) return; state[id] = 1;
-  try { const mod = await M.load(); handles[id] = M.make(mod, el) || null; } catch (e) { console.warn('scene', id, e); } }
-// on-screen gating + lazy init
-const onIO = new IntersectionObserver(es => es.forEach(e => { const id = e.target.id, M = MODS[id], t = M && M.on ? $(M.on) : e.target; if (e.isIntersecting) ensure(id); t.dataset.on = e.isIntersecting ? '1' : '0'; if (t !== e.target) e.target.dataset.on = t.dataset.on; }), {rootMargin:'40% 0px'});
-Object.keys(MODS).forEach(id => { const el = document.getElementById(id); if (el) { el.dataset.on = '0'; if (MODS[id].on) $(MODS[id].on).dataset.on = '0'; onIO.observe(el); } });
+let cine = null; const getCine = () => cine || (cine = import('/js/cine.js'));
+const hero = $('#hero'); hero.dataset.on = '0';
+const io = (el, fn, m = '25% 0px') => new IntersectionObserver(es => es.forEach(e => fn(e.isIntersecting)), {rootMargin:m}).observe(el);
+let heroH = null; io(hero, v => { hero.dataset.on = v ? '1' : '0'; if (v && !heroH) getCine().then(m => { const api = {}; heroH = m.initHero(hero, api, CINE.hero); api.start && api.start(); }); });
 
-/* ---------- reveal on scroll ---------- */
-const rvIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rvIO.unobserve(e.target); } }), {rootMargin:'0px 0px -12% 0px'});
-$$('.rv').forEach(el => { const sib = [...el.parentElement.children].filter(c => c.classList.contains('rv')); el.style.transitionDelay = (sib.indexOf(el) * .08) + 's'; rvIO.observe(el); });
+/* Machine Lab tabs */
+const tabs = $$('.tabs [role=tab]'), panels = {drone:$('#tp-drone'), field:$('#tp-field'), desk:$('#tp-desk')};
+let labVisible = false, active = 'drone', droneH = null, medusaOn = false, novaOn = false;
+const onTarget = k => k === 'field' ? $('#medusa') : panels[k];
+const syncOn = () => Object.keys(panels).forEach(k => { onTarget(k).dataset.on = (labVisible && active === k) ? '1' : '0'; });
+async function initTab(k) {
+  if (k === 'drone' && !droneH) { const m = await getCine(); droneH = m.init(panels.drone, CINE.lab); droneH.setProgress(dp.p); }
+  if (k === 'field' && !medusaOn && webgl) { medusaOn = true; (await import('/js/medusa.js')).initMedusa($('#medusa')); }
+  if (k === 'desk' && !novaOn && webgl) { novaOn = true; panels.desk.__p = .75; (await import('/js/nova.js')).initNova(panels.desk, {}); }
+  syncOn();
+}
+function selectTab(k) { active = k; tabs.forEach(t => { const on = t.id === 't-' + k; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; }); Object.entries(panels).forEach(([n, el]) => el.hidden = n !== k); initTab(k); syncOn(); }
+tabs.forEach((t, i) => { t.onclick = () => selectTab(t.id.slice(2)); t.onkeydown = e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (d) { const n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); n.click(); } }; });
+Object.keys(panels).forEach(k => onTarget(k).dataset.on = '0');
+io($('#lab'), v => { labVisible = v; if (v) initTab(active); syncOn(); }, '10% 0px');
+// drone steps: click a step, or let it play
+const dp = {p:0}, stepsEl = $('#steps'), S = CINE.lab.steps, a0 = .1, a1 = .84, w = (a1 - a0) / S.length;
+let userTouched = false, playT = null, cur = -1;
+const stepBtns = S.map((s, i) => { const b = document.createElement('button'); b.textContent = String(i + 1).padStart(2, '0') + ' ' + s.tag; b.onclick = () => { userTouched = true; goStep(i); }; stepsEl.append(b); return b; });
+const rb = document.createElement('button'); rb.textContent = '↺ Reassemble'; rb.onclick = () => { userTouched = true; goStep(S.length); }; stepsEl.append(rb);
+function goStep(i) { cur = i; stepBtns.forEach((b, j) => b.classList.toggle('on', j === i)); const from = i >= S.length ? .9 : a0 + i * w + .002, to = i >= S.length ? 1 : a0 + (i + .97) * w;
+  if (!window.gsap || reduced) { dp.p = to; droneH && droneH.setProgress(to); return; }
+  gsap.killTweensOf(dp); dp.p = from; gsap.to(dp, {p:to, duration:i >= S.length ? 1.6 : 3.2, ease:'power1.inOut', onUpdate:() => droneH && droneH.setProgress(dp.p)}); }
+setInterval(() => { if (!labVisible || active !== 'drone' || userTouched || !droneH) return; goStep((cur + 1) % (S.length + 1)); }, 6000);
 
-/* ---------- boot: smooth scroll, pins, choreography ---------- */
+/* panels (service detail) */
+$$('[data-open]').forEach(b => b.addEventListener('click', () => { const d = document.getElementById(b.dataset.open); d.showModal(); }));
+$$('dialog.panel').forEach(d => { d.querySelector('.x').onclick = () => d.close(); d.addEventListener('click', e => { if (e.target === d) d.close(); }); });
+$$('[data-close]').forEach(a => a.addEventListener('click', () => a.closest('dialog').close()));
+
+/* menu drawer */
+const burger = $('#burger'), drawer = $('#drawer');
+const setDrawer = o => { drawer.hidden = !o; burger.setAttribute('aria-expanded', o); burger.setAttribute('aria-label', o ? 'Close menu' : 'Open menu'); document.body.style.overflow = o ? 'hidden' : ''; o ? lenis && lenis.stop() : lenis && lenis.start(); };
+burger.onclick = () => setDrawer(drawer.hidden); addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) setDrawer(false); });
+
+/* navigation */
 let lenis = null;
-function goTo(id) { const t = id === 'top' ? 0 : document.getElementById(id); if (t === null) return; lenis ? lenis.scrollTo(t, {duration:1.6, offset:id === 'top' ? 0 : -8}) : (t === 0 ? scrollTo({top:0}) : t.scrollIntoView({behavior:reduced ? 'auto' : 'smooth'})); }
-$$('[data-go]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); goTo(a.dataset.go); }));
+function goTo(id) { setDrawer(false); const t = id === 'top' ? 0 : document.getElementById(id); if (t === null) return; lenis ? lenis.scrollTo(t, {duration:1.4, offset:id === 'top' ? 0 : -70}) : (t === 0 ? scrollTo({top:0, behavior:'smooth'}) : t.scrollIntoView({behavior:reduced ? 'auto' : 'smooth'})); }
+$$('[data-go]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); goTo(a.dataset.go); const ind = a.dataset.ind; if (ind) { const c = $('#ind-' + ind); setTimeout(() => { c.classList.add('hl'); c.focus({preventScroll:true}); setTimeout(() => c.classList.remove('hl'), 2200); }, 900); } }));
+const totop = $('#totop'); totop.onclick = () => goTo('top');
+const navLinks = $$('.nav nav a');
+const onScroll = () => { const y = scrollY; totop.classList.toggle('show', y > innerHeight * .6);
+  const ids = ['top', 'lab', 'industries', 'projects', 'contact']; let curId = 'top'; ids.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < innerHeight * .4) curId = id; });
+  navLinks.forEach(a => a.classList.toggle('on', a.dataset.go === curId && curId !== 'top')); };
+addEventListener('scroll', onScroll, {passive:true});
+
+/* reveals */
+$$('.ind,.proj,.how li,.sh').forEach(el => el.classList.add('rv'));
+const rio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } }), {rootMargin:'0px 0px -8% 0px'});
+$$('.rv').forEach(el => { const sib = [...el.parentElement.children]; el.style.transitionDelay = (sib.indexOf(el) % 6) * .07 + 's'; rio.observe(el); });
+
+/* project loop */
+const pv = $('.proj video'); if (pv) io(pv, v => { if (reduced) return; v ? pv.play().catch(() => {}) : pv.pause(); }, '0px');
+
 function boot() {
-  if (!window.gsap) return;
-  gsap.registerPlugin(ScrollTrigger);
-  if (!reduced && window.Lenis) { lenis = new Lenis({lerp:.1}); lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0); }
-  $$('[data-pin]').forEach(sec => { const id = sec.id, len = +sec.dataset.pin;
-    ScrollTrigger.create({trigger:sec, start:'top top', end:() => '+=' + Math.round(len * innerHeight), pin:$('.pin', sec), pinSpacing:true, anticipatePin:1, invalidateOnRefresh:true,
-      onUpdate:s => { const p = s.progress; if (id === 'desk') sec.__p = p * 1.2; else handles[id] && handles[id].setProgress && handles[id].setProgress(p); if (id === 'top') { const o = 1 - Math.min(1, p * 2.2); $('.hero-copy').style.opacity = o; $('.hero-copy').style.transform = `translateY(${-p * 80}px)`; $('.scrollhint').style.opacity = o; } }}); });
-  // statement words light up as you scroll
-  const mf = $('#mf'); mf.innerHTML = mf.innerHTML.split('<br>').map(l => l.trim().split(/\s+/).map(w => `<span class="w">${w}</span>`).join(' ')).join('<br>');
-  const ws = $$('#mf .w'); ScrollTrigger.create({trigger:mf, start:'top 85%', end:'bottom 40%', scrub:true, onUpdate:s => ws.forEach((w, i) => { w.style.opacity = s.progress * ws.length > i ? 1 : .14; })});
-  if (reduced) ws.forEach(w => w.style.opacity = 1);
-  ScrollTrigger.batch('.rv', {start:'top 94%', onEnter:els => els.forEach(e => e.classList.add('in'))});
-  gsap.fromTo('.marq-in', {xPercent:0}, {xPercent:-50, duration:40, ease:'none', repeat:-1});
-  // nav: dark style over dark sections, out of the way over the simulator
-  const nav = $('#nav'); const navSync = () => { const el = document.elementsFromPoint(innerWidth / 2, 36).find(n => !nav.contains(n) && n.closest('section')), sec = el && el.closest('section'); nav.classList.toggle('on-dark', !!(sec && sec.classList.contains('dark'))); const f = $('#medusa').getBoundingClientRect(); nav.classList.toggle('away', f.top < 60 && f.bottom > 120); };
-  (lenis ? lenis.on('scroll', navSync) : addEventListener('scroll', navSync, {passive:true})); navSync();
-  addEventListener('resize', () => ScrollTrigger.refresh());
+  if (!reduced && window.Lenis) { lenis = new Lenis({lerp:.11}); const raf = t => { lenis.raf(t); requestAnimationFrame(raf); }; requestAnimationFrame(raf); lenis.on('scroll', onScroll); }
+  onScroll();
 }
 
-/* ---------- projects: play loops when visible ---------- */
-const vIO = new IntersectionObserver(es => es.forEach(e => { const v = $('video', e.target); if (!v || reduced) return; e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }), {threshold:.35});
-$$('.proj').forEach(p => vIO.observe(p));
+/* cursor */
+const curEl = $('#cur'); if (curEl && matchMedia('(hover:hover) and (pointer:fine)').matches) { const lab = curEl.firstElementChild; let x = -99, y = -99, sx = x, sy = y;
+  addEventListener('pointermove', e => { x = e.clientX; y = e.clientY; const t = e.target, hit = t.closest && (t.closest('#gl') ? 'DRAG' : t.closest('.cine') ? 'HOLD' : t.closest('.svc') ? 'OPEN' : t.closest('a,button,.ind') ? '' : null); curEl.classList.toggle('big', hit !== null); lab.textContent = hit || ''; }, {passive:true});
+  const loop = () => { sx += (x - sx) * .22; sy += (y - sy) * .22; curEl.style.transform = `translate(${sx}px,${sy}px)`; requestAnimationFrame(loop); }; loop(); }
 
-/* ---------- cursor ---------- */
-const cur = $('#cur'); if (cur && matchMedia('(hover:hover) and (pointer:fine)').matches) { const lab = cur.firstElementChild; let x = -99, y = -99, sx = x, sy = y;
-  addEventListener('pointermove', e => { x = e.clientX; y = e.clientY; const t = e.target, hit = t.closest && (t.closest('#gl') ? 'DRAG' : t.closest('.cine') ? 'HOLD' : t.closest('a,button,.svc,.ind,.proj') ? '' : null); cur.classList.toggle('big', hit !== null); lab.textContent = hit || ''; }, {passive:true});
-  const loop = () => { sx += (x - sx) * .22; sy += (y - sy) * .22; cur.style.transform = `translate(${sx}px,${sy}px)`; requestAnimationFrame(loop); }; loop(); }
-
-/* ---------- contact form ---------- */
+/* contact form */
 const cf = $('#cf'), cfm = $('#cfm'); const siteKey = document.querySelector('meta[name="turnstile-sitekey"]')?.content;
 if (siteKey) { const s = document.createElement('script'); s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'; s.async = true; s.onload = () => turnstile.render('#ts', {sitekey:siteKey}); document.head.append(s); }
 cf.addEventListener('submit', async e => { e.preventDefault(); cfm.className = 'cf-msg'; const d = Object.fromEntries(new FormData(cf)); d.nda = cf.nda.checked;
