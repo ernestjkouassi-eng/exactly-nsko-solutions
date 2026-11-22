@@ -66,11 +66,11 @@ export function init(root, o = {}) {
         const X = gx * CELL, Y = gy * ROW, dx = X - cx, dy = Y - cy; if (dx * dx + dy * dy > R2) continue;
         const k = ((gy - y0) * w + (gx - x0)) * 4, lum = (img[k] * .3 + img[k + 1] * .59 + img[k + 2] * .11) / 255; if (lum < .07) continue;
         const hot = img[k] > img[k + 2] + 40, ch = RAMP[Math.min(RAMP.length - 1, (lum * RAMP.length + ((gx * 7 + gy * 13 + flick) % 5 === 0 ? 1 : 0)) | 0)];
-        lx.fillStyle = hot ? `rgba(255,120,90,${Math.min(1, .35 + lum).toFixed(2)})` : `rgba(${150 + lum * 105 | 0},${205 + lum * 50 | 0},255,${Math.min(1, .25 + lum * 1.1).toFixed(2)})`;
+        lx.fillStyle = hot ? `rgba(255,120,90,${Math.min(1, .35 + lum).toFixed(2)})` : `rgba(${190 + lum * 65 | 0},${190 + lum * 65 | 0},${195 + lum * 60 | 0},${Math.min(1, .25 + lum * 1.1).toFixed(2)})`;
         lx.fillText(ch, X, Y);
       }
       lx.restore();
-      if (R < Math.max(W, H)) { lx.strokeStyle = 'rgba(127,212,255,.9)'; lx.lineWidth = 1; lx.beginPath(); lx.arc(cx, cy, R, 0, 6.2832); lx.stroke(); lx.fillStyle = 'rgba(127,212,255,.95)'; lx.font = '500 9px "Geist Mono", monospace'; lx.fillText('CODE VIEW', cx - 26, cy + R + 8); }
+      if (R < Math.max(W, H)) { lx.strokeStyle = 'rgba(232,84,26,.95)'; lx.lineWidth = 1; lx.beginPath(); lx.arc(cx, cy, R, 0, 6.2832); lx.stroke(); lx.fillStyle = 'rgba(232,84,26,.95)'; lx.font = '500 9px "Geist Mono", monospace'; lx.fillText('CODE VIEW', cx - 26, cy + R + 8); }
     } catch (e) { lensOK = false; try { lx.restore(); } catch (_) {} }
   }
 
@@ -93,7 +93,7 @@ export function init(root, o = {}) {
     const z = o.mode === 'pointer' ? 1.03 + p * .5 : 1.03 + (o.push || 0) * p;
     const rx = (spy - .5) * -(o.tilt ?? 3.2), ry = (spx - .5) * (o.tilt ?? 3.2) * 1.4;
     plate.style.transform = `translate3d(${(.5 - spx) * 14}px,${(.5 - spy) * 9}px,0) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${z.toFixed(4)})`;
-    light.style.background = `radial-gradient(${small ? 60 : 38}vmax circle at ${(px * 100).toFixed(1)}% ${(py * 100).toFixed(1)}%, rgba(127,212,255,.20), rgba(21,84,224,.06) 40%, transparent 70%)`;
+    light.style.background = `radial-gradient(${small ? 60 : 38}vmax circle at ${(px * 100).toFixed(1)}% ${(py * 100).toFixed(1)}%, rgba(255,255,255,.14), rgba(232,84,26,.05) 40%, transparent 70%)`;
     if (o.mode === 'pointer') wrap.style.opacity = (1 - seg(p, .45, 1) * .85).toFixed(3);
     if (rl) { rl.textContent = `${o.tag || 'NSKO'} · T+${(cur * 5).toFixed(2)}S`; rr.textContent = `X ${(spx * 100 | 0).toString().padStart(2, '0')} · Y ${(spy * 100 | 0).toString().padStart(2, '0')} · ${Math.round(p * 100)}%`; }
     drawLens(t);

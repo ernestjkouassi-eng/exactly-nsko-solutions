@@ -19,7 +19,7 @@ export function initNova(root, opts = {}) {
   key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 6; key.shadow.bias = -.0005;
   Object.assign(key.shadow.camera, {left:-4, right:4, top:5, bottom:-5, near:1, far:20}); scene.add(key);
   const rim = new THREE.DirectionalLight(0xe6f0ff, 1.2); rim.position.set(4, 2, -4); scene.add(rim);
-  const warm = new THREE.PointLight(0x7fd4ff, 2.2, 6); warm.position.set(-3.2, 1.2, .6); scene.add(warm);
+  const warm = new THREE.PointLight(0xE8541A, 2.2, 6); warm.position.set(-3.2, 1.2, .6); scene.add(warm);
 
   const shell = new THREE.MeshPhysicalMaterial({color:0xeeebe6, roughness:.38, clearcoat:.45, clearcoatRoughness:.3});
   const shellL = new THREE.MeshPhysicalMaterial({color:0xf8f6f2, roughness:.34, clearcoat:.45, clearcoatRoughness:.3});
@@ -30,7 +30,7 @@ export function initNova(root, opts = {}) {
   // gradient ring texture: NSKO blue -> ice -> teal
   const rc = document.createElement('canvas'); rc.width = rc.height = 512;
   { const c = rc.getContext('2d'), g = c.createConicGradient ? c.createConicGradient(Math.PI * .6, 256, 256) : null;
-    if (g) { ['#1554E0', '#3d86f0', '#7FD4FF', '#19B8A6', '#7FD4FF', '#3d86f0', '#1554E0'].forEach((col, i, a) => g.addColorStop(i / (a.length - 1), col)); c.fillStyle = g; } else c.fillStyle = '#1554E0';
+    if (g) { ['#1C1D21', '#8A8F98', '#E8541A', '#F5F5F2', '#E8541A', '#8A8F98', '#1C1D21'].forEach((col, i, a) => g.addColorStop(i / (a.length - 1), col)); c.fillStyle = g; } else c.fillStyle = '#1554E0';
     c.fillRect(0, 0, 512, 512); }
   const ringTex = new THREE.CanvasTexture(rc); ringTex.colorSpace = THREE.SRGBColorSpace;
   const ringMat = new THREE.MeshPhysicalMaterial({map:ringTex, emissiveMap:ringTex, emissive:0xffffff, emissiveIntensity:.22, roughness:.5, clearcoat:.35});

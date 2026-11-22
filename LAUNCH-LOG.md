@@ -8,3 +8,4 @@
 - 2026-11-22 · Removed: trading bot, ZIGANA, films-as-a-service, "10 years" claim (unverified), app/website as headline services.
 - 2026-11-22 · Films: no AI-generated people (house rule) — surgeon and operator clips stay on the site as labelled concept visuals, but are left out of films.
 - 2026-11-22 · Skills: no third-party skill installs this round (unvetted code); used nearest installed skills. Logged in team/SKILLS-INSTALLED.md.
+- 2026-11-22 · Website v3 + HQ merged to main after local QA (deploys are not a hard stop).

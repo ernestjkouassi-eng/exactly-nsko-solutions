@@ -1,0 +1,154 @@
+{
+  "updated": "2026-11-22",
+  "note": "Written by the NSKO Solutions team. Agents update this file as work moves; HQ reads it on every deploy.",
+  "team": [
+    {
+      "n": 1,
+      "id": "lead",
+      "name": "Lead",
+      "status": "Working",
+      "task": "v3 live; waiting for the rest of brief v3 (section 5 onward)",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 2,
+      "id": "research",
+      "name": "Research",
+      "status": "Idle",
+      "task": "No task assigned this round.",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 3,
+      "id": "brand",
+      "name": "Brand",
+      "status": "Done",
+      "task": "Exploded-N logo set, colour and type tokens, BRAND.md.",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 4,
+      "id": "uiux",
+      "name": "UI/UX",
+      "status": "Done",
+      "task": "Website v3: light/dark, services, Machine Lab, industries, projects",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 5,
+      "id": "motion",
+      "name": "Motion & 3D",
+      "status": "Done",
+      "task": "Scroll scenes, Machine Lab simulator and desk robot in the v3 brand",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 6,
+      "id": "mobile",
+      "name": "Mobile app",
+      "status": "Idle",
+      "task": "No task assigned this round.",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 7,
+      "id": "backoffice",
+      "name": "Back office & ops",
+      "status": "Done",
+      "task": "HQ dashboard: inbox, approvals, team, site health, log",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 8,
+      "id": "video",
+      "name": "Video & voice",
+      "status": "Working",
+      "task": "Film re-cut in the v3 brand (16:9 and 9:16)",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 9,
+      "id": "marketing",
+      "name": "Marketing",
+      "status": "Idle",
+      "task": "No task assigned this round.",
+      "updated": "2026-11-22"
+    },
+    {
+      "n": 10,
+      "id": "legalqa",
+      "name": "Legal & QA",
+      "status": "Done",
+      "task": "Site + HQ checks passed locally; live check after deploy",
+      "updated": "2026-11-22"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "higgsfield-topup",
+      "title": "Top up Higgsfield credits",
+      "what": "The Higgsfield balance is 1.84 credits, which is not enough to generate new photoreal imagery. A top-up lets the team make fresh images for the site. Until then the site uses renders we already own.",
+      "cost": "You choose the amount. It is paid on your Higgsfield account.",
+      "risk": "Low. Nothing on the site changes until new images are made and reviewed.",
+      "added": "2026-11-22"
+    },
+    {
+      "id": "contact-email",
+      "title": "Turn on contact form email",
+      "what": "Every brief is already saved here in HQ. Turning on email also sends each brief to your inbox the moment it arrives. You add two settings in Cloudflare: RESEND_API_KEY (a key from resend.com) and CONTACT_TO (the address briefs go to).",
+      "cost": "Resend has a free plan for low volumes. Check their pricing page before you sign up.",
+      "risk": "Low. If email fails, briefs are still saved in HQ.",
+      "added": "2026-11-22"
+    },
+    {
+      "id": "repo-private",
+      "title": "Make the nsko-solutions GitHub repo private",
+      "what": "Only people you invite will be able to see the website's code. The live website itself stays public.",
+      "cost": "Free.",
+      "risk": "Low. After the switch, check that Cloudflare still has access to the repo so updates keep publishing.",
+      "added": "2026-11-22"
+    }
+  ],
+  "log": [
+    {
+      "date": "2026-11-22",
+      "text": "Brief v3 arrived cut off at section 5; built sections 0 to 5, asked Ernest for the rest."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Logo SVGs not received; drew the exploded N from the brief's geometry (brand/logo)."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Higgsfield balance 1.84 credits: no new generation. Top-up is a paid step, queued in HQ for approval. Site uses renders we already own."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Work on branch v3; main auto-deploys to nskosolutions.co.uk, so v3 merges only after QA."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Project statuses: NSKO = LIVE (nsko.co.uk is live); NSKO 1.1 = IN BUILD (placeholder until Ernest sends material). Change in one line if wrong."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Removed: trading bot, ZIGANA, films-as-a-service, \"10 years\" claim (unverified), app/website as headline services."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Films: no AI-generated people (house rule). Surgeon and operator clips stay on the site as labelled concept visuals, but are left out of films."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Skills: no third-party skill installs this round (unvetted code); used nearest installed skills. Logged in team/SKILLS-INSTALLED.md."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "HQ dashboard built at /hq: contact briefs are now saved in Workers KV, so none are lost when email is off."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Website v3 and HQ merged to live (nskosolutions.co.uk)."
+    }
+  ]
+}

@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<title>NSKO HQ</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script nonce="__NONCE__">try{var t=localStorage.getItem('nsko-hq-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<style nonce="__NONCE__">
+@font-face{font-family:Inter;src:url(/fonts/Inter.woff2) format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url(/fonts/JetBrainsMono-400.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url(/fonts/JetBrainsMono-500.woff2) format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url(/fonts/JetBrainsMono-600.woff2) format('woff2');font-weight:600;font-display:swap}
+:root{
+  --obsidian:#0A0A0B;--graphite:#1C1D21;--steel:#8A8F98;--mist:#E7E8EA;--paper:#F5F5F2;--white:#FFFFFF;--orange:#E8541A;--live:#E5241B;
+  --bg:var(--paper);--surface:var(--white);--surface-2:#FAFAF8;--ink:var(--obsidian);--muted:#5C6068;--rule:var(--mist);--rule-2:#D6D8DB;
+  --btn:var(--obsidian);--btn-ink:var(--white);--chip:#EFEFEC;
+  --floor:#ECECE8;--floor-line:#DCDDD9;--wall:#E2E3E0;--desk-t:#FFFFFF;--desk-l:#D9DADB;--desk-r:#C4C6C9;--mon:#1C1D21;--scr-idle:#3A3C42;--scr-done:#8A8F98;--scr-queued:#5C6068;--label:#0A0A0B;
+  --shadow:0 1px 0 rgba(10,10,11,.04),0 8px 24px -12px rgba(10,10,11,.12);
+  --r-sm:6px;--r-md:12px;--r-lg:20px;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+[data-theme=dark]{
+  --bg:var(--obsidian);--surface:var(--graphite);--surface-2:#16171A;--ink:var(--paper);--muted:#A3A8B0;--rule:#2A2C31;--rule-2:#3A3C42;
+  --btn:var(--paper);--btn-ink:var(--obsidian);--chip:#26282D;
+  --floor:#141518;--floor-line:#212226;--wall:#1A1B1F;--desk-t:#2C2E34;--desk-l:#1F2025;--desk-r:#17181C;--mon:#0A0A0B;--scr-idle:#2A2C31;--scr-done:#8A8F98;--scr-queued:#4A4D55;--label:#F5F5F2;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 12px 32px -16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.muted{color:var(--muted)}
+.sym{display:block;width:26px;height:26px;flex:none}
+.sym{color:var(--ink)}
+h1,h2,h3{margin:0;font-weight:900;text-transform:uppercase;letter-spacing:-.04em;line-height:.95}
+h1{font-size:clamp(30px,4vw,44px)}
+h2{font-size:22px}
+h3{font-size:17px;letter-spacing:-.03em;line-height:1.1}
+p{margin:0}
+.hidden{display:none!important}
+[data-mode=setup] .m-login,[data-mode=setup] .m-app,[data-mode=login] .m-setup,[data-mode=login] .m-app,[data-mode=app] .m-setup,[data-mode=app] .m-login{display:none!important}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink);font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:transform .12s ease,opacity .12s ease}
+.btn:hover{opacity:.88}.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule-2)}
+.btn.ghost:hover{border-color:var(--ink);opacity:1}
+.btn.sm{height:34px;padding:0 13px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn svg{width:16px;height:16px;flex:none}
+.icon-btn{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:999px;border:1px solid var(--rule-2);background:transparent;cursor:pointer;color:var(--ink)}
+.icon-btn:hover{border-color:var(--ink)}
+.icon-btn svg{width:18px;height:18px}
+svg.i{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+/* gate screens (setup + login) */
+.gate{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;padding:24px}
+.gate-top{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand-name{font-weight:900;letter-spacing:-.04em;font-size:18px;text-transform:uppercase;line-height:1}
+.brand-sub{display:block;margin-top:3px}
+.gate-main{display:grid;place-items:center;padding:40px 0}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.gate-card{width:100%;max-width:440px;padding:36px}
+.gate-card.wide{max-width:640px}
+.gate-card h1{margin:14px 0 12px}
+.gate-card .lede{color:var(--muted);margin-bottom:24px}
+.field{display:grid;gap:8px;margin-bottom:16px}
+.field label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.input{height:48px;border-radius:var(--r-md);border:1px solid var(--rule-2);background:var(--surface-2);padding:0 14px;font-size:16px;width:100%}
+.input:focus-visible{outline:2px solid var(--orange);outline-offset:1px;border-color:transparent}
+.gate-card .btn{width:100%;justify-content:center;height:48px}
+.msg{min-height:22px;margin-top:14px;font-size:14px}
+.msg.err{color:var(--ink);font-weight:600}
+.msg.err::before{content:'';display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--orange);margin-right:8px;vertical-align:1px}
+.steps{list-style:none;margin:0 0 20px;padding:0;counter-reset:s;display:grid;gap:12px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start}
+.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);font-size:12px;font-weight:600;height:28px;display:grid;place-items:center;border:1px solid var(--rule-2);border-radius:var(--r-sm)}
+.steps b{font-weight:600}
+code,.kbd{font-family:var(--mono);font-size:12.5px;background:var(--chip);padding:2px 6px;border-radius:5px}
+.note{border-top:1px solid var(--rule);padding-top:16px;color:var(--muted);font-size:14px}
+.gate-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted)}
+
+/* app shell */
+.app{min-height:100vh;display:grid;grid-template-columns:248px 1fr;grid-template-rows:auto 1fr}
+.top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px;border-bottom:1px solid var(--rule);background:var(--bg);position:sticky;top:0;z-index:5}
+.top-r{display:flex;align-items:center;gap:10px}
+.session{display:flex;align-items:center;gap:8px;margin-right:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--steel);display:inline-block;flex:none}
+.dot.on{background:var(--orange)}
+.rail{border-right:1px solid var(--rule);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:73px;height:calc(100vh - 73px)}
+.rail-label{padding:0 12px 10px;color:var(--muted)}
+.tablist{display:flex;flex-direction:column;gap:4px}
+.tab{display:flex;align-items:center;gap:12px;width:100%;height:44px;padding:0 12px;border-radius:var(--r-md);border:0;background:transparent;cursor:pointer;text-align:left;font-weight:500;font-size:14.5px;position:relative;color:var(--muted)}
+.tab svg{width:18px;height:18px;flex:none}
+.tab:hover{color:var(--ink);background:var(--chip)}
+.tab[aria-selected=true]{color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 1px var(--rule)}
+.tab[aria-selected=true]::before{content:'';position:absolute;left:-16px;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--orange)}
+.count{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:600;min-width:22px;height:20px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:var(--chip);color:var(--ink)}
+.count:empty{display:none}
+.rail-foot{margin-top:auto;padding:12px;border-top:1px solid var(--rule);color:var(--muted);font-size:13px}
+main{padding:32px 40px 64px;min-width:0;max-width:1240px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px;flex-wrap:wrap}
+.head p{margin-top:10px;color:var(--muted);max-width:640px}
+.eyebrow{color:var(--muted);display:block;margin-bottom:10px}
+
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px}
+.tile{padding:18px 18px 16px;text-align:left;cursor:pointer;display:grid;gap:14px;align-content:space-between;min-height:118px;border-radius:var(--r-md)}
+.tile:hover{border-color:var(--rule-2)}
+.tile .v{font-weight:900;font-size:36px;letter-spacing:-.04em;line-height:1}
+.tile .v small{font-size:14px;font-weight:600;letter-spacing:0;color:var(--muted);margin-left:6px}
+.tile .k{display:flex;align-items:center;gap:8px;color:var(--muted)}
+
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:3px;background:var(--surface)}
+.seg button{border:0;background:transparent;height:32px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--btn);color:var(--btn-ink)}
+.seg .n{font-family:var(--mono);font-size:11px;margin-left:6px;opacity:.75}
+
+.list{display:grid;gap:12px}
+.empty{padding:40px 32px;text-align:left;display:grid;gap:10px;border-style:dashed;box-shadow:none;background:transparent}
+.empty h3{font-size:18px}
+.empty p{color:var(--muted);max-width:560px}
+
+/* inbox */
+.brief{padding:22px 24px;display:grid;gap:16px}
+.brief-h{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.brief-h h3{font-size:19px}
+.brief-h .who{margin-top:6px;color:var(--muted);font-size:14px}
+.meta{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:var(--r-md);overflow:hidden}
+.meta div{background:var(--surface-2);padding:10px 12px;display:grid;gap:4px;min-width:0}
+.meta dt{color:var(--muted)}
+.meta dd{margin:0;font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.msgbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.6;max-width:72ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions .spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 10px;border-radius:999px;background:var(--chip);font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.chip.out{background:transparent;box-shadow:inset 0 0 0 1px var(--rule-2)}
+.chip.ink{background:var(--btn);color:var(--btn-ink)}
+.chip.live{background:var(--live);color:#fff}
+.chip.live .dot{background:#fff}
+
+/* approvals */
+.appr{padding:24px;display:grid;grid-template-columns:1fr auto;gap:18px 28px;align-items:start}
+.appr h3{font-size:20px;margin-bottom:10px}
+.appr .what{max-width:66ch}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.facts div{border-top:1px solid var(--rule);padding-top:10px;display:grid;gap:4px}
+.facts span{color:var(--muted)}
+.facts p{font-size:14px}
+.decide{display:grid;gap:8px;min-width:170px}
+.decide .btn{justify-content:center;height:44px}
+.decided{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--rule)}
+.decided p{font-size:14px}
+.sect{margin:32px 0 14px;display:flex;align-items:center;gap:12px}
+.sect::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+/* team */
+.office{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.floor{padding:12px;overflow:hidden;position:relative}
+.floor svg{display:block;width:100%;height:auto}
+.floor-cap{position:absolute;left:20px;top:18px;display:flex;gap:14px;flex-wrap:wrap}
+.legend{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.sw.w{background:var(--orange)}.sw.d{background:var(--scr-done)}.sw.q{background:var(--scr-queued)}.sw.i{background:var(--scr-idle);box-shadow:inset 0 0 0 1px var(--rule-2)}
+.iso-floor{fill:var(--floor)} .iso-line{stroke:var(--floor-line);stroke-width:1;fill:none}
+.wall .f-t{fill:var(--wall)} .wall .f-l,.wall .f-r{fill:var(--floor-line)}
+.desk .f-t{fill:var(--desk-t);stroke:var(--rule-2);stroke-width:.6} .desk .f-l{fill:var(--desk-l)} .desk .f-r{fill:var(--desk-r)}
+.mon .f-t,.mon .f-l,.mon .f-r{fill:var(--mon)}
+.scr{fill:var(--scr-idle)} .scr.Working{fill:var(--orange)} .scr.Done{fill:var(--scr-done)} .scr.Queued{fill:var(--scr-queued)} .scr.Blocked{fill:var(--scr-idle)}
+.scr-n{font-family:var(--mono);font-weight:600;font-size:13px;fill:#F5F5F2}
+.scr.Done + .scr-n{fill:#0A0A0B}
+.glow{fill:var(--orange);opacity:.22}
+.rack .f-t{fill:var(--desk-t)} .rack .f-l{fill:var(--desk-l)} .rack .f-r{fill:var(--desk-r)}
+.led{fill:var(--steel)} .led.on{fill:var(--orange)}
+.desk-g{cursor:pointer;outline:none}
+.desk-g:hover .desk .f-t{fill:var(--surface-2);stroke:var(--steel)}
+.desk-g:focus-visible .desk .f-t,.desk-g.sel .desk .f-t{stroke:var(--orange);stroke-width:2.2}
+.labels{pointer-events:none}.labels text{paint-order:stroke;stroke:var(--floor);stroke-width:4px;stroke-linejoin:round}
+.desk-name{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.06em;fill:var(--label);text-transform:uppercase}
+.desk-st{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;fill:var(--muted);text-transform:uppercase}
+@media (prefers-reduced-motion:no-preference){.glow{animation:pulse 3.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.08}}}
+.panel{padding:22px;display:grid;gap:16px;position:sticky;top:96px}
+.panel .num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.panel h3{font-size:24px}
+.panel dl{margin:0;display:grid;gap:14px}
+.panel dl div{display:grid;gap:4px;border-top:1px solid var(--rule);padding-top:12px}
+.panel dt{color:var(--muted)}
+.panel dd{margin:0}
+.roster{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ag{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r-md);text-align:left;cursor:pointer;border:1px solid var(--rule);background:var(--surface)}
+.ag:hover{border-color:var(--rule-2)}
+.ag[aria-pressed=true]{border-color:var(--ink)}
+.ag .n{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted)}
+.ag .nm{font-weight:600;font-size:14px;line-height:1.2}
+.ag .tk{font-size:12.5px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400;margin-top:2px}
+.ag>span:nth-child(2){min-width:0}
+
+/* health */
+.hgrid{display:grid;gap:16px}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:12px 20px;border-bottom:1px solid var(--rule)}
+.tbl td{padding:14px 20px;border-bottom:1px solid var(--rule);font-size:14px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .u{font-family:var(--mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.tbl .r{text-align:right;font-family:var(--mono);font-size:13px;white-space:nowrap}
+.hcard{overflow:hidden}
+.hcard-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.hcard-h h3{font-size:16px;margin-bottom:6px}
+.ok-mark{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.ok-mark::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.bad-mark{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.bad-mark::before{content:'';width:8px;height:8px;border-radius:2px;background:var(--orange)}
+.off-mark{display:inline-flex;align-items:center;gap:7px;color:var(--muted)}
+.off-mark::before{content:'';width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--steel)}
+
+/* log */
+.log{list-style:none;margin:0;padding:0}
+.log li{display:grid;grid-template-columns:120px 1fr;gap:20px;padding:16px 24px;border-bottom:1px solid var(--rule)}
+.log li:last-child{border-bottom:0}
+.log time{color:var(--muted);padding-top:2px}
+
+.skel{height:120px;border-radius:var(--r-md);background:linear-gradient(90deg,var(--chip),var(--surface),var(--chip));background-size:200% 100%}
+@media (prefers-reduced-motion:no-preference){.skel{animation:sk 1.4s linear infinite}@keyframes sk{to{background-position:-200% 0}}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--btn);color:var(--btn-ink);padding:12px 18px;border-radius:999px;font-size:14px;font-weight:500;box-shadow:var(--shadow);z-index:20}
+
+@media (max-width:1100px){.meta{grid-template-columns:repeat(3,minmax(0,1fr))}.office{grid-template-columns:1fr}.panel{position:static}.sum{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .top{padding:12px 16px}
+  .rail{position:sticky;top:65px;z-index:4;height:auto;flex-direction:row;overflow-x:auto;padding:8px 12px;border-right:0;border-bottom:1px solid var(--rule);background:var(--bg);gap:4px;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .rail-label,.rail-foot{display:none}
+  .tablist{flex-direction:row}
+  .tab{width:auto;flex:none;height:40px;padding:0 12px}
+  .tab[aria-selected=true]::before{left:12px;right:12px;top:auto;bottom:-9px;width:auto;height:3px;border-radius:3px 3px 0 0}
+  main{padding:24px 16px 56px}
+  .session{display:none}
+  .appr{grid-template-columns:1fr}
+  .decide{grid-template-columns:1fr 1fr;min-width:0}
+  .roster{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .gate{padding:16px}.gate-card{padding:24px}
+  .sum{gap:8px}.tile{min-height:104px;padding:14px}.tile .v{font-size:30px}
+  .brief{padding:18px}
+  .facts{grid-template-columns:1fr}
+  .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tbl th,.tbl td{padding:12px 14px}
+  .tbl .hide-s{display:none}
+  .log li{grid-template-columns:1fr;gap:4px;padding:14px 18px}
+  .brand-sub{display:none}
+  .floor-cap{position:static;padding:4px 8px 8px}
+}
+</style>
+</head>
+<body data-mode="__MODE__">
+<svg width="0" height="0" class="sr" aria-hidden="true"><defs><symbol id="nsym" viewBox="0 0 100 100"><rect fill="currentColor" x="0" y="0" width="22" height="100"/><polygon fill="#E8541A" points="26,0 56,0 58.88,16 28.88,16"/><polygon fill="currentColor" points="29.96,22 59.96,22 74,100 44,100"/><rect fill="currentColor" x="78" y="0" width="22" height="100"/></symbol></defs></svg>
+
+<!-- SETUP: shown when HQ_PASSWORD is not set yet -->
+<div class="gate m-setup">
+  <div class="gate-top">
+    <span class="brand"><svg class="sym" aria-hidden="true"><use href="#nsym"/></svg><span><span class="brand-name">NSKO HQ</span><span class="brand-sub mono muted">Private control room</span></span></span>
+    <button class="icon-btn js-theme" type="button" aria-label="Switch to dark mode"></button>
+  </div>
+  <div class="gate-main">
+    <section class="card gate-card wide" aria-labelledby="setup-h">
+      <span class="mono muted">One-time setup</span>
+      <h1 id="setup-h">Set your HQ password</h1>
+      <p class="lede">HQ is locked until you choose a password. It is stored as a secret in Cloudflare, never in the website's code. It takes about two minutes.</p>
+      <ol class="steps">
+        <li><span>Sign in at <b>dash.cloudflare.com</b>.</span></li>
+        <li><span>Open <b>Workers &amp; Pages</b>, then click <b>nsko-solutions</b>.</span></li>
+        <li><span>Go to <b>Settings</b>, then <b>Variables and Secrets</b>, and click <b>Add</b>.</span></li>
+        <li><span>Choose type <b>Secret</b>. Name it <code>HQ_PASSWORD</code>. For the value, type a long password only you know (four or more random words works well).</span></li>
+        <li><span>Click <b>Deploy</b>. Then reload this page and sign in.</span></li>
+      </ol>
+      <p class="note">Keep the password somewhere safe, such as a password manager. To change it later, edit the same secret; everyone signed in is signed out straight away.</p>
+    </section>
+  </div>
+  <div class="gate-foot mono"><span>NSKO Solutions</span><span>Built by NSKO.</span></div>
+</div>
+
+<!-- LOGIN -->
+<div class="gate m-login">
+  <div class="gate-top">
+    <span class="brand"><svg class="sym" aria-hidden="true"><use href="#nsym"/></svg><span><span class="brand-name">NSKO HQ</span><span class="brand-sub mono muted">Private control room</span></span></span>
+    <button class="icon-btn js-theme" type="button" aria-label="Switch to dark mode"></button>
+  </div>
+  <div class="gate-main">
+    <form class="card gate-card" id="login" novalidate aria-labelledby="login-h">
+      <span class="mono muted">Founder access</span>
+      <h1 id="login-h">Sign in to HQ</h1>
+      <p class="lede">Briefs, decisions waiting for you, the team and the website's health, in one place.</p>
+      <div class="field">
+        <label for="pw">Password</label>
+        <input class="input" id="pw" name="password" type="password" autocomplete="current-password" required aria-describedby="login-msg">
+      </div>
+      <button class="btn" type="submit" id="login-btn">Sign in</button>
+      <p class="msg" id="login-msg" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+  <div class="gate-foot mono"><span>NSKO Solutions</span><span>Built by NSKO.</span></div>
+</div>
+
+<!-- APP -->
+<div class="app m-app">
+  <header class="top">
+    <span class="brand"><svg class="sym" aria-hidden="true"><use href="#nsym"/></svg><span><span class="brand-name">NSKO HQ</span><span class="brand-sub mono muted">Private control room</span></span></span>
+    <div class="top-r">
+      <span class="session mono muted"><span class="dot on" aria-hidden="true"></span><span id="session-txt">Signed in</span></span>
+      <button class="icon-btn js-theme" type="button" aria-label="Switch to dark mode"></button>
+      <button class="btn ghost sm" type="button" id="logout"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>Sign out</button>
+    </div>
+  </header>
+  <nav class="rail" aria-label="HQ sections">
+    <span class="rail-label mono">Control room</span>
+    <div role="tablist" aria-orientation="vertical" id="tabs" class="tablist">
+      <button class="tab" role="tab" id="t-inbox" aria-controls="p-inbox" data-tab="inbox"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5"/></svg>Inbox<span class="count" id="c-inbox"></span></button>
+      <button class="tab" role="tab" id="t-approvals" aria-controls="p-approvals" data-tab="approvals"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4M5 4h14v16H5z"/></svg>Approvals<span class="count" id="c-approvals"></span></button>
+      <button class="tab" role="tab" id="t-team" aria-controls="p-team" data-tab="team"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></svg>Team<span class="count" id="c-team"></span></button>
+      <button class="tab" role="tab" id="t-health" aria-controls="p-health" data-tab="health"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Site health<span class="count" id="c-health"></span></button>
+      <button class="tab" role="tab" id="t-log" aria-controls="p-log" data-tab="log"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Log</button>
+    </div>
+    <div class="rail-foot"><span class="mono">Engineered in Britain.</span></div>
+  </nav>
+  <main id="main">
+    <div class="sum" id="summary" aria-label="At a glance"></div>
+    <section class="tabpanel" role="tabpanel" id="p-inbox" aria-labelledby="t-inbox" tabindex="-1"></section>
+    <section class="tabpanel" role="tabpanel" id="p-approvals" aria-labelledby="t-approvals" tabindex="-1"></section>
+    <section class="tabpanel" role="tabpanel" id="p-team" aria-labelledby="t-team" tabindex="-1"></section>
+    <section class="tabpanel" role="tabpanel" id="p-health" aria-labelledby="t-health" tabindex="-1"></section>
+    <section class="tabpanel" role="tabpanel" id="p-log" aria-labelledby="t-log" tabindex="-1"></section>
+  </main>
+</div>
+
+<script nonce="__NONCE__">
+(function () {
+  'use strict';
+  var root = document.documentElement, mode = document.body.getAttribute('data-mode');
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  /* ---------- helpers ---------- */
+  function add(el, c) {
+    if (c == null || c === false) return;
+    if (Array.isArray(c)) { c.forEach(function (x) { add(el, x); }); return; }
+    el.appendChild(typeof c === 'object' ? c : document.createTextNode(String(c)));
+  }
+  function mk(ns, tag, attrs, kids) {
+    var el = ns ? document.createElementNS(ns, tag) : document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v == null || v === false) return;
+      if (k === 'text') el.textContent = v;
+      else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+      else if (k === 'class' && !ns) el.className = v;
+      else el.setAttribute(k, v === true ? '' : v);
+    });
+    add(el, kids);
+    return el;
+  }
+  function h(tag, attrs) { return mk(null, tag, attrs, Array.prototype.slice.call(arguments, 2)); }
+  function s(tag, attrs) { return mk(SVGNS, tag, attrs, Array.prototype.slice.call(arguments, 2)); }
+  function $(id) { return document.getElementById(id); }
+  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
+  function icon(d) { return s('svg', {class: 'i', viewBox: '0 0 24 24', 'aria-hidden': 'true'}, s('path', {d: d})); }
+  var I = {
+    mail: 'M4 6h16v12H4zM4 7l8 6 8-6', check: 'M5 12l5 5 9-10', archive: 'M4 5h16v4H4zM5 9v10h14V9M10 13h4',
+    undo: 'M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3', refresh: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5', x: 'M6 6l12 12M18 6L6 18',
+    sun: 'M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6L4.2 4.2M19.8 19.8l-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+    moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z'
+  };
+  var TZ = {timeZone: 'Europe/London'};
+  function fmt(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('en-GB', Object.assign({day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}, TZ)); }
+  function fmtDay(ymd) { var d = new Date(ymd + 'T12:00:00Z'); return isNaN(d) ? ymd : d.toLocaleDateString('en-GB', Object.assign({day: 'numeric', month: 'short', year: 'numeric'}, TZ)); }
+  function ago(iso) {
+    var m = Math.round((Date.now() - new Date(iso)) / 60000);
+    if (!(m >= 0)) return ''; if (m < 1) return 'just now'; if (m < 60) return m + ' min ago';
+    var hr = Math.round(m / 60); if (hr < 24) return hr + (hr === 1 ? ' hour ago' : ' hours ago');
+    var dy = Math.round(hr / 24); return dy + (dy === 1 ? ' day ago' : ' days ago');
+  }
+  var toastT;
+  function toast(t) { var el = $('toast'); if (!el) { el = h('div', {id: 'toast', class: 'toast', role: 'status', 'aria-live': 'polite'}); document.body.appendChild(el); } el.textContent = t; el.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(function () { el.classList.add('hidden'); }, 2600); }
+
+  function api(path, body) {
+    var opt = {credentials: 'same-origin', headers: {}};
+    if (body) { opt.method = 'POST'; opt.headers['content-type'] = 'application/json'; opt.body = JSON.stringify(body); }
+    return fetch('/api/hq/' + path, opt).then(function (r) {
+      if (r.status === 401 && mode === 'app') { location.reload(); throw new Error('signed out'); }
+      return r.json().catch(function () { return {ok: false}; }).then(function (j) { j.status = r.status; return j; });
+    });
+  }
+
+  /* ---------- theme ---------- */
+  function paintTheme() {
+    var dark = root.getAttribute('data-theme') === 'dark';
+    Array.prototype.forEach.call(document.querySelectorAll('.js-theme'), function (b) {
+      clear(b); add(b, icon(dark ? I.sun : I.moon));
+      b.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+      b.setAttribute('title', dark ? 'Light mode' : 'Dark mode');
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.js-theme'), function (b) {
+    b.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('nsko-hq-theme', next); } catch (e) {}
+      paintTheme();
+    });
+  });
+  paintTheme();
+
+  /* ---------- login ---------- */
+  if (mode === 'login') {
+    var form = $('login'), pw = $('pw'), msg = $('login-msg'), btn = $('login-btn');
+    pw.focus();
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      msg.className = 'msg'; msg.textContent = '';
+      if (!pw.value) { msg.className = 'msg err'; msg.textContent = 'Type your password first.'; pw.focus(); return; }
+      btn.disabled = true; btn.textContent = 'Checking…';
+      api('login', {password: pw.value}).then(function (j) {
+        if (j.ok) { btn.textContent = 'Opening HQ…'; location.reload(); return; }
+        btn.disabled = false; btn.textContent = 'Sign in';
+        msg.className = 'msg err';
+        if (j.error === 'wrong') msg.textContent = 'That password is not right. ' + j.left + (j.left === 1 ? ' try' : ' tries') + ' left before a 15 minute pause.';
+        else if (j.error === 'locked') msg.textContent = 'Too many wrong tries. For safety, sign-in is paused for 15 minutes.';
+        else msg.textContent = 'Could not sign in just now. Check your connection and try again.';
+        pw.select();
+      }).catch(function () { btn.disabled = false; btn.textContent = 'Sign in'; msg.className = 'msg err'; msg.textContent = 'Could not reach HQ. Check your connection and try again.'; });
+    });
+    return;
+  }
+  if (mode !== 'app') return;
+
+  /* ---------- app state ---------- */
+  var S = {briefs: null, storage: true, filter: 'new', approvals: null, apprStorage: true, team: null, teamUpdated: '', log: null, logUpdated: '', health: null, healthBusy: false, desk: null};
+  var TABS = ['inbox', 'approvals', 'team', 'health', 'log'];
+  var current = 'inbox';
+
+  function select(tab, focus) {
+    if (TABS.indexOf(tab) < 0) tab = 'inbox';
+    current = tab;
+    TABS.forEach(function (t) {
+      var b = $('t-' + t), p = $('p-' + t), on = t === tab;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      p.classList.toggle('hidden', !on);
+    });
+    if (focus) $('t-' + tab).focus();
+    if (location.hash !== '#' + tab) history.replaceState(null, '', '#' + tab);
+  }
+  TABS.forEach(function (t, i) {
+    var b = $('t-' + t);
+    b.addEventListener('click', function () { select(t); });
+    b.addEventListener('keydown', function (e) {
+      var k = e.key, n = null;
+      if (k === 'ArrowDown' || k === 'ArrowRight') n = TABS[(i + 1) % TABS.length];
+      else if (k === 'ArrowUp' || k === 'ArrowLeft') n = TABS[(i + TABS.length - 1) % TABS.length];
+      else if (k === 'Home') n = TABS[0]; else if (k === 'End') n = TABS[TABS.length - 1];
+      if (n) { e.preventDefault(); select(n, true); }
+    });
+  });
+  window.addEventListener('hashchange', function () { select(location.hash.slice(1)); });
+  select(location.hash.slice(1));
+
+  $('logout').addEventListener('click', function () {
+    api('logout', {}).then(function () { location.reload(); }, function () { location.reload(); });
+  });
+
+  function head(eyebrow, title, lede, right) {
+    return h('div', {class: 'head'}, h('div', null, h('span', {class: 'eyebrow mono', text: eyebrow}), h('h1', {text: title}), lede ? h('p', {text: lede}) : null), right || null);
+  }
+  function loading(el) { clear(el); add(el, [h('div', {class: 'skel', 'aria-hidden': 'true'}), h('p', {class: 'sr', text: 'Loading'})]); }
+  function emptyCard(title, text) { return h('div', {class: 'card empty'}, h('h3', {text: title}), h('p', {text: text})); }
+
+  /* ---------- summary ---------- */
+  function liveHome() { return S.health && S.health.live && S.health.live[0]; }
+  function renderSummary() {
+    var el = clear($('summary'));
+    function tile(key, value, unit, label, tab, hot) {
+      return h('button', {class: 'card tile', type: 'button', onclick: function () { select(tab, true); }},
+        h('span', {class: 'k mono'}, hot ? h('span', {class: 'dot on', 'aria-hidden': 'true'}) : null, label),
+        h('span', {class: 'v'}, value, unit ? h('small', {text: unit}) : null));
+    }
+    var nNew = S.briefs ? S.briefs.filter(function (b) { return b.state === 'new'; }).length : null;
+    var nWait = S.approvals ? S.approvals.filter(function (a) { return !a.decision; }).length : null;
+    var nWork = S.team ? S.team.filter(function (a) { return a.status === 'Working'; }).length : null;
+    var home = liveHome();
+    add(el, [
+      tile('b', nNew == null ? '–' : nNew, null, 'New briefs', 'inbox', nNew > 0),
+      tile('a', nWait == null ? '–' : nWait, null, 'Waiting for you', 'approvals', nWait > 0),
+      tile('t', nWork == null ? '–' : nWork, S.team ? 'of ' + S.team.length : null, 'Agents working', 'team', false),
+      tile('h', S.healthBusy && !home ? '…' : home ? (home.ok ? 'Up' : 'Down') : '–', home && home.ok ? home.ms + ' ms' : null, 'Live website', 'health', false)
+    ]);
+    $('c-inbox').textContent = nNew ? String(nNew) : '';
+    $('c-approvals').textContent = nWait ? String(nWait) : '';
+    $('c-team').textContent = nWork ? String(nWork) : '';
+    var issues = S.health ? S.health.live.concat(S.health.deployment).filter(function (r) { return !r.ok; }).length : 0;
+    $('c-health').textContent = issues ? '!' : '';
+  }
+
+  /* ---------- inbox ---------- */
+  var STATE_LABEL = {'new': 'New', replied: 'Replied', archived: 'Archived'};
+  function renderInbox() {
+    var el = clear($('p-inbox'));
+    var counts = {'new': 0, replied: 0, archived: 0, all: 0};
+    (S.briefs || []).forEach(function (b) { counts[b.state]++; counts.all++; });
+    var seg = h('div', {class: 'seg', role: 'group', 'aria-label': 'Show briefs'});
+    [['new', 'New'], ['replied', 'Replied'], ['archived', 'Archived'], ['all', 'All']].forEach(function (f) {
+      add(seg, h('button', {type: 'button', 'aria-pressed': S.filter === f[0] ? 'true' : 'false', onclick: function () { S.filter = f[0]; renderInbox(); }}, f[1], h('span', {class: 'n', text: S.briefs ? counts[f[0]] : ''})));
+    });
+    add(el, head('Inbox', 'Briefs', 'Every brief sent through the contact form on nskosolutions.co.uk, newest first. Each one is saved here even when email is off.', seg));
+    if (!S.briefs) { add(el, h('div', {class: 'skel'})); return; }
+    if (!S.storage) { add(el, emptyCard('Storage is not connected yet', 'Briefs are kept in Cloudflare KV storage named HQ. Cloudflare creates it automatically the next time the site is deployed. Until then, new briefs can only arrive by email (if email is turned on).')); return; }
+    var list = S.briefs.filter(function (b) { return S.filter === 'all' || b.state === S.filter; });
+    if (!list.length) {
+      var t = S.briefs.length === 0
+        ? emptyCard('No briefs yet', 'When someone fills in the contact form on nskosolutions.co.uk, their brief appears here within seconds: name, company, sector, budget, timeline, NDA request and message. You can reply by email and mark it Replied or Archived.')
+        : emptyCard('Nothing in ' + (STATE_LABEL[S.filter] || 'this view'), 'All caught up. Switch to All to see every brief.');
+      add(el, t); return;
+    }
+    var wrap = h('div', {class: 'list'});
+    list.forEach(function (b) { add(wrap, briefCard(b)); });
+    add(el, wrap);
+  }
+  function briefCard(b) {
+    var meta = [['Sector', b.sector], ['Budget', b.budget], ['Timeline', b.timeline], ['Project', b.project], ['Phone', b.phone], ['NDA', b.nda ? 'Requested' : 'Not requested']];
+    var dl = h('dl', {class: 'meta'});
+    meta.forEach(function (m) { add(dl, h('div', null, h('dt', {class: 'mono', text: m[0]}), h('dd', {text: m[1] || '—'}))); });
+    var mail = 'mailto:' + String(b.email || '').replace(/[\s?&#<>"]/g, '') + '?subject=' + encodeURIComponent('Re: your brief to NSKO Solutions');
+    function setState(st) {
+      return function (e) {
+        var btn = e.currentTarget; btn.disabled = true;
+        api('briefs/state', {id: b.id, state: st}).then(function (j) {
+          if (!j.ok) { btn.disabled = false; toast('Could not save. Try again.'); return; }
+          b.state = j.state; b.stateAt = j.stateAt; renderInbox(); renderSummary();
+          toast('Marked ' + STATE_LABEL[st].toLowerCase() + '.');
+        }, function () { btn.disabled = false; toast('Could not save. Try again.'); });
+      };
+    }
+    var acts = h('div', {class: 'actions'},
+      h('a', {class: 'btn sm', href: mail}, icon(I.mail), 'Reply by email'),
+      b.state !== 'replied' ? h('button', {class: 'btn ghost sm', type: 'button', onclick: setState('replied')}, icon(I.check), 'Mark replied') : null,
+      b.state !== 'archived' ? h('button', {class: 'btn ghost sm', type: 'button', onclick: setState('archived')}, icon(I.archive), 'Archive') : null,
+      b.state !== 'new' ? h('button', {class: 'btn ghost sm', type: 'button', onclick: setState('new')}, icon(I.undo), 'Mark as new') : null,
+      h('span', {class: 'spacer'}),
+      h('span', {class: 'mono muted', text: b.emailed ? 'Also emailed' : 'Saved in HQ only'}));
+    return h('article', {class: 'card brief', 'aria-label': 'Brief from ' + (b.name || 'unknown')},
+      h('div', {class: 'brief-h'},
+        h('div', null, h('h3', {text: b.company ? b.company : b.name}), h('p', {class: 'who'}, b.company ? b.name + ' · ' : '', h('a', {href: mail, text: b.email}))),
+        h('div', {class: 'actions'}, h('span', {class: 'chip' + (b.state === 'new' ? ' ink' : ' out')}, b.state === 'new' ? h('span', {class: 'dot on', 'aria-hidden': 'true'}) : null, STATE_LABEL[b.state]),
+          h('time', {class: 'mono muted', datetime: b.at, title: fmt(b.at), text: fmt(b.at) + ' · ' + ago(b.at)}))),
+      dl,
+      h('p', {class: 'msgbody', text: b.message}),
+      acts);
+  }
+
+  /* ---------- approvals ---------- */
+  function renderApprovals() {
+    var el = clear($('p-approvals'));
+    add(el, head('Approvals', 'Your decisions', 'Steps the team will not take without your yes. Approving records your decision with the time. It does not do the step by itself: Claude carries it out in the next session.'));
+    if (!S.approvals) { add(el, h('div', {class: 'skel'})); return; }
+    if (!S.apprStorage) add(el, h('div', {class: 'card empty'}, h('h3', {text: 'Decisions cannot be saved yet'}), h('p', {text: 'HQ storage (Cloudflare KV) is not connected. It is created on the next deploy. Until then the buttons are switched off.'})));
+    var waiting = S.approvals.filter(function (a) { return !a.decision; }), done = S.approvals.filter(function (a) { return a.decision; });
+    add(el, h('div', {class: 'sect'}, h('span', {class: 'mono muted', text: 'Waiting for you · ' + waiting.length})));
+    if (!waiting.length) add(el, emptyCard('Nothing waiting', 'You have decided everything on the list. New items appear here when the team needs your yes for a paid, public or hard-to-undo step.'));
+    else { var w = h('div', {class: 'list'}); waiting.forEach(function (a) { add(w, apprCard(a)); }); add(el, w); }
+    if (done.length) {
+      add(el, h('div', {class: 'sect'}, h('span', {class: 'mono muted', text: 'Decided · ' + done.length})));
+      var d = h('div', {class: 'list'}); done.forEach(function (a) { add(d, apprCard(a)); }); add(el, d);
+    }
+  }
+  function apprCard(a) {
+    function decide(choice) {
+      return function (e) {
+        var btns = e.currentTarget.parentNode.querySelectorAll('button');
+        Array.prototype.forEach.call(btns, function (x) { x.disabled = true; });
+        api('approvals/decide', {id: a.id, decision: choice}).then(function (j) {
+          if (!j.ok) { Array.prototype.forEach.call(btns, function (x) { x.disabled = false; }); toast('Could not save your decision. Try again.'); return; }
+          a.decision = j.decision; renderApprovals(); renderSummary();
+          toast(choice === 'approved' ? 'Approved. Claude carries this out next session.' : choice === 'declined' ? 'Declined. Nothing will happen.' : 'Moved back to waiting.');
+          var p = $('p-approvals'); p.focus({preventScroll: true});
+        }, function () { Array.prototype.forEach.call(btns, function (x) { x.disabled = false; }); toast('Could not save your decision. Try again.'); });
+      };
+    }
+    var dec = a.decision, off = !S.apprStorage;
+    var body = h('div', null, h('h3', {text: a.title}), h('p', {class: 'what', text: a.what}),
+      h('div', {class: 'facts'}, h('div', null, h('span', {class: 'mono', text: 'Cost'}), h('p', {text: a.cost})), h('div', null, h('span', {class: 'mono', text: 'Risk'}), h('p', {text: a.risk}))));
+    if (!dec) {
+      return h('article', {class: 'card appr', 'aria-label': a.title}, body,
+        h('div', {class: 'decide'},
+          h('button', {class: 'btn', type: 'button', disabled: off, onclick: decide('approved'), 'aria-label': 'Approve: ' + a.title}, icon(I.check), 'Approve'),
+          h('button', {class: 'btn ghost', type: 'button', disabled: off, onclick: decide('declined'), 'aria-label': 'Decline: ' + a.title}, icon(I.x), 'Decline')));
+    }
+    var yes = dec.decision === 'approved';
+    return h('article', {class: 'card appr', 'aria-label': a.title}, body, h('div'),
+      h('div', {class: 'decided'},
+        h('span', {class: 'chip' + (yes ? ' ink' : ' out'), text: yes ? 'Approved' : 'Declined'}),
+        h('time', {class: 'mono muted', datetime: dec.at, text: fmt(dec.at)}),
+        h('p', {text: yes ? 'Claude carries this out next session.' : 'Nothing will happen.'}),
+        h('span', {class: 'spacer'}),
+        h('button', {class: 'btn ghost sm', type: 'button', disabled: off, onclick: decide('undo')}, icon(I.undo), 'Change my mind')));
+  }
+
+  /* ---------- team: isometric office ---------- */
+  var C = Math.cos(Math.PI / 6), U = 44;
+  function P(x, y, z) { return [(x - y) * C * U, (x + y) * 0.5 * U - z * U]; }
+  function pts(arr) { return arr.map(function (p) { var q = P(p[0], p[1], p[2]); return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' '); }
+  function box(x, y, z, w, d, hh, cls) {
+    return s('g', {class: cls},
+      s('polygon', {class: 'f-l', points: pts([[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + hh], [x, y + d, z + hh]])}),
+      s('polygon', {class: 'f-r', points: pts([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + hh], [x + w, y, z + hh]])}),
+      s('polygon', {class: 'f-t', points: pts([[x, y, z + hh], [x + w, y, z + hh], [x + w, y + d, z + hh], [x, y + d, z + hh]])}));
+  }
+  var W = 13.4, D = 8;
+  function deskPos(i) { var row = i < 5 ? 0 : 1, col = i % 5; return {x: 0.9 + col * 2.5, y: row ? 5 : 1.3}; }
+  function officeSvg() {
+    var lo = P(0, D, 0), hi = P(W, 0, 0), bot = P(W, D, 0), top = P(0, 0, 1.2);
+    var pad = 24, vb = [lo[0] - pad, top[1] - pad, hi[0] - lo[0] + pad * 2, bot[1] - top[1] + pad * 2 + 10];
+    var svg = s('svg', {viewBox: vb.map(function (n) { return n.toFixed(0); }).join(' '), role: 'group', 'aria-label': 'Office floor with ' + S.team.length + ' agent desks. Choose a desk to see its work.'},
+      s('defs', null, s('filter', {id: 'blur', x: '-50%', y: '-50%', width: '200%', height: '200%'}, s('feGaussianBlur', {stdDeviation: '14'}))));
+    add(svg, s('polygon', {class: 'iso-floor', points: pts([[0, 0, 0], [W, 0, 0], [W, D, 0], [0, D, 0]])}));
+    var g = s('g', {class: 'iso-grid'});
+    for (var gx = 1; gx < W; gx++) add(g, s('polyline', {class: 'iso-line', points: pts([[gx, 0, 0], [gx, D, 0]])}));
+    for (var gy = 1; gy < D; gy++) add(g, s('polyline', {class: 'iso-line', points: pts([[0, gy, 0], [W, gy, 0]])}));
+    add(svg, g);
+    add(svg, box(0, -0.12, 0, W, 0.12, 0.5, 'wall'));
+    add(svg, box(-0.12, -0.12, 0, 0.12, D + 0.12, 0.5, 'wall'));
+    // server rack in the back corner (HQ storage); its light is on when storage is connected
+    add(svg, box(0.12, 3.35, 0, 0.5, 0.9, 1.15, 'rack'));
+    for (var r = 0; r < 4; r++) add(svg, s('polygon', {class: 'led' + (S.storage && S.apprStorage ? ' on' : ''), points: pts([[0.63, 3.45, 0.95 - r * 0.24], [0.63, 3.6, 0.95 - r * 0.24], [0.63, 3.6, 0.9 - r * 0.24], [0.63, 3.45, 0.9 - r * 0.24]])}));
+    var labels = s('g', {class: 'labels', 'aria-hidden': 'true'});
+    S.team.forEach(function (a, i) {
+      var p = deskPos(i), x = p.x, y = p.y, w = 1.5, d = 0.95, dh = 0.42;
+      var dg = s('g', {class: 'desk-g' + (S.desk === a.id ? ' sel' : ''), tabindex: '0', role: 'button', 'aria-label': 'Desk ' + a.n + ', ' + a.name + ': ' + a.status, 'aria-pressed': S.desk === a.id ? 'true' : 'false', 'data-id': a.id});
+      if (a.status === 'Working') { var c = P(x + w / 2, y + d / 2, 0); add(dg, s('ellipse', {class: 'glow', cx: c[0].toFixed(1), cy: c[1].toFixed(1), rx: (U * 1.6).toFixed(0), ry: (U * 0.85).toFixed(0), filter: 'url(#blur)'})); }
+      add(dg, box(x, y, 0, w, d, dh, 'desk'));
+      add(dg, box(x + 0.62, y + 0.16, dh, 0.26, 0.2, 0.025, 'mon'));
+      add(dg, box(x + 0.72, y + 0.24, dh, 0.06, 0.04, 0.12, 'mon'));
+      add(dg, box(x + 0.28, y + 0.2, dh + 0.1, 0.94, 0.06, 0.58, 'mon'));
+      var sy = y + 0.265, x0 = x + 0.34, x1 = x + 1.16, z0 = dh + 0.15, z1 = dh + 0.63;
+      add(dg, s('polygon', {class: 'scr ' + a.status, points: pts([[x0, sy, z0], [x1, sy, z0], [x1, sy, z1], [x0, sy, z1]])}));
+      var tp = P(x0 + 0.14, sy, z0 + 0.12);
+      add(dg, s('text', {class: 'scr-n', transform: 'matrix(' + C.toFixed(3) + ',0.5,0,1,' + tp[0].toFixed(1) + ',' + tp[1].toFixed(1) + ')', text: (a.n < 10 ? '0' : '') + a.n}));
+      // keyboard
+      add(dg, box(x + 0.4, y + 0.55, dh, 0.7, 0.2, 0.015, 'mon'));
+      var lb = P(x + w, y + d, 0), cx = P(x + w / 2, y + d / 2, 0)[0];
+      add(labels, s('text', {class: 'desk-name', x: cx.toFixed(1), y: (lb[1] + 18).toFixed(1), 'text-anchor': 'middle', text: a.name}));
+      add(labels, s('text', {class: 'desk-st', x: cx.toFixed(1), y: (lb[1] + 33).toFixed(1), 'text-anchor': 'middle', text: a.status}));
+      dg.addEventListener('click', function () { pickDesk(a.id); });
+      dg.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickDesk(a.id); } });
+      add(svg, dg);
+    });
+    add(svg, labels);
+    return svg;
+  }
+  function pickDesk(id) {
+    S.desk = id; renderTeam();
+    var el = document.querySelector('.desk-g[data-id="' + id + '"]'); if (el) el.focus();
+  }
+  function statusChip(st) {
+    var cls = st === 'Working' ? 'chip' : st === 'Done' ? 'chip ink' : 'chip out';
+    return h('span', {class: cls}, st === 'Working' ? h('span', {class: 'dot on', 'aria-hidden': 'true'}) : null, st);
+  }
+  function renderTeam() {
+    var el = clear($('p-team'));
+    add(el, head('Team', 'The office', 'Ten AI agents, one desk each. Orange screens are working now. Choose a desk to see what it is doing.' + (S.teamUpdated ? ' Last updated ' + fmtDay(S.teamUpdated) + '.' : '')));
+    if (!S.team) { add(el, h('div', {class: 'skel'})); return; }
+    if (!S.team.length) { add(el, emptyCard('No agents listed', 'The team list lives in hq/status.json. Add agents there and redeploy.')); return; }
+    if (!S.desk) S.desk = (S.team.filter(function (a) { return a.status === 'Working'; })[0] || S.team[0]).id;
+    var a = S.team.filter(function (x) { return x.id === S.desk; })[0] || S.team[0];
+    var floor = h('div', {class: 'card floor'},
+      h('div', {class: 'floor-cap', 'aria-hidden': 'true'},
+        h('span', {class: 'legend mono'}, h('span', {class: 'sw w'}), 'Working'), h('span', {class: 'legend mono'}, h('span', {class: 'sw d'}), 'Done'),
+        h('span', {class: 'legend mono'}, h('span', {class: 'sw q'}), 'Queued'), h('span', {class: 'legend mono'}, h('span', {class: 'sw i'}), 'Idle')),
+      officeSvg());
+    var panel = h('aside', {class: 'card panel', 'aria-live': 'polite', 'aria-label': 'Selected desk'},
+      h('span', {class: 'num', text: 'DESK ' + (a.n < 10 ? '0' : '') + a.n}),
+      h('h3', {text: a.name}),
+      h('div', null, statusChip(a.status)),
+      h('dl', null,
+        h('div', null, h('dt', {class: 'mono', text: 'Current task'}), h('dd', {text: a.task})),
+        h('div', null, h('dt', {class: 'mono', text: 'Last update'}), h('dd', {text: a.updated ? fmtDay(a.updated) : 'Not recorded'}))));
+    add(el, h('div', {class: 'office'}, floor, panel));
+    var roster = h('div', {class: 'roster', role: 'group', 'aria-label': 'All agents'});
+    S.team.forEach(function (x) {
+      add(roster, h('button', {class: 'ag', type: 'button', 'aria-pressed': x.id === S.desk ? 'true' : 'false', onclick: function () { S.desk = x.id; renderTeam(); var b = document.querySelector('.ag[aria-pressed=true]'); if (b) b.focus(); }},
+        h('span', {class: 'n', text: (x.n < 10 ? '0' : '') + x.n}),
+        h('span', null, h('span', {class: 'nm', text: x.name}), h('span', {class: 'tk', text: x.task})),
+        statusChip(x.status)));
+    });
+    add(el, h('div', {class: 'sect'}, h('span', {class: 'mono muted', text: 'All agents'})));
+    add(el, roster);
+  }
+
+  /* ---------- health ---------- */
+  function resultCell(r) {
+    if (r.ok) return h('span', {class: 'ok-mark', text: 'OK'});
+    return h('span', {class: 'bad-mark', text: r.status ? 'Error ' + r.status : (r.error || 'Failed')});
+  }
+  function checkTable(title, sub, rows, live) {
+    var home = rows[0];
+    var t = h('table', {class: 'tbl'}, h('thead', null, h('tr', null, h('th', {text: 'Check'}), h('th', {class: 'hide-s', text: 'Address'}), h('th', {text: 'Result'}), h('th', {class: 'r', text: 'Time'}))));
+    var tb = h('tbody');
+    rows.forEach(function (r) { add(tb, h('tr', null, h('td', {text: r.name}), h('td', {class: 'u hide-s', text: r.url}), h('td', null, resultCell(r)), h('td', {class: 'r', text: r.ms + ' ms'}))); });
+    add(t, tb);
+    return h('section', {class: 'card hcard', 'aria-label': title},
+      h('div', {class: 'hcard-h'}, h('div', null, h('h3', {text: title}), h('p', {class: 'muted', text: sub})),
+        live && home && home.ok ? h('span', {class: 'chip live'}, h('span', {class: 'dot', 'aria-hidden': 'true'}), 'LIVE') : null), t);
+  }
+  function renderHealth() {
+    var el = clear($('p-health'));
+    var btn = h('button', {class: 'btn ghost', type: 'button', disabled: S.healthBusy, onclick: runHealth}, icon(I.refresh), S.healthBusy ? 'Checking…' : 'Check again');
+    add(el, head('Site health', 'Website checks', 'Real checks run by HQ the moment you open this page. Settings show only whether each one is set, never its value.' + (S.health ? ' Last checked ' + fmt(S.health.checkedAt) + '.' : ''), btn));
+    if (!S.health) { add(el, h('div', {class: 'skel'})); return; }
+    if (S.health.error) { add(el, emptyCard('Checks could not run', 'HQ could not run the checks just now. Press Check again in a minute.')); return; }
+    var cfg = h('table', {class: 'tbl'}, h('thead', null, h('tr', null, h('th', {text: 'Setting'}), h('th', {class: 'hide-s', text: 'What it does'}), h('th', {class: 'r', text: 'State'}))));
+    var cb = h('tbody');
+    S.health.config.forEach(function (c) { add(cb, h('tr', null, h('td', null, h('code', {text: c.key})), h('td', {class: 'hide-s muted', text: c.what}), h('td', {class: 'r'}, c.set ? h('span', {class: 'ok-mark', text: 'Set'}) : h('span', {class: 'off-mark', text: 'Not set'})))); });
+    add(cfg, cb);
+    add(el, h('div', {class: 'hgrid'},
+      checkTable('Live website', 'nskosolutions.co.uk, fetched from Cloudflare just now.', S.health.live, true),
+      checkTable('This deployment', 'Files bundled with the version of the site that is serving HQ.', S.health.deployment, false),
+      h('section', {class: 'card hcard', 'aria-label': 'Settings'}, h('div', {class: 'hcard-h'}, h('div', null, h('h3', {text: 'Settings'}), h('p', {class: 'muted', text: 'Set in Cloudflare: Workers & Pages, nsko-solutions, Settings, Variables and Secrets.'}))), cfg)));
+  }
+  function runHealth() {
+    S.healthBusy = true; renderHealth(); renderSummary();
+    api('health').then(function (j) { S.health = j.ok ? j : {error: true}; }, function () { S.health = {error: true}; })
+      .then(function () { S.healthBusy = false; renderHealth(); renderSummary(); });
+  }
+
+  /* ---------- log ---------- */
+  function renderLog() {
+    var el = clear($('p-log'));
+    add(el, head('Log', 'Decisions made', 'Calls the team made without stopping to ask, so you can check them. Mirrored from LAUNCH-LOG.md.'));
+    if (!S.log) { add(el, h('div', {class: 'skel'})); return; }
+    if (!S.log.length) { add(el, emptyCard('No entries yet', 'When the team makes a call without stopping, it is written to LAUNCH-LOG.md and hq/status.json, and shows here after the next deploy.')); return; }
+    var ul = h('ol', {class: 'log', reversed: true});
+    S.log.slice().reverse().forEach(function (e) { add(ul, h('li', null, h('time', {class: 'mono', datetime: e.date, text: fmtDay(e.date)}), h('p', {text: e.text}))); });
+    add(el, h('div', {class: 'card'}, ul));
+  }
+
+  /* ---------- load ---------- */
+  function all() { renderSummary(); renderInbox(); renderApprovals(); renderTeam(); renderHealth(); renderLog(); }
+  all();
+  api('briefs').then(function (j) { S.briefs = j.briefs || []; S.storage = !!j.storage; renderInbox(); renderSummary(); renderTeam(); });
+  api('approvals').then(function (j) { S.approvals = j.approvals || []; S.apprStorage = !!j.storage; renderApprovals(); renderSummary(); });
+  api('team').then(function (j) { S.team = j.team || []; S.teamUpdated = j.updated || ''; renderTeam(); renderSummary(); });
+  api('log').then(function (j) { S.log = j.log || []; S.logUpdated = j.updated || ''; renderLog(); });
+  api('me').then(function (j) { if (j.until) $('session-txt').textContent = 'Signed in until ' + new Date(j.until).toLocaleTimeString('en-GB', Object.assign({hour: '2-digit', minute: '2-digit'}, TZ)); });
+  runHealth();
+})();
+</script>
+</body>
+</html>
