@@ -7,7 +7,7 @@
       "id": "lead",
       "name": "Lead",
       "status": "Working",
-      "task": "v3 live; waiting for the rest of brief v3 (section 5 onward)",
+      "task": "Waiting for the rest of brief v3 (section 5 onward) and the NSKO / NSKO 1.1 material",
       "updated": "2026-11-22"
     },
     {
@@ -62,8 +62,8 @@
       "n": 8,
       "id": "video",
       "name": "Video & voice",
-      "status": "Working",
-      "task": "Film re-cut in the v3 brand (16:9 and 9:16)",
+      "status": "Done",
+      "task": "v3 film: 31s in 16:9 and 9:16, new brand, no AI-generated people",
       "updated": "2026-11-22"
     },
     {
@@ -149,6 +149,10 @@
     {
       "date": "2026-11-22",
       "text": "Website v3 and HQ merged to live (nskosolutions.co.uk)."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "v3 film exported (16:9 and 9:16, 31 seconds)."
     }
   ]
 }
