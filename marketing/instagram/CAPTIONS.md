@@ -1,6 +1,6 @@
 # NSKO Solutions · Instagram launch set
 
-10 posts (1080×1350, `post-01.jpg` … `post-10.jpg`) plus 2 reels (`nsko-solutions-v3-film-9x16.mp4`, 31s, and `nsko-reel-15s-9x16.mp4`, 15s).
+10 posts (1080×1350, `post-01.jpg` … `post-10.jpg`) plus 2 reels (`nsko-solutions-reel-15s-9x16.mp4`, 15s, and `nsko-solutions-film-9x16.mp4`, 60s).
 Rules followed: no fake numbers, clients or claims; AI-made scenes are marked "Concept visual"; one orange accent.
 
 **Suggested schedule:** two weeks, about 3 a week. Post at 12:30 or 19:00 UK time.
@@ -14,7 +14,7 @@ Rules followed: no fake numbers, clients or claims; AI-made scenes are marked "C
 | Tue wk2 | 04 Prototype Lab | Image |
 | Wed wk2 | 05 NSKO Secure | Image |
 | Thu wk2 | 06 How a drone chooses its route | Image |
-| Fri wk2 | Reel 31s | Reel |
+| Fri wk2 | Reel 60s (launch film) | Reel |
 | Mon wk3 | 07 Healthcare | Image |
 | Tue wk3 | 08 Government & Defence | Image |
 | Wed wk3 | 09 Back our first robot | Image |
