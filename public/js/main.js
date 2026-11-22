@@ -72,6 +72,7 @@ setInterval(() => { if (!labVisible || active !== 'drone' || userTouched || !dro
 
 /* panels (service detail) */
 $$('[data-open]').forEach(b => b.addEventListener('click', () => { const d = document.getElementById(b.dataset.open); d.showModal(); }));
+const film = $('#d-film'); if (film) { const fv = film.querySelector('video'); film.querySelector('.x').onclick = () => film.close(); film.addEventListener('click', e => { if (e.target === film) film.close(); }); film.addEventListener('close', () => fv.pause()); film.addEventListener('toggle', () => { if (film.open) fv.play().catch(() => {}); }); }
 $$('dialog.panel').forEach(d => { d.querySelector('.x').onclick = () => d.close(); d.addEventListener('click', e => { if (e.target === d) d.close(); }); });
 $$('[data-close]').forEach(a => a.addEventListener('click', () => a.closest('dialog').close()));
 
