@@ -13,3 +13,4 @@
 - 2026-11-22 · Slogan changed to COMPLEX MADE REAL. everywhere (site, brand, tokens, HQ, film end card). Old line search: 0 left.
 - 2026-11-22 · Ernest picked design B (Command Deck): rebuilt site dark-by-default with light switch, menu + phone drawer, back-to-top, service panels, tabbed Machine Lab. Page ~4.5 screens on desktop.
 - 2026-11-22 · Kickstarter added: 'Fund the build' backer list under Projects (sign-ups land in HQ inbox); campaign launch queued as an HQ approval (hard stop: public + takes money).
+- 2026-11-22 · Marketing set: 10 IG posts, captions, schedule, 15s + 31s reels. Ernest posts them (posting from here would need his Instagram login).

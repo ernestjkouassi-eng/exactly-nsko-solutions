@@ -70,8 +70,8 @@
       "n": 9,
       "id": "marketing",
       "name": "Marketing",
-      "status": "Queued",
-      "task": "Kickstarter: campaign plan, page draft, reward tiers (for your approval before launch)",
+      "status": "Done",
+      "task": "Instagram launch set: 10 posts, captions, 3-week schedule, 2 reels (marketing/instagram). Kickstarter campaign plan next.",
       "updated": "2026-11-22"
     },
     {
@@ -165,6 +165,10 @@
     {
       "date": "2026-11-22",
       "text": "Kickstarter added: backer list on the site (saved to HQ inbox) and a launch approval in HQ."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Marketing: 10 Instagram posts + captions + schedule + 15s and 31s reels ready."
     }
   ]
 }
