@@ -41,7 +41,7 @@ def build(W,H,tag):
         run(f"ffmpeg -v error -y -loop 1 -t 1.5 -i fr{i}_{tag}.png -vf \"{vf}\" -t 1.5 {ENC} s5_{i}_{tag}.mp4")
     # end card
     lk2=Image.open('lockup.png'); lw2=int(W*(.34 if not V else .6)); lk2=lk2.resize((lw2,int(lk2.height*lw2/lk2.width))); e=Image.open(f'obs_{tag}.png').copy(); e.paste(lk2,((W-lw2)//2,int(H*.62)),lk2); e.save(f'end_{tag}.png')
-    t1=tf('e1.txt',"WE BUILD\nWHAT'S NEXT."); t2=tf('e2.txt','Bring us the hard problem.  nskosolutions.co.uk'); t3=tf('e3.txt','BUILT BY NSKO  /  ENGINEERED IN BRITAIN')
+    t1=tf('e1.txt',"COMPLEX\nMADE REAL."); t2=tf('e2.txt','Bring us the hard problem.  nskosolutions.co.uk'); t3=tf('e3.txt','BUILT BY NSKO.')
     vf=",".join([f"fps={FPS}",dt(t1,SANS,int((130 if not V else 120)*s),'(w-tw)/2',f"h*{.22 if not V else .26}",.3,6),dt(t2,MONO,int(22*s),'(w-tw)/2',f"h*{.52 if not V else .5}",1,6,'0xE8541A'),dt(t3,MONO,int(16*s),'(w-tw)/2',f"h-{int(90*s)}",1.4,6,'0x8A8F98'),"fade=t=in:st=0:d=0.4,fade=t=out:st=5.5:d=0.5"])
     run(f"ffmpeg -v error -y -loop 1 -t 6 -i end_{tag}.png -vf \"{vf}\" -t 6 {ENC} s6_{tag}.mp4")
     segs=[f's1_{tag}.mp4',f's2_{tag}.mp4',f's3_{tag}.mp4',f's4_{tag}.mp4']+[f's5_{i}_{tag}.mp4' for i in range(5)]+[f's6_{tag}.mp4']

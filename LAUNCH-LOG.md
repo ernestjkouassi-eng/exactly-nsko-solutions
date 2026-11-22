@@ -10,3 +10,4 @@
 - 2026-11-22 · Skills: no third-party skill installs this round (unvetted code); used nearest installed skills. Logged in team/SKILLS-INSTALLED.md.
 - 2026-11-22 · Website v3 + HQ merged to main after local QA (deploys are not a hard stop).
 - 2026-11-22 · v3 film exported: 31s, 16:9 + 9:16, built from live site captures and machine footage; soundtrack synthesised in-house (no licence needed).
+- 2026-11-22 · Slogan changed to COMPLEX MADE REAL. everywhere (site, brand, tokens, HQ, film end card). Old line search: 0 left.

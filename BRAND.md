@@ -24,7 +24,7 @@ Files: `nsko-symbol(.svg|-white.svg)`, `nsko-solutions-lockup(.svg|-white.svg)`,
 Headlines: Inter Black, capitals, tracking -4%. Body: Inter Regular. Labels and data: JetBrains Mono, uppercase, letterspaced.
 
 ## Words
-Slogan: **WE BUILD WHAT'S NEXT.** · CTA: **Bring us the hard problem.** · Sign-off: **Built by NSKO.** · Tenders: **Engineered in Britain.**
+Slogan: **COMPLEX MADE REAL.** · CTA: **Bring us the hard problem.** · Sign-off: **Built by NSKO.** · Tenders: **Engineered in Britain.**
 Plain British English. No fake numbers, clients, years or certifications. Concepts say "Concept". Never "Coming soon".
 
 ## Modes
