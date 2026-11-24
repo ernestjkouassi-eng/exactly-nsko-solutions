@@ -4,3 +4,7 @@ node_modules/
 assets-src/
 render/out/
 render/*.log
+brand/templates/film/out/
+brand/templates/film/*.log
+marketing/v42/*.log
+marketing/v42/reels/raw-*.mp4
