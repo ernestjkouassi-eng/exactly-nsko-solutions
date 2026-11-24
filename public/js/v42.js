@@ -6,16 +6,16 @@ document.documentElement.style.setProperty('--dpr', Math.min(devicePixelRatio ||
 
 /* ---------- content ---------- */
 const CAP = {
-  'intelligent-systems': {t: 'Intelligent systems', obj: 'chip', line: 'The brain inside the machine.', b: ['Perception, planning and control software for robots and drones.', 'Platforms that run fleets of machines, with people in charge.', 'Models tested on your own data before anything goes live.'], aud: ['healthcare', 'industry', 'defence']},
-  'robotics': {t: 'Robotics and prototypes', obj: 'arm', line: 'Built in house, tested by hand.', b: ['Small robots and robot arms, designed and built in house.', '3D-printed working prototypes you can hold and test.', 'Test, improve, hand over, with drawings and source files.'], aud: ['industry', 'healthcare', 'partner']},
-  'secure-platforms': {t: 'Secure platforms', obj: 'blade', line: 'Software for regulated work.', b: ['Web, mobile and data platforms for regulated work.', 'Role-based access, audit trails and UK hosting options.', 'Built to pass review by your own security team.'], aud: ['government', 'healthcare']},
+  'intelligent-systems': {t: 'Intelligent systems', obj: 'surgical', line: 'The brain inside the machine.', b: ['Perception, planning and control software for robots and drones.', 'Platforms that run fleets of machines, with people in charge.', 'Models tested on your own data before anything goes live.'], aud: ['healthcare', 'industry', 'defence']},
+  'robotics': {t: 'Robotics and prototypes', obj: 'robot', line: 'Built in house, tested by hand.', b: ['Small robots and robot arms, designed and built in house.', '3D-printed working prototypes you can hold and test.', 'Test, improve, hand over, with drawings and source files.'], aud: ['industry', 'healthcare', 'partner']},
+  'secure-platforms': {t: 'Secure platforms', obj: 'n1', line: 'Software for regulated work.', b: ['Web, mobile and data platforms for regulated work.', 'Role-based access, audit trails and UK hosting options.', 'Built to pass review by your own security team.'], aud: ['government', 'healthcare']},
   'cyber-security': {t: 'Cyber security', obj: 'key', line: 'Find it before they do.', b: ['Penetration testing of apps, networks and devices.', 'Technical bug sweeps for rooms and vehicles.', 'Plain-English reports with fixes ranked by risk.'], aud: ['government', 'defence']},
 };
 const LAB = {
-  drone: {t: 'Drone', obj: 'drone', s: 'Concept', d: 'A compact quadcopter frame with a stabilised camera pod. Printed carbon-nylon arms, swappable payload bay.', spec: [['Status', 'Concept'], ['Frame', 'Quad, 420 mm diagonal'], ['Build', 'Printed arms, machined motor mounts']]},
-  architecture: {t: 'Architectural scale model', obj: 'arch', s: 'Concept', d: 'A presentation model for a small mixed-use scheme. Printed in white resin on a dark plinth, with a cantilevered roof.', spec: [['Status', 'Concept'], ['Scale', '1:200'], ['Build', 'Resin print, hand finished']]},
+  quadruped: {t: 'Inspection quadruped', obj: 'quad', s: 'Concept', still: true, d: 'An unarmed four-legged robot for inspecting sites, tunnels and plant rooms. Stereo cameras, frost status lights and a sealed graphite body.', spec: [['Status', 'Concept'], ['Use', 'Inspection and survey, unarmed'], ['Sensors', 'Stereo vision, depth, thermal option']]},
+  architecture: {t: 'Architectural scale model', obj: 'arch', s: 'Concept', still: true, d: 'A 1:200 model of a stacked tower: offset white volumes, timber screens, lit rooms and rooftop planting, on a black plinth with an NSKO plaque.', spec: [['Status', 'Concept'], ['Scale', '1:200'], ['Build', 'Resin print, hand finished']]},
   watch: {t: 'Skeleton tourbillon watch', obj: 'watch', s: 'Concept', still: true, d: 'Polished gold case, an open black dial with gold gears and ruby jewels, a tourbillon at six and a black strap. Engraved NSKO SOLUTIONS.', spec: [['Status', 'Concept'], ['Case', '40 mm, polished gold tone'], ['Dial', 'Open skeleton, tourbillon at six']]},
-  pendant: {t: 'Medallion pendant', obj: 'pendant', s: 'Concept', still: true, d: 'A gold medallion on a box chain. The NSKO mark is raised in gold with its fragment in orange enamel, and NSKO SOLUTIONS is engraved around the rim.', spec: [['Status', 'Concept'], ['Size', '32 mm'], ['Finish', 'Gold tone, black and orange enamel']]},
+  pendant: {t: 'Iced medallion', obj: 'pendant', s: 'Concept', still: true, d: 'A silver medallion set edge to edge with pavé stones and a marquise border. The NSKO mark is raised in polished silver with its fragment in orange enamel, on a heavy chain. NSKO SOLUTIONS is engraved on the bail.', spec: [['Status', 'Concept'], ['Size', '45 mm'], ['Finish', 'Silver tone, pavé stones, orange enamel']]},
 };
 const PROJ = {
   nsko: {t: 'NSKO', tag: 'Live', live: true, d: 'Our own fitness, health and coaching membership, with wellness in VR. Members, coaches and an admin portal, on the web and in the app.', kv: [['Status', 'Live'], ['Built', 'Web, iOS and Android app, member portal'], ['Stack', 'Secure sign-in, row-level security, payments']]},
@@ -90,7 +90,7 @@ function setCap(k, focus) {
   cap = k; $$('[data-cap]').forEach(b => { const on = b.dataset.cap === k; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
   capd.setAttribute('aria-labelledby', 't-' + k); capd.innerHTML = capHTML(k); capmore.href = '/capabilities/' + k;
   capvid.style.opacity = 0;
-  setTimeout(() => { capvid.poster = `/media/v42/poster/${CAP[k].obj}-900.webp`; if (RM) capvid.removeAttribute('src'); else capvid.src = `/media/v42/loop/${CAP[k].obj}.mp4`; capvid.style.opacity = 1; playCap(); }, RM ? 0 : 250);
+  setTimeout(() => { capvid.poster = `/media/v42/poster/${CAP[k].obj}-900.webp`; capvid.removeAttribute('src'); capvid.style.opacity = 1; playCap(); }, RM ? 0 : 250);
 }
 function playCap() { if (!RM && capvid.src && scenes[1].classList.contains('in')) capvid.play().catch(() => {}); }
 $$('[data-cap]').forEach(b => b.addEventListener('click', () => setCap(b.dataset.cap)));

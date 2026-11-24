@@ -10,12 +10,17 @@ def webp(src, dst, size=None, q=80):
     if size and size < im.width: im = im.resize((size, round(im.height * size / im.width)), Image.LANCZOS)
     im.save(dst, 'WEBP', quality=q, method=6)
 for f in sorted((R / 'hero-n').glob('f*.png')): webp(f, P / 'hero' / (f.stem + '.webp'), q=78)
-for o in 'drone arm chip blade key arch watch pendant'.split():
-    src = R / 'lux' / f'{o}.png' if (R / 'lux' / f'{o}.png').exists() else R / f'poster-{o}' / 'f000.png'; final = src.exists()
-    if not final: src = pathlib.Path(f'/tmp/v42t/{o}/f000.png')
+SRC = {'surgical': R / 'scn/surgical.png', 'robot': R / 'scn/robot.png', 'n1': R / 'scn/chip.png', 'quad': R / 'scn/quad.png', 'arch': R / 'scn/arch.png',
+       'wire': R / 'scn/wire.png', 'pendant': R / 'scn/iced.png', 'watch': R / 'lux/watch.png', 'goldpendant': R / 'lux/pendant.png', 'key': R / 'poster-key/f000.png'}
+for o, src in SRC.items():
+    if not src.exists(): src = pathlib.Path(str(src).replace('.png', '-t.png'))
     if not src.exists(): continue
-    for s in (900, 600): webp(src, P / 'poster' / f'{o}-{s}.webp', s, 82)
-    if final: webp(src, P / 'poster' / f'{o}-1600.webp', None, 86)
+    im = Image.open(src); w, h = im.size
+    if h > w:  # portrait render: centre square crop for posters, keep the full frame as -tall
+        top = (h - w) // 2; sq = R / 'tmp_sq.png'; im.crop((0, top, w, top + w)).save(sq); webp(src, P / 'poster' / f'{o}-tall.webp', None, 84); src2 = sq
+    else: src2 = src
+    for s_ in (900, 600): (P / 'poster' / f'{o}-{s_}.webp').unlink(missing_ok=True); webp(src2, P / 'poster' / f'{o}-{s_}.webp', s_, 84)
+    (P / 'poster' / f'{o}-1600.webp').unlink(missing_ok=True); webp(src2, P / 'poster' / f'{o}-1600.webp', None, 86)
 for o in 'arm chip blade key'.split():
     d = R / f'loop-{o}'
     if (d / 'f094.png').exists() and not (P / 'loop' / f'{o}.mp4').exists():
