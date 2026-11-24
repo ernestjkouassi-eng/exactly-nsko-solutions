@@ -145,7 +145,7 @@ area('rim', (2.4 * k, 2.2 * k, 1.6 * k), 1.6 * k, 520 * k * k, lin('#CFE0EC'))
 area('rim2', (-2.6 * k, 2.4 * k, 1.2 * k), 1.6 * k, 300 * k * k, lin('#CFE0EC'))
 area('top', (0, 0, 4 * k), 3 * k, 120 * k * k, (1, 1, 1))
 sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = SPP; sc.cycles.use_denoising = True; sc.cycles.max_bounces = 6
-sc.render.resolution_x = SZ; sc.render.resolution_y = int(SZ * (0.625 if NAME == 'n' else 1)); sc.render.resolution_percentage = 100
+sc.render.resolution_x = SZ; sc.render.resolution_y = int(SZ * float(os.environ.get('ASP', 0.625 if NAME == 'n' else 1))); sc.render.resolution_percentage = 100
 sc.render.image_settings.file_format = 'PNG'; sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'AgX - Base Contrast' if False else 'None'
 try: sc.view_settings.look = 'AgX - Medium High Contrast'
 except Exception: pass

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><title>NSKO Solutions · Build beyond. (film)</title>
+<!-- Deterministic film: window.seek(t) draws frame t. Rendered by render.js at dpr 2 (3840x2160 or 2160x3840). Images are never shown above their native size. -->
+<style>
+@font-face{font-family:D-DIN;src:url(/public/fonts/D-DIN.woff2);font-weight:400 550}
+@font-face{font-family:D-DIN;src:url(/public/fonts/D-DIN-Bold.woff2);font-weight:551 900}
+@font-face{font-family:Inter;src:url(/public/fonts/Inter.woff2);font-weight:100 900}
+*{box-sizing:border-box;margin:0}html,body{width:100%;height:100%;overflow:hidden;background:#0B0B0D;color:#F0F0FA}
+#f{position:absolute;inset:0;overflow:hidden;background:#0B0B0D}
+.glow{position:absolute;inset:0;background:radial-gradient(55% 50% at 50% 46%,rgba(207,224,236,.15),rgba(11,11,13,0) 70%)}
+.L{position:absolute;inset:0;opacity:0}
+.k{font:500 15px/1.2 D-DIN;letter-spacing:.2em;text-transform:uppercase;color:rgba(240,240,250,.62)}
+.h{font:700 112px/0.95 D-DIN;letter-spacing:.05em;text-transform:uppercase}
+.s{font:400 26px/1.4 Inter;color:rgba(240,240,250,.8)}
+.wipe{clip-path:inset(0 calc(100% - var(--w,0%)) 0 0)}
+.mask{-webkit-mask:radial-gradient(closest-side,#000 42%,transparent 94%);mask:radial-gradient(closest-side,#000 42%,transparent 94%)}
+.hair{position:absolute;height:2px;background:#E8541A}
+.tag{display:inline-flex;align-items:center;gap:10px;font:500 14px/1 D-DIN;letter-spacing:.16em;text-transform:uppercase;padding:9px 14px;border-radius:99px;border:1px solid rgba(240,240,250,.3);color:rgba(240,240,250,.85)}
+.dot{width:9px;height:9px;border-radius:50%;background:#E5241B;display:inline-block}
+#grain{position:absolute;inset:0;opacity:.035;pointer-events:none;mix-blend-mode:screen}
+.mk{display:flex;align-items:center;gap:16px}.mk svg{width:40px;height:40px}.mk b{font:900 30px Inter;letter-spacing:-.02em}
+.row{display:flex;gap:18px;align-items:center}
+.pl{display:grid;gap:0;border-top:1px solid rgba(240,240,250,.14)}.pl>div{display:flex;justify-content:space-between;align-items:center;gap:30px;padding:22px 0;border-bottom:1px solid rgba(240,240,250,.14)}
+.pl h3{font:700 40px/1 D-DIN;letter-spacing:.05em;text-transform:uppercase}.pl p{font:400 20px Inter;color:rgba(240,240,250,.62);margin-top:6px}
+.V .h{font-size:96px}.V .s{font-size:28px}
+</style></head><body>
+<div id="f">
+ <div class="glow" id="glow"></div>
+ <!-- A: open -->
+ <div class="L" id="A"><div class="hair" id="Ah"></div><p class="k" id="Ak" style="position:absolute;width:100%;text-align:center">NSKO Solutions</p></div>
+ <!-- B: hero -->
+ <div class="L" id="B"><canvas id="hc" width="1600" height="1000" class="mask" style="position:absolute"></canvas>
+  <div id="Bt" style="position:absolute"><p class="k">NSKO Solutions</p><h1 class="h wipe" id="Bh" style="margin-top:18px">Build beyond.</h1><p class="s" id="Bs" style="margin-top:22px;opacity:0">Complex made real.</p></div></div>
+ <!-- C: disciplines -->
+ <div class="L" id="C"><div id="Ci" style="position:absolute"></div><div id="Ct" style="position:absolute"></div></div>
+ <!-- D: lab -->
+ <div class="L" id="D"><div id="Dt" style="position:absolute"><p class="k">Prototype Lab</p><h2 class="h wipe" id="Dh" style="margin-top:16px">From idea<br>to object.</h2></div><div id="Dg" style="position:absolute;display:grid;gap:22px"></div></div>
+ <!-- E: projects -->
+ <div class="L" id="E"><div id="Et" style="position:absolute"><h2 class="h wipe" id="Eh">Built. Tested.<br>Proven.</h2><div class="pl" id="Ep" style="margin-top:44px">
+  <div><div><h3>NSKO</h3><p>Fitness, health and coaching membership</p></div><span class="tag"><i class="dot"></i>Live</span></div>
+  <div><div><h3>NSKO 1.1 Wellspring</h3><p>Runs on simulated data</p></div><span class="tag">Demo built</span></div>
+  <div><div><h3>NSKO 1.2 Pure</h3><p>Early concept</p></div><span class="tag">Concept</span></div></div></div></div>
+ <!-- F: impact -->
+ <div class="L" id="F"><div id="Ft" style="position:absolute"><p class="k">Impact</p><h2 class="h wipe" id="Fh" style="margin-top:16px">Technology<br>with purpose.</h2><div id="Fl" style="margin-top:40px;display:grid;gap:14px"></div></div></div>
+ <!-- G: end -->
+ <div class="L" id="G"><div id="Gt" style="position:absolute;left:0;right:0;text-align:center;display:flex;flex-direction:column;align-items:center">
+  <div class="mk"><svg viewBox="0 0 100 100"><rect width="22" height="100" fill="#F0F0FA"/><polygon points="26,0 56,0 58.88,16 28.88,16" fill="#E8541A"/><polygon points="29.96,22 59.96,22 74,100 44,100" fill="#F0F0FA"/><rect x="78" width="22" height="100" fill="#F0F0FA"/></svg><b>NSKO</b></div>
+  <h2 class="h wipe" id="Gh" style="margin-top:40px">Build beyond.</h2><p class="s" style="margin-top:24px" id="Gs">nskosolutions.co.uk</p><p class="k" style="margin-top:46px" id="Gk">Built by NSKO.</p></div></div>
+ <canvas id="grain"></canvas>
+</div>
+<script>
+const Q = new URLSearchParams(location.search), V = Q.get('v') === '1'; if (V) document.body.classList.add('V');
+const W = V ? 1080 : 1920, H = V ? 1920 : 1080, DUR = 56;
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => 1 - Math.pow(1 - cl(x), 3);
+const seg = (t, a, b) => ease((t - a) / (b - a));
+const win = (t, a, b, f = .6) => cl(Math.min((t - a) / f, (b - t) / f));  // fade in/out window
+const S = '/public/media/v42';
+const CAP = [['Intelligent systems', 'chip', 'The brain inside the machine.'], ['Robotics and prototypes', 'arm', 'Built in house, tested by hand.'], ['Secure platforms', 'blade', 'Software for regulated work.'], ['Cyber security', 'key', 'Find it before they do.']];
+const LAB = [['Drone', 'drone'], ['Scale model', 'arch'], ['Watch', 'watch'], ['Pendant', 'pendant']];
+const IMG = {}; const load = (k, src) => new Promise(r => { const i = new Image(); i.onload = () => { IMG[k] = i; r(); }; i.onerror = () => r(); i.src = src; });
+const HF = []; for (let i = 0; i < 120; i += 2) HF.push(i);
+// best available poster: 1600 (final) else 900
+const P = o => [`${S}/poster/${o}-1600.webp`, `${S}/poster/${o}-900.webp`];
+async function pload(k, o) { for (const s of P(o)) { await load(k, s); if (IMG[k]) return; } }
+function layout() {
+  const f = $('f'); f.style.width = W + 'px'; f.style.height = H + 'px';
+  const hc = $('hc'); hc.style.width = '800px'; hc.style.height = '500px'; // 1600 device px at dpr 2: native size, never upscaled
+  hc.style.left = (V ? (W - 800) / 2 : W - 800 - 170) + 'px'; hc.style.top = (V ? 420 : (H - 500) / 2) + 'px';
+  const bt = $('Bt'); bt.style.left = (V ? 80 : 120) + 'px'; bt.style.top = (V ? 1080 : 380) + 'px';
+  $('Ah').style.top = H / 2 + 'px'; $('Ak').style.top = H / 2 + 28 + 'px';
+  const ci = $('Ci'); const cs = V ? 820 : 800; Object.assign(ci.style, {width: cs + 'px', height: cs + 'px', left: (V ? (W - cs) / 2 : W - cs - 140) + 'px', top: (V ? 300 : (H - cs) / 2) + 'px'});
+  const ct = $('Ct'); Object.assign(ct.style, {left: (V ? 80 : 120) + 'px', top: (V ? 1200 : 300) + 'px', width: (V ? 920 : 860) + 'px'});
+  $('Dt').style.left = (V ? 80 : 120) + 'px'; $('Dt').style.top = (V ? 200 : 330) + 'px';
+  const dg = $('Dg'); const ds = V ? 440 : 400; Object.assign(dg.style, {gridTemplateColumns: `repeat(2, ${ds}px)`, left: (V ? (W - ds * 2 - 22) / 2 : W - ds * 2 - 22 - 140) + 'px', top: (V ? 700 : (H - ds * 2 - 22) / 2) + 'px'});
+  dg.innerHTML = LAB.map(([t, o], i) => `<div id="d${i}" style="position:relative;width:${ds}px;height:${ds}px;border-radius:22px;overflow:hidden;background:#1A1C20"><img src="${IMG['l' + i]?.src || ''}" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;left:18px;bottom:16px;right:18px;display:flex;justify-content:space-between;align-items:center"><span style="font:700 22px D-DIN;letter-spacing:.08em;text-transform:uppercase">${t}</span><span class="tag" style="font-size:12px">Concept</span></div></div>`).join('');
+  $('Et').style.left = (V ? 80 : 120) + 'px'; $('Et').style.top = (V ? 420 : 200) + 'px'; $('Et').style.width = (V ? 920 : 1100) + 'px';
+  $('Ft').style.left = (V ? 80 : 120) + 'px'; $('Ft').style.top = (V ? 560 : 240) + 'px';
+  $('Fl').innerHTML = ['Clean water', 'Health diagnostics concept', 'Climate and food resilience'].map((x, i) => `<div id="f${i}" class="row" style="font:600 ${V ? 40 : 38}px D-DIN;letter-spacing:.06em;text-transform:uppercase;opacity:0"><span style="width:28px;height:2px;background:#8C95A0;display:inline-block"></span>${x}</div>`).join('') + '<p class="k" style="margin-top:18px">Programme concepts. Looking for partners.</p>';
+  $('Gt').style.top = (V ? 760 : 330) + 'px';
+}
+// grain: seeded per frame so renders are repeatable
+const g = $('grain'); g.width = W / 2; g.height = H / 2; g.style.width = W + 'px'; g.style.height = H + 'px'; const gx = g.getContext('2d'); const gd = gx.createImageData(g.width, g.height);
+function grain(fr) { let s = (fr * 9301 + 49297) % 233280; for (let i = 0; i < gd.data.length; i += 4) { s = (s * 9301 + 49297) % 233280; const v = s / 233280 * 255; gd.data[i] = gd.data[i + 1] = gd.data[i + 2] = v; gd.data[i + 3] = 255; } gx.putImageData(gd, 0, 0); }
+const hx = $('hc').getContext('2d');
+function hero(p) { // p 0..1 across 60 frames with crossfade (no stepping)
+  const x = p * (HF.length - 1), i = Math.floor(x), fr = x - i, a = IMG['h' + i], b = IMG['h' + Math.min(HF.length - 1, i + 1)];
+  hx.globalAlpha = 1; hx.clearRect(0, 0, 1600, 1000); if (a) hx.drawImage(a, 0, 0, 1600, 1000); if (b && fr > 0) { hx.globalAlpha = fr; hx.drawImage(b, 0, 0, 1600, 1000); }
+}
+window.seek = t => {
+  const o = (id, v) => $(id).style.opacity = v.toFixed(3);
+  // A 0-4
+  o('A', win(t, 0, 4.2)); $('Ah').style.left = (W / 2 - 60 * seg(t, .4, 2)) + 'px'; $('Ah').style.width = (120 * seg(t, .4, 2)) + 'px'; o('Ak', seg(t, 1.2, 2.4));
+  // B 4-13
+  o('B', win(t, 3.8, 13.2, .8)); hero(cl((t - 3.8) / 9.4)); $('hc').style.transform = `translateX(${(-20 * seg(t, 4, 13)).toFixed(1)}px)`;
+  $('Bh').style.setProperty('--w', (seg(t, 5.6, 7) * 100) + '%'); o('Bs', seg(t, 7.6, 8.6));
+  // C 13-29
+  o('C', win(t, 13, 29.2, .6)); const ci = cl(Math.floor((t - 15) / 3.5), 0, 3), ce = t < 15 ? -1 : ci;
+  if ($('Ci').dataset.i !== String(ce)) { $('Ci').dataset.i = ce; $('Ci').innerHTML = ce < 0 ? '' : `<img src="${IMG['c' + ce]?.src || ''}" class="mask" style="width:100%;height:100%">`;
+    $('Ct').innerHTML = ce < 0 ? `<p class="k">What we build</p><h2 class="h" style="margin-top:16px">Four disciplines.<br>One standard.</h2>` : `<p class="k">0${ce + 1} / 04</p><h2 class="h" style="margin-top:16px;font-size:${V ? 84 : 80}px">${CAP[ce][0]}</h2><p class="s" style="margin-top:22px">${CAP[ce][2]}</p>`; }
+  if (ce >= 0) { const a = 15 + ce * 3.5, lt = win(t, a, a + 3.5, .45); const img = $('Ci').firstChild; if (img) { img.style.opacity = lt; img.style.transform = `scale(${(.9 + .1 * seg(t, a, a + 3.5)).toFixed(4)})`; } $('Ct').style.opacity = lt; }
+  else { $('Ct').style.opacity = win(t, 13, 15, .5); $('Ct').firstChild && ($('Ct').querySelector('h2').style.clipPath = `inset(0 ${100 - seg(t, 13.2, 14.4) * 100}% 0 0)`); }
+  // D 29-40
+  o('D', win(t, 29, 40.2, .6)); $('Dh').style.setProperty('--w', (seg(t, 29.4, 30.8) * 100) + '%');
+  LAB.forEach((_, i) => { const a = 31 + i * 1.4, d = $('d' + i); if (d) { d.style.opacity = seg(t, a, a + .9); d.style.transform = `translateY(${(30 * (1 - seg(t, a, a + .9))).toFixed(1)}px) scale(${(.96 + .04 * seg(t, a, 40)).toFixed(4)})`; } });
+  // E 40-46
+  o('E', win(t, 40, 46.2, .6)); $('Eh').style.setProperty('--w', (seg(t, 40.3, 41.6) * 100) + '%');
+  [...$('Ep').children].forEach((r, i) => { r.style.opacity = seg(t, 41.6 + i * .7, 42.4 + i * .7); });
+  // F 46-51
+  o('F', win(t, 46, 51.2, .6)); $('Fh').style.setProperty('--w', (seg(t, 46.3, 47.5) * 100) + '%');
+  [0, 1, 2].forEach(i => $('f' + i).style.opacity = seg(t, 47.6 + i * .6, 48.3 + i * .6));
+  // G 51-56
+  o('G', win(t, 51, 57, .8)); $('Gh').style.setProperty('--w', (seg(t, 51.8, 53) * 100) + '%'); o('Gs', seg(t, 53, 54)); o('Gk', seg(t, 53.6, 54.6));
+  const gl = $('glow'); gl.style.background = `radial-gradient(55% 50% at ${50 + 14 * Math.sin(t / 7)}% ${44 + 6 * Math.cos(t / 9)}%,rgba(207,224,236,${(.15 * cl(t / 2)).toFixed(3)}),rgba(11,11,13,0) 70%)`;
+  grain(Math.round(t * 24));
+};
+(async () => {
+  await Promise.all([...HF.map((f, i) => load('h' + i, `${S}/hero/f${String(f).padStart(3, '0')}.webp`)), ...CAP.map((c, i) => pload('c' + i, c[1])), ...LAB.map((l, i) => pload('l' + i, l[1])), document.fonts.ready]);
+  layout(); window.seek(Q.has('t') ? +Q.get('t') : 0); window.ready = true;
+  if (!location.hash.includes('render')) { const t0 = performance.now(); const loop = () => { window.seek(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); }; loop(); }
+})();
+</script>
+</body></html>

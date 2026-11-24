@@ -15,7 +15,7 @@ for o in 'drone arm chip blade key arch watch pendant'.split():
     if not final: src = pathlib.Path(f'/tmp/v42t/{o}/f000.png')
     if not src.exists(): continue
     for s in (900, 600): webp(src, P / 'poster' / f'{o}-{s}.webp', s, 82)
-    if final: webp(src, P / 'poster' / f'{o}-2048.webp', None, 86)
+    if final: webp(src, P / 'poster' / f'{o}-1600.webp', None, 86)
 for o in 'arm chip blade key'.split():
     d = R / f'loop-{o}'
     if (d / 'f094.png').exists() and not (P / 'loop' / f'{o}.mp4').exists():
