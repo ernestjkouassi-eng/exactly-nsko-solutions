@@ -117,6 +117,8 @@ else:
             box((x, y, 0), (.026, .02, .02), GOLD, rot=(0, 0, ang + math.pi / 2), bev=.004)
             box((x, y, 0), (.016, .021, .012), BLK, rot=(0, 0, ang + math.pi / 2), bev=0)
     root.rotation_euler = (math.radians(90), 0, math.radians(-8)); root.location = (0, 0, .23)
+if os.environ.get('GLB'):
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from glbhook import export_glb; export_glb(root, os.environ['GLB'])
 # --------------------------------------------------------------- set: black marble with gold veins, warm bokeh
 bpy.ops.mesh.primitive_plane_add(size=8); fl = bpy.context.active_object
 m = bpy.data.materials.new('marble'); m.use_nodes = True; nt = m.node_tree; b = nt.nodes['Principled BSDF']

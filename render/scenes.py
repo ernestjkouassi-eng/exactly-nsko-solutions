@@ -111,7 +111,7 @@ elif NAME == 'surgical':  # surgical arm over a hologram brain, no people
     HOLO = mat('holo', '#7FC4FF', 0, .3, 1.4)
     # hologram brain (wireframe, frost)
     for s in (1, -1):
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=.13, location=(0.06, s * .07, .46)); b = bpy.context.active_object; b.scale = (1.3, .95, .9)
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3 if os.environ.get('GLB') else 4, radius=.13, location=(0.06, s * .07, .46)); b = bpy.context.active_object; b.scale = (1.3, .95, .9)
         t = bpy.data.textures.new('n', 'CLOUDS'); t.noise_scale = .05; d = b.modifiers.new('d', 'DISPLACE'); d.texture = t; d.strength = .03
         wm = b.modifiers.new('w', 'WIREFRAME'); wm.thickness = .0007; P(b, HOLO)
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=.06, location=(-.05, 0, .37)); cb = bpy.context.active_object; cb.scale = (1.2, 1.4, .8); wm = cb.modifiers.new('w', 'WIREFRAME'); wm.thickness = .0006; P(cb, HOLO)
@@ -191,6 +191,8 @@ elif NAME == 'iced':  # iced-out medallion, diamond pavé, Cuban chain
             ang = math.atan2(.22 + 2 * t * .5, sgn * .23)
             l = tor((x, y, 0), .022, .009, SILV, rot=(math.radians(55 if k % 2 else -55), 0, ang), seg=40); l.scale = (1.35, 1, .8)
     root.rotation_euler = (math.radians(90), 0, math.radians(-6)); root.location = (0, 0, .25); LOOK = 'jewel'; TGT = Vector((0, 0, .3)); CAM = Vector((.05, -2.2, .38)); LENSMM = 85; FST = 3.5
+if os.environ.get('GLB'):
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from glbhook import export_glb; export_glb(root, os.environ['GLB'])
 # ======================================================================= studio
 w = sc.world = bpy.data.worlds.new('w'); w.use_nodes = True; bg = w.node_tree.nodes['Background']
 bg.inputs[0].default_value = (*lin({'clinic': '#0E1820', 'studio': '#0D0D0E', 'jewel': '#020202', 'pcb': '#060506', 'void': '#05070A', 'wet': '#060A0E'}.get(LOOK, '#0B0B0D')), 1)
