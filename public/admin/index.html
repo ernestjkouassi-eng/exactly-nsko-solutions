@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NSKO Office</title><meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#0B0B0D">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/css/v42.css"><link rel="stylesheet" href="/css/admin.css">
+</head><body class="adm">
+<header class="top"><a class="brand" href="/admin" aria-label="NSKO Office"><svg viewBox="0 0 100 100" aria-hidden="true"><rect width="22" height="100" fill="#F0F0FA"/><polygon points="26,0 56,0 58.88,16 28.88,16" fill="#E8541A"/><polygon points="29.96,22 59.96,22 74,100 44,100" fill="#F0F0FA"/><rect x="78" width="22" height="100" fill="#F0F0FA"/></svg><b>NSKO</b><span class="k" style="margin-left:6px">Office</span></a>
+<div class="row"><span class="k" id="clock" aria-live="off"></span><button class="btn s" id="out" hidden>Sign out</button></div></header>
+<main id="main">
+ <section class="gate" id="gate" hidden>
+  <p class="k">Owner only</p><h1 style="font-size:clamp(36px,6vw,72px);margin:12px 0 18px">Sign in.</h1>
+  <form id="f-email"><label for="em">Email</label><input id="em" type="email" autocomplete="email" required><div class="row" style="margin-top:18px"><button class="btn p">Send sign-in link</button></div></form>
+  <form id="f-enrol" hidden><p class="lede">Scan this with your authenticator app (Google Authenticator, 1Password or similar), then enter the 6-digit code.</p><img id="qr" alt="Authenticator QR code" width="200" height="200" style="background:#fff;border-radius:12px;padding:10px;margin:18px 0"><p class="note">Or type this key: <code id="secret"></code></p><label for="c1">Code</label><input id="c1" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required><div class="row" style="margin-top:18px"><button class="btn p">Turn on two-step sign-in</button></div></form>
+  <form id="f-code" hidden><p class="lede">Enter the 6-digit code from your authenticator app.</p><label for="c2">Code</label><input id="c2" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required><div class="row" style="margin-top:18px"><button class="btn p">Open the office</button></div></form>
+  <p class="msg" id="gmsg" role="status" aria-live="polite"></p>
+ </section>
+ <section class="office" id="office" hidden>
+  <div class="ohead"><div><p class="k">Virtual office</p><h1>Good to see you.</h1></div><p class="note" id="sess"></p></div>
+  <div class="plan"><svg id="plan" viewBox="150 40 700 450" role="group" aria-label="Office floor plan"></svg></div>
+  <nav class="rooms" id="rooms" aria-label="Rooms"></nav>
+ </section>
+</main>
+<dialog class="panel wide" id="room" aria-labelledby="rh"><button class="x" type="button" data-close aria-label="Close">✕</button><div id="rbody"></div></dialog>
+<script src="/vendor/supabase.js"></script>
+<script type="module" src="/js/admin.js"></script>
+</body></html>

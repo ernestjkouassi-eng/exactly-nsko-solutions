@@ -1,0 +1,20 @@
+.adm{scroll-snap-type:none}html:has(.adm){scroll-snap-type:none}
+.gate{max-width:520px;margin:0 auto;padding:16vh 20px 60px}
+.office{padding:96px var(--g) 40px;max-width:1280px;margin:0 auto}
+.ohead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}.ohead h1{font-size:clamp(32px,5vw,64px);margin-top:10px}
+.plan{margin-top:10px}.plan svg{width:100%;height:auto;display:block}
+.plan .room{cursor:pointer}.plan .room .fl{fill:#15171B;stroke:rgba(240,240,250,.14);transition:fill .6s var(--ease)}
+.plan .room:hover .fl,.plan .room:focus-visible .fl{fill:#1E2127}.plan .room:focus{outline:none}.plan .room:focus-visible .fl{stroke:var(--frost);stroke-width:2}
+.plan .wl{fill:#1A1C20}.plan .wr{fill:#121317}
+.plan text{fill:#F0F0FA;font:600 13px var(--disp);letter-spacing:.14em;text-transform:uppercase;pointer-events:none}
+.plan .cnt{fill:#8C95A0;font:500 11px var(--disp);letter-spacing:.14em}
+.plan .live{fill:var(--signal)}
+.rooms{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.panel.wide{width:min(760px,100vw)}
+.list{display:grid;gap:10px;margin-top:16px}
+.item{border:1px solid rgba(240,240,250,.1);border-radius:14px;padding:14px 16px;background:rgba(240,240,250,.02)}
+.item h3{font-size:16px;letter-spacing:.06em}.item .m{color:var(--dim);font-size:14px;margin-top:4px}.item p.b{margin-top:8px;font-size:15px;white-space:pre-wrap}
+.item .row{margin-top:10px}.item select,.item input{min-height:40px;padding:6px 10px;font-size:14px;width:auto}
+.btn.sm{min-height:40px;padding:0 16px;font-size:11px}
+.empty{color:var(--dim);margin-top:16px}
+code{font-family:ui-monospace,monospace;font-size:13px;word-break:break-all}

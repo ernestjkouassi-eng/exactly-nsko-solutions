@@ -1,8 +1,9 @@
 // NSKO Solutions: serves the static site, handles POST /api/contact, and runs HQ (/hq and /api/hq/*).
-// Settings (Cloudflare dashboard, Variables and Secrets): CONTACT_TO (where briefs are emailed), RESEND_API_KEY, TURNSTILE_SECRET, HQ_PASSWORD.
+// Settings (Cloudflare dashboard, Variables and Secrets): SUPABASE_SERVICE_KEY (admin project), NTFY_TOPIC (phone push), TURNSTILE_SITEKEY at build, CONTACT_TO (where briefs are emailed), RESEND_API_KEY, TURNSTILE_SECRET, HQ_PASSWORD.
 // Storage: KV binding HQ (briefs, decisions, sign-ins, rate limits). The older binding name BRIEFS still works. Optional: FROM_EMAIL.
 import {hqApi, briefStore} from './hq/api.js';
 import {hqPage} from './hq/page.js';
+import {intake} from './intake.js';
 
 const json = (o, s = 200) => new Response(JSON.stringify(o), {status: s, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
@@ -47,6 +48,8 @@ export default {
     const url = new URL(req.url);
     const p = url.pathname;
     if (p === '/api/contact') return contact(req, env);
+    if (p === '/api/brief') return intake(req, env, 'brief');
+    if (p === '/api/portfolio') return intake(req, env, 'portfolio');
     if (p.startsWith('/api/hq/')) return hqApi(req, env, url);
     if (p === '/hq') return hqPage(req, env);
     if (p.startsWith('/hq/')) return Response.redirect(url.origin + '/hq', 302);
