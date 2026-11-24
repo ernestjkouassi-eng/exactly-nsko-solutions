@@ -71,6 +71,7 @@ def arm(white, dark, accent, wire=False):
     for s in (1, -1):  # gripper fingers
         box(w + Vector((s * .03, 0, -.12)), (.018, .05, .12), dark, bev=.004); box(w + Vector((s * .036, 0, -.19)), (.012, .04, .05), dark, rot=(0, s * .25, 0), bev=.003)
     text('NSKO R1', .045, (.17, -.087, .77), dark if not wire else accent, rot=(math.radians(90), math.radians(-61), 0), spacing=1.15)
+    text('NSKO SOLUTIONS', .022, (0, -.152, .27), dark if not wire else accent, rot=(math.radians(90), 0, 0), spacing=1.5)
     # cables
     pts = [j1 + Vector((-.12, .06, -.05)), j1 + Vector((-.2, .08, .25)), j2 + Vector((-.1, .1, .12)), j2 + Vector((.02, .09, .02))]
     cu = bpy.data.curves.new('c', 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = .009; sp = cu.splines.new('BEZIER'); sp.bezier_points.add(len(pts) - 1)
@@ -92,7 +93,7 @@ elif NAME == 'quad':  # unarmed quadruped inspection robot
     for y in (-.07, .07): cyl((.555, y, .565), .03, .02, LENS, rot=(0, math.radians(82), 0)); tor((.563, y, .566), .031, .004, CHROME, rot=(0, math.radians(82), 0))
     cyl((.556, 0, .53), .012, .02, FROSTE, rot=(0, math.radians(82), 0)); box((.5, 0, .63), (.08, .16, .015), FROSTE, bev=.004)
     cyl((-.32, .09, .74), .006, .22, BLKM); sph((-.32, .09, .85), .012, BLKM)
-    text('NSKO', .05, (0, -.166, .555), mat('stencil', '#C9CED6', 0, .5), rot=(math.radians(90), 0, 0), spacing=1.3); box((-.22, -.163, .5), (.05, .002, .012), SIG, bev=0)
+    text('NSKO SOLUTIONS', .032, (0, -.166, .55), mat('stencil', '#C9CED6', 0, .5), rot=(math.radians(90), 0, 0), spacing=1.35); box((-.22, -.163, .5), (.05, .002, .012), SIG, bev=0)
     for sx in (1, -1):
         for sy in (1, -1):
             hip = Vector((sx * .3, sy * .2, .5)); cyl(hip, .075, .1, BLKG, rot=(math.radians(90), 0, 0)); tor(hip + Vector((0, sy * .05, 0)), .06, .004, FROSTE, rot=(math.radians(90), 0, 0))
@@ -106,7 +107,7 @@ elif NAME == 'surgical':  # surgical arm over a hologram brain, no people
     for a in (0, 2.09, 4.19):
         p1 = h + Vector((math.cos(a) * .09, math.sin(a) * .09, -.05)); p2 = h + Vector((math.cos(a) * .05, math.sin(a) * .05, -.25)); seg(h, p1, .012, CHROME); seg(p1, p2, .006, CHROME); sph(p2, .009, BLKM)
     seg(h + Vector((0, 0, -.1)), h + Vector((0, 0, -.33)), .004, CHROME)
-    text('NSKO', .035, (.53, -.072, 1.27), BLKM, rot=(math.radians(90), math.radians(42), 0), spacing=1.2)
+    text('NSKO SOLUTIONS', .022, (.53, -.072, 1.27), BLKM, rot=(math.radians(90), math.radians(42), 0), spacing=1.2)
     HOLO = mat('holo', '#7FC4FF', 0, .3, 1.4)
     # hologram brain (wireframe, frost)
     for s in (1, -1):
@@ -138,7 +139,7 @@ elif NAME == 'chip':
             px, py = c * .215 - s_ * t, s_ * .215 + c * t
             box((px, py, .015), (.035 if c else .006, .006 if c else .035, .004), SIG if side == 3 else CHROME, rot=(0, 0, 0), bev=0)
     box((0, 0, .051), (.2, .2, .004), GRAPH, bev=.002)
-    text('NSKO', .04, (0, .035, .054), CHROME, spacing=1.2); text('N1 · SECURE', .018, (0, -.02, .054), CHROME, spacing=1.4); text('UK 2026', .014, (0, -.06, .054), CHROME, spacing=1.3)
+    text('NSKO', .04, (0, .035, .054), CHROME, spacing=1.2); text('N1 · SECURE', .018, (0, -.02, .054), CHROME, spacing=1.4); text('NSKO SOLUTIONS', .0125, (0, -.06, .054), CHROME, spacing=1.4)
     nmark(-.15, .15, .051, .053, .0006, CHROME, SIG)
     root.rotation_euler = (0, 0, math.radians(32)); LOOK = 'pcb'; TGT = Vector((0, 0, .03)); CAM = Vector((.55, -.95, .55)); LENSMM = 80; FST = 2.0
 elif NAME == 'arch':  # stacked tower scale model
@@ -176,11 +177,14 @@ elif NAME == 'iced':  # iced-out medallion, diamond pavé, Cuban chain
             if x * x + y * y < (R * .84) ** 2:
                 g = gem.copy(); g.location = (x, y, .0175); sc.collection.objects.link(g); g.parent = root; n += 1
     for k in range(44):  # marquise ring
-        a = 2 * math.pi * k / 44; g = gem.copy(); g.scale = (2.4, 1.2, 1.1); g.rotation_euler = (0, 0, a + math.pi / 2); g.location = (math.cos(a) * R * .92, math.sin(a) * R * .92, .02); sc.collection.objects.link(g); g.parent = root
+        a = 2 * math.pi * k / 44
+        if abs(math.degrees(a) - 270) < 38: continue
+        g = gem.copy(); g.scale = (2.4, 1.2, 1.1); g.rotation_euler = (0, 0, a + math.pi / 2); g.location = (math.cos(a) * R * .92, math.sin(a) * R * .92, .02); sc.collection.objects.link(g); g.parent = root
     nmark(0, 0, .02, .036, .0017, SILV, mat('sigP', '#E8541A', .3, .2, .4))
     bail = box((0, R + .035, 0), (.05, .06, .03), SILV, bev=.008)
     for k in range(5): g = gem.copy(); g.location = (0, R + .015 + k * .011, .016); sc.collection.objects.link(g); g.parent = root
-    text('NSKO SOLUTIONS', .0055, (0, R + .035, -.0155), SILV, rot=(math.pi, 0, 0), spacing=1.3)
+    text('NSKO SOLUTIONS', .0042, (0, R + .045, .0156), mat('engr', '#2A2C30', .8, .3), spacing=1.2)
+    text('NSKO SOLUTIONS', .0115, (0, -R * .925, .03), mat('engr2', '#26282C', .8, .35), spacing=1.4)
     for sgn in (1, -1):  # Cuban links
         for k in range(18):
             t = k / 17; x = sgn * (.02 + t * .23); y = R + .075 + t * t * .5 + t * .22
