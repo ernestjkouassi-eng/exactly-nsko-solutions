@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /demo/
 Disallow: /admin
+Disallow: /reel/
 
 Sitemap: https://nskosolutions.co.uk/sitemap.xml

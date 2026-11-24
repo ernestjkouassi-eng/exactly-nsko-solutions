@@ -9,7 +9,7 @@ const ease = t => 1 - Math.pow(1 - t, 3);
 export function mount(host, opts = {}) {
   let gl; try { gl = new THREE.WebGLRenderer({antialias: true, alpha: true, powerPreference: 'high-performance'}); } catch { return null; }
   gl.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 1.0;
-  gl.outputColorSpace = THREE.SRGBColorSpace; gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFSoftShadowMap;
+  gl.outputColorSpace = THREE.SRGBColorSpace; gl.shadowMap.enabled = !opts.noShadow; gl.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(32, 1, .01, 100);
   const pm = new THREE.PMREMGenerator(gl); scene.environment = pm.fromScene(new RoomEnvironment(), .03).texture; scene.environmentIntensity = .55;
   const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-2.5, 4, 3); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 6;
@@ -61,8 +61,13 @@ export function mount(host, opts = {}) {
     if (tween) { tween.t = Math.min(1, tween.t + dt / .9); const e = ease(tween.t); cam.position.lerpVectors(tween.p0, tween.p1, e); ctl.target.lerpVectors(tween.t0, tween.t1, e); if (tween.t >= 1) tween = null; }
     ctl.update(); gl.render(scene, cam); raf = requestAnimationFrame(loop);
   };
-  raf = requestAnimationFrame(loop);
-  return {
+  if (!opts.manual) raf = requestAnimationFrame(loop);
+  const step = dtS => { last = 0; const n = performance.now; let tt = 0;
+    if (Math.abs(amt - target) > .001) { amt += (target - amt) * Math.min(1, dtS * 3.2); const e = ease(amt); for (const q of parts) q.m.position.copy(q.base).addScaledVector(q.off, e); }
+    if (tween) { tween.t = Math.min(1, tween.t + dtS / .9); const e = ease(tween.t); cam.position.lerpVectors(tween.p0, tween.p1, e); ctl.target.lerpVectors(tween.t0, tween.t1, e); if (tween.t >= 1) tween = null; }
+    ctl.update(dtS);
+    gl.render(scene, cam); };
+  return {step,
     explode: on => set(on), get exploded() { return target === 1; },
     spin: on => { ctl.autoRotate = on && !RM; }, focus, reset,
     dispose() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); ctl.dispose(); scene.traverse(o => { o.geometry?.dispose?.(); }); gl.dispose(); pm.dispose(); c.remove(); host.classList.remove('live'); },

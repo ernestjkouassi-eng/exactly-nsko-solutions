@@ -57,8 +57,8 @@ const ease = x => 1 - Math.pow(1 - cl(x), 3);
 const seg = (t, a, b) => ease((t - a) / (b - a));
 const win = (t, a, b, f = .6) => cl(Math.min((t - a) / f, (b - t) / f));  // fade in/out window
 const S = '/public/media/v42';
-const CAP = [['Intelligent systems', 'chip', 'The brain inside the machine.'], ['Robotics and prototypes', 'arm', 'Built in house, tested by hand.'], ['Secure platforms', 'blade', 'Software for regulated work.'], ['Cyber security', 'key', 'Find it before they do.']];
-const LAB = [['Drone', 'drone'], ['Scale model', 'arch'], ['Watch', 'watch'], ['Pendant', 'pendant']];
+const CAP = [['NSKO R1 robot arm', 'robot', 'Six axes. One standard.'], ['NSKO Sentinel', 'quad', 'Eyes where people should not go.'], ['Surgical Assist', 'surgical', 'Precision you can see.'], ['NSKO N1 secure chip', 'n1', 'Security starts in the silicon.']];
+const LAB = [['Tower 1:200', 'arch'], ['Tourbillon', 'watch'], ['Medallion', 'pendant'], ['Sentinel', 'quad']];
 const IMG = {}; const load = (k, src) => new Promise(r => { const i = new Image(); i.onload = () => { IMG[k] = i; r(); }; i.onerror = () => r(); i.src = src; });
 const HF = []; for (let i = 0; i < 120; i += 2) HF.push(i);
 // best available poster: 1600 (final) else 900

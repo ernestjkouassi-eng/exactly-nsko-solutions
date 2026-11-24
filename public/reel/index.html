@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>NSKO reel</title>
+<!-- 9:16 reel stage for capture: /reel/?p=robot. Time is driven by the capture script (Playwright clock). -->
+<link rel="stylesheet" href="/css/v42.css">
+<script type="importmap">{"imports":{"three":"/vendor/three/three.module.js","three/addons/":"/vendor/three/addons/"}}</script>
+<style>
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0B0B0D;scroll-snap-type:none}
+.glow{position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 42%,rgba(207,224,236,.16),rgba(11,11,13,0) 70%)}
+#v{position:absolute;left:0;right:0;top:250px;height:1150px}
+.top{position:absolute;left:72px;right:72px;top:80px;display:flex;justify-content:space-between;align-items:center}
+.top b{font:900 38px Inter;letter-spacing:-.02em}.top .brand svg{width:44px;height:44px}
+.k{font:600 22px D-DIN;letter-spacing:.3em;text-transform:uppercase;color:rgba(240,240,250,.72)}
+.bot{position:absolute;left:72px;right:72px;bottom:150px;transition:opacity .8s}
+.hair{width:72px;height:4px;background:#E8541A;margin-bottom:28px}
+h1{font:700 118px/.95 D-DIN;letter-spacing:.04em;text-transform:uppercase;margin-top:18px}
+.line{font:400 36px/1.35 Inter;color:rgba(240,240,250,.82);margin-top:24px}
+.state{position:absolute;left:72px;top:1280px;font:600 24px D-DIN;letter-spacing:.3em;text-transform:uppercase;color:#CFE0EC;opacity:0;transition:opacity .5s}
+.end{position:absolute;inset:0;background:#0B0B0D;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;opacity:0;transition:opacity .9s}
+.end h2{font:700 110px D-DIN;letter-spacing:.05em;text-transform:uppercase}
+</style></head><body>
+<div class="glow"></div>
+<div id="v" class="p3d"></div>
+<div class="top"><div class="brand" style="display:flex;gap:16px;align-items:center"><svg viewBox="0 0 100 100"><rect width="22" height="100" fill="#F0F0FA"/><polygon points="26,0 56,0 58.88,16 28.88,16" fill="#E8541A"/><polygon points="29.96,22 59.96,22 74,100 44,100" fill="#F0F0FA"/><rect x="78" width="22" height="100" fill="#F0F0FA"/></svg><b>NSKO</b></div><span class="k">NSKO Solutions</span></div>
+<div class="state" id="st">Exploded view</div>
+<div class="bot" id="bot"><div class="hair"></div><span class="k" id="kk"></span><h1 id="tt"></h1><p class="line" id="ll"></p></div>
+<div class="end" id="end"><svg viewBox="0 0 100 100" width="120" height="120"><rect width="22" height="100" fill="#F0F0FA"/><polygon points="26,0 56,0 58.88,16 28.88,16" fill="#E8541A"/><polygon points="29.96,22 59.96,22 74,100 44,100" fill="#F0F0FA"/><rect x="78" width="22" height="100" fill="#F0F0FA"/></svg><h2>Build beyond.</h2><span class="k">nskosolutions.co.uk</span><span class="k" style="margin-top:40px">Built by NSKO</span></div>
+<script type="module">
+import {mount} from '/js/product3d.js';
+const D = {robot: ['Robotics', 'NSKO R1', 'Six axes. One standard.'], quad: ['Defence systems', 'NSKO Sentinel', 'Eyes where people should not go.'],
+  surgical: ['Healthcare · concept', 'Surgical Assist', 'Precision you can see.'], arch: ['3D building models', 'NSKO Tower', 'Scale models that sell the idea.'], watch: ['Watches', 'NSKO Tourbillon', 'Engineering you can wear.']};
+const p = new URLSearchParams(location.search).get('p') || 'robot', d = D[p];
+kk.textContent = d[0] + ' · NSKO Solutions'; tt.textContent = d[1]; ll.textContent = d[2];
+const v = mount(document.getElementById('v'), {src: `/media/v42/glb3/${p}.glb`, label: d[1], manual: true, onReady: () => { window.ready = true; }});
+// the capture script calls seek-forward one frame at a time
+let T = 0; document.querySelectorAll('*').forEach(e => e.style.transition = 'none');
+window.frame = dt => { T += dt;
+  if (T > 2.5 && T - dt <= 2.5) { v.explode(true); }
+  if (T > 6.5 && T - dt <= 6.5) { v.explode(false); }
+  st.style.opacity = T > 2.7 && T < 6.6 ? 1 : 0;
+  end.style.opacity = Math.min(1, Math.max(0, (T - 11) / .8));
+  bot.style.opacity = Math.min(1, T / .8);
+  v.step(dt); };
+</script>
+</body></html>
