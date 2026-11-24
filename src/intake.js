@@ -44,6 +44,9 @@ export async function intake(req, env, kind) {
     if (f && typeof f === 'object' && f.size) {
       if (f.size > 10 * 1024 * 1024) return json({ok: false, error: 'file too large'}, 413);
       if (!MIME.includes(f.type)) return json({ok: false, error: 'file type'}, 415);
+      const head = new Uint8Array(await f.slice(0, 8).arrayBuffer()), hex = [...head].map(b => b.toString(16).padStart(2, '0')).join('');
+      const SIG = {'application/pdf': ['25504446'], 'image/png': ['89504e47'], 'image/jpeg': ['ffd8ff'], 'image/webp': ['52494646'], 'application/msword': ['d0cf11e0'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['504b0304']};
+      if (SIG[f.type] && !SIG[f.type].some(x => hex.startsWith(x))) return json({ok: false, error: 'file type'}, 415);
       if (env.SUPABASE_SERVICE_KEY) {
         const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${clip(f.name, 80).replace(/[^\w.-]/g, '_')}`;
         const up = await sb(env, '/storage/v1/object/briefs/' + path, {method: 'POST', headers: {'content-type': f.type}, body: f.stream()});

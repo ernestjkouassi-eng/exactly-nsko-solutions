@@ -11,7 +11,7 @@ def webp(src, dst, size=None, q=80):
     im.save(dst, 'WEBP', quality=q, method=6)
 for f in sorted((R / 'hero-n').glob('f*.png')): webp(f, P / 'hero' / (f.stem + '.webp'), q=78)
 for o in 'drone arm chip blade key arch watch pendant'.split():
-    src = R / f'poster-{o}' / 'f000.png'; final = src.exists()
+    src = R / 'lux' / f'{o}.png' if (R / 'lux' / f'{o}.png').exists() else R / f'poster-{o}' / 'f000.png'; final = src.exists()
     if not final: src = pathlib.Path(f'/tmp/v42t/{o}/f000.png')
     if not src.exists(): continue
     for s in (900, 600): webp(src, P / 'poster' / f'{o}-{s}.webp', s, 82)

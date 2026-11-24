@@ -14,8 +14,8 @@ const CAP = {
 const LAB = {
   drone: {t: 'Drone', obj: 'drone', s: 'Concept', d: 'A compact quadcopter frame with a stabilised camera pod. Printed carbon-nylon arms, swappable payload bay.', spec: [['Status', 'Concept'], ['Frame', 'Quad, 420 mm diagonal'], ['Build', 'Printed arms, machined motor mounts']]},
   architecture: {t: 'Architectural scale model', obj: 'arch', s: 'Concept', d: 'A presentation model for a small mixed-use scheme. Printed in white resin on a dark plinth, with a cantilevered roof.', spec: [['Status', 'Concept'], ['Scale', '1:200'], ['Build', 'Resin print, hand finished']]},
-  watch: {t: 'Watch', obj: 'watch', s: 'Concept', d: 'A minimal three-hand watch with a brushed steel case and a single signal-orange seconds hand.', spec: [['Status', 'Concept'], ['Case', '40 mm, brushed steel'], ['Build', 'Machined case, printed strap links']]},
-  pendant: {t: 'Pendant', obj: 'pendant', s: 'Concept', d: 'The NSKO mark as a pendant in polished steel, with the orange fragment in enamel.', spec: [['Status', 'Concept'], ['Size', '32 mm'], ['Build', 'Cast steel, enamel fill']]},
+  watch: {t: 'Skeleton tourbillon watch', obj: 'watch', s: 'Concept', still: true, d: 'Polished gold case, an open black dial with gold gears and ruby jewels, a tourbillon at six and a black strap. Engraved NSKO SOLUTIONS.', spec: [['Status', 'Concept'], ['Case', '40 mm, polished gold tone'], ['Dial', 'Open skeleton, tourbillon at six']]},
+  pendant: {t: 'Medallion pendant', obj: 'pendant', s: 'Concept', still: true, d: 'A gold medallion on a box chain. The NSKO mark is raised in gold with its fragment in orange enamel, and NSKO SOLUTIONS is engraved around the rim.', spec: [['Status', 'Concept'], ['Size', '32 mm'], ['Finish', 'Gold tone, black and orange enamel']]},
 };
 const PROJ = {
   nsko: {t: 'NSKO', tag: 'Live', live: true, d: 'Our own fitness, health and coaching membership, with wellness in VR. Members, coaches and an admin portal, on the web and in the app.', kv: [['Status', 'Live'], ['Built', 'Web, iOS and Android app, member portal'], ['Stack', 'Secure sign-in, row-level security, payments']]},
@@ -90,7 +90,7 @@ function setCap(k, focus) {
   cap = k; $$('[data-cap]').forEach(b => { const on = b.dataset.cap === k; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
   capd.setAttribute('aria-labelledby', 't-' + k); capd.innerHTML = capHTML(k); capmore.href = '/capabilities/' + k;
   capvid.style.opacity = 0;
-  setTimeout(() => { capvid.poster = `/media/v42/poster/${CAP[k].obj}-900.webp`; capvid.src = RM ? '' : `/media/v42/loop/${CAP[k].obj}.mp4`; capvid.style.opacity = 1; playCap(); }, RM ? 0 : 250);
+  setTimeout(() => { capvid.poster = `/media/v42/poster/${CAP[k].obj}-900.webp`; if (RM) capvid.removeAttribute('src'); else capvid.src = `/media/v42/loop/${CAP[k].obj}.mp4`; capvid.style.opacity = 1; playCap(); }, RM ? 0 : 250);
 }
 function playCap() { if (!RM && capvid.src && scenes[1].classList.contains('in')) capvid.play().catch(() => {}); }
 $$('[data-cap]').forEach(b => b.addEventListener('click', () => setCap(b.dataset.cap)));
@@ -114,7 +114,7 @@ function openDlg(d) { lastFocus = document.activeElement; if (!d.open) d.showMod
 function routeHTML(r) {
   const [sec, k] = r.split('/');
   if (sec === 'capabilities' && CAP[k]) { const v = CAP[k]; return `<p class="k" style="margin-top:12px">Capabilities</p><h2 id="ph">${esc(v.t)}</h2><div class="media"><img src="/media/v42/poster/${v.obj}-900.webp" alt="${esc(v.t)}, studio render" width="900" height="900"></div><p class="lede">${esc(v.line)}</p><div class="detail" style="margin-top:0;border:0;padding:0"><ul>${v.b.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="row" style="margin-top:26px"><a class="btn p" href="/start" data-start>Start a project</a></div>`; }
-  if (sec === 'lab' && LAB[k]) { const v = LAB[k]; return `<p class="k" style="margin-top:12px">Prototype Lab</p><h2 id="ph">${esc(v.t)}</h2><div class="media" data-glb="${v.obj}"><img src="/media/v42/poster/${v.obj}-900.webp" alt="${esc(v.t)}, studio render" width="900" height="900"><span class="k hint">Drag to turn</span></div><span class="tag">${esc(v.s)}</span><p class="lede" style="margin-top:16px">${esc(v.d)}</p>${kv(v.spec)}<div class="row" style="margin-top:22px"><a class="btn p" href="/lab/portfolio" data-pack>Request the portfolio pack</a></div>`; }
+  if (sec === 'lab' && LAB[k]) { const v = LAB[k]; return `<p class="k" style="margin-top:12px">Prototype Lab</p><h2 id="ph">${esc(v.t)}</h2><div class="media"${v.still ? '' : ` data-glb="${v.obj}"`}><img src="/media/v42/poster/${v.obj}-900.webp" alt="${esc(v.t)}, studio render" width="900" height="900">${v.still ? '' : '<span class="k hint">Drag to turn</span>'}</div><span class="tag">${esc(v.s)}</span><p class="lede" style="margin-top:16px">${esc(v.d)}</p>${kv(v.spec)}<div class="row" style="margin-top:22px"><a class="btn p" href="/lab/portfolio" data-pack>Request the portfolio pack</a></div>`; }
   if (sec === 'projects' && PROJ[k]) { const v = PROJ[k]; return `<p class="k" style="margin-top:12px">Projects</p><h2 id="ph">${esc(v.t)}</h2><span class="tag">${v.live ? '<span class="dot live" aria-hidden="true"></span> ' : ''}${esc(v.tag)}</span>${v.demo ? `<a class="media" href="/demo/wellspring/" target="_blank" rel="noopener" style="display:block;margin-top:18px;aspect-ratio:16/10"><img src="/media/v42/wellspring-demo.webp" width="1440" height="900" alt="Wellspring demo: a 3D map of Côte d'Ivoire with water, farming and cocoa layers" loading="lazy"><span class="k hint" style="background:#0B0B0D;padding:6px 10px;border-radius:999px">Simulated data</span></a><a class="btn s" href="/demo/wellspring/" target="_blank" rel="noopener" style="margin-top:4px">Open the demo</a>` : ''}<p class="lede" style="margin-top:16px">${esc(v.d)}</p>${kv(v.kv)}<div class="row" style="margin-top:22px"><a class="btn p" href="/start" data-start>Start a project</a></div>`; }
   return null;
 }
@@ -129,7 +129,7 @@ function openRoute(r, push = true) {
 function openStart(push = true) { openDlg($('#start')); if (push && location.pathname !== '/start') history.pushState({r: 'start'}, '', '/start'); }
 function openPack(push = true) { openDlg($('#pack')); if (push && location.pathname !== '/lab/portfolio') history.pushState({r: 'lab/portfolio'}, '', '/lab/portfolio'); }
 $$('dialog').forEach(d => {
-  d.addEventListener('close', () => { if (d === panel) { viewer?.dispose?.(); viewer = null; } if (!$('dialog[open]') && location.pathname !== '/') history.pushState({}, '', '/' + location.hash); lastFocus?.focus?.(); });
+  d.addEventListener('close', () => { if (d === panel) { viewer?.dispose?.(); viewer = null; } if (!$('dialog[open]') && location.pathname !== '/') { if (history.state && history.state.r) history.back(); else history.replaceState({}, '', '/' + location.hash); } lastFocus?.focus?.(); });
   d.addEventListener('click', e => { if (e.target === d && d !== $('#menu')) d.close(); if (e.target.closest('[data-close]')) d.close(); });
 });
 document.addEventListener('click', e => {

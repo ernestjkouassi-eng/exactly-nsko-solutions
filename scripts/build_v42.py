@@ -23,10 +23,10 @@ routes = {
   'projects/pure': ('NSKO 1.2 Pure · Projects · NSKO Solutions', 'An early concept.'),
 }
 for r, (t, d) in routes.items():
-    path = '/' + r
+    path = '/' + r + ('/' if r else '')
     h = tpl.replace('{{TITLE}}', t).replace('{{DESC}}', d).replace('{{PATH}}', path).replace('{{ROUTE}}', r)
     out = R / 'public' / r / 'index.html' if r else R / 'public/index.html'
     out.parent.mkdir(parents=True, exist_ok=True); out.write_text(h)
-sm = ['/', '/trust/', '/impact/', '/privacy/', '/security/'] + ['/' + r for r in routes if r and r != 'start']
+sm = ['/', '/trust/', '/impact/', '/privacy/', '/security/'] + ['/' + r + '/' for r in routes if r and r != 'start']
 (R / 'public/sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>https://nskosolutions.co.uk{u}</loc></url>\n' for u in sm) + '</urlset>\n')
 print('built', len(routes), 'pages')
