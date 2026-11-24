@@ -140,9 +140,11 @@ cam.location = (.45, -2.6, 1.05) if NAME == 'watch' else (.1, -2.5, .5)
 c = cam.constraints.new('TRACK_TO'); c.target = tgt; c.track_axis = 'TRACK_NEGATIVE_Z'; c.up_axis = 'UP_Y'
 cam.data.dof.use_dof = True; cam.data.dof.focus_object = tgt; cam.data.dof.aperture_fstop = 2.4
 def area(loc, sz, en, col):
+    global _li; _li = globals().get('_li', -1) + 1
+    if str(_li) == os.environ.get('OFF'): en = 0
     l = bpy.data.lights.new('a', 'AREA'); l.size = sz; l.energy = en; l.color = col; o = bpy.data.objects.new('a', l); sc.collection.objects.link(o); o.location = loc
     t = o.constraints.new('TRACK_TO'); t.target = tgt; t.track_axis = 'TRACK_NEGATIVE_Z'; t.up_axis = 'UP_Y'
-area((-1.6, -.4, 1.1), 1.0, 70, (1, .9, .78)); area((1.3, .8, .8), .8, 220, (1, .78, .5)); area((0, -1.6, .9), 1.6, 18, (1, .95, .9)); area((-.9, 1.2, .9), .6, 160, (1, .85, .6))
+area((-1.4, -.6, 2.6), 1.0, 90, (1, .9, .78)); area((1.3, .8, .8), .8, 220, (1, .78, .5)); area((0, -1.2, 2.2), 1.0, 14, (1, .95, .9)); area((-.6, 1.8, 2.4), .6, 220, (1, .85, .6))
 sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = SPP; sc.cycles.use_denoising = True; sc.cycles.max_bounces = 8
 sc.render.resolution_x = SZ; sc.render.resolution_y = int(SZ * 1.25); sc.view_settings.view_transform = 'AgX'
 try: sc.view_settings.look = 'AgX - Medium High Contrast'
