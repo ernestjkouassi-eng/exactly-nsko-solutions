@@ -8,3 +8,7 @@ brand/templates/film/out/
 brand/templates/film/*.log
 marketing/v42/*.log
 marketing/v42/reels/raw-*.mp4
+films/*/ref/*.mp4
+films/*/ref/*.mov
+films/*/assets/source/
+__pycache__/
