@@ -4,16 +4,16 @@ import math, bpy, bmesh
 from mathutils import Vector, Matrix
 import jlib as J
 
-LINK_PITCH = 1.22     # cm between link centres (≈37 links on a 45 cm neck)
+LINK_PITCH = .98      # cm between link centres: links overlap like scales, as in the photos and video
 W = 2.2               # chain width, cm (photo reads 20 to 22 mm)
 
 # ---------------------------------------------------------------- bust (display form, not a person)
-_BP = [(-30, 16.0), (-16, 16.6), (-10, 15.6), (-6, 13.6), (-3, 11.4), (0, 8.9), (2.5, 7.3), (5, 6.4), (8, 6.0), (14, 5.9), (20.5, 5.9), (22, 5.6), (22.6, 4.8)]
+_BP = [(-30, 16.5), (-16, 17.0), (-10, 16.0), (-6, 14.2), (-3, 12.0), (0, 9.4), (2.5, 7.9), (5, 7.0), (8, 6.6), (11.5, 6.5), (13.2, 6.3), (13.8, 5.2)]
 def _pchip_slopes(P):
     h = [P[i + 1][0] - P[i][0] for i in range(len(P) - 1)]; d = [(P[i + 1][1] - P[i][1]) / h[i] for i in range(len(h))]
     m = [d[0]] + [0 if d[i - 1] * d[i] <= 0 else 3 * (h[i - 1] + h[i]) / ((2 * h[i] + h[i - 1]) / d[i - 1] + (h[i] + 2 * h[i - 1]) / d[i]) for i in range(1, len(d))] + [d[-1]]
     return m
-_BP = [(z * .74, r * .74) for z, r in _BP]
+_BP = [(z * .62, r * .62) for z, r in _BP]      # slim display bust: neck ≈ 3.3 chain widths (photos)
 _BM = _pchip_slopes(_BP)
 def _bust_r(z):
     """Profile radius of the bust at height z (cm): smooth monotone curve (no ripples), neck above 5, flaring to the shoulders."""
@@ -26,7 +26,7 @@ def _bust_r(z):
 
 def _bust_sy(z):
     """Front-to-back squash: round neck, flatter chest."""
-    t = min(1, max(0, (4.4 - z) / 10.4)); return 1 - .38 * t
+    t = min(1, max(0, (3.7 - z) / 8.7)); return 1 - .38 * t
 
 def bust_point(theta, z):
     r = _bust_r(z); return Vector((r * math.cos(theta), r * _bust_sy(z) * math.sin(theta), z))
@@ -39,7 +39,7 @@ def bust_normal(theta, z):
     if n.dot(Vector((p.x, p.y, 0))) < 0: n = -n
     return n
 
-def build_bust(root, col='#8F8B88'):
+def build_bust(root, col='#B3AEAA'):
     bm = bmesh.new(); NT = 96; zs = [_BP[0][0] + i * .2 for i in range(int((_BP[-1][0] - _BP[0][0]) / .2) + 1)]
     rings = [[bm.verts.new(bust_point(2 * math.pi * i / NT, z)) for i in range(NT)] for z in zs]
     for A, B in zip(rings, rings[1:]):
@@ -58,7 +58,7 @@ def build_bust(root, col='#8F8B88'):
     return o
 
 # ---------------------------------------------------------------- chain path on the bust
-def chain_frames(n_links=None, z_back=2.5, z_front=-1.3, lift=.26):
+def chain_frames(n_links=None, z_back=2.0, z_front=-2.8, lift=.42):
     """Link frames (4x4, cm) sitting on the bust: x = along the chain, z = out of the bust surface."""
     def z_of(th): return (z_back + z_front) / 2 + (z_back - z_front) / 2 * math.sin(th)    # th=-90° is the front (camera side)
     N = 2000; P = []
@@ -160,24 +160,45 @@ def halo_cluster(F, S, cx, cy, cz, root, tag, centre=.5, halo=.12, nh=16, mats=N
         tilt = Vector((math.cos(a) * .22, math.sin(a) * .22, 1)).normalized()
         S.add(halo, F @ p, rot @ tilt)
 
-LB = (.7, 1.1, .3)            # link body half-sizes (cm): along chain, across, dome height
+def pear_cluster(F, S, cx, cy, cz, root, tag, size=.78, halo=.11, flip=0):
+    """Pear-cut centre in a pear-shaped halo (the links either side of the clasp, as in IMG_9407)."""
+    rg = J.M_rosegold(.1); pear = J.brilliant('cut_pear', 'pear', 48)
+    rot = Matrix.Rotation(math.pi / 2 + (math.pi if flip else 0), 4, 'Z')
+    C = F @ Matrix.Translation((cx, cy, cz)) @ rot
+    st = bpy.data.objects.new(tag + '_pear', pear); J.sc.collection.objects.link(st); st.parent = root; st.matrix_basis = C @ Matrix.Diagonal((size, size, size, 1))
+    if not pear.materials: pear.materials.append(J.M_diamond())
+    pts = J._outline('pear', 200); cxp = sum(x for x, _ in pts) / 200; cyp = sum(y for _, y in pts) / 200
+    per = [0]
+    for i in range(1, 200): per.append(per[-1] + math.dist(pts[i], pts[i - 1]))
+    nh = int(per[-1] * size * 1.25 / (halo * 1.05)); r3 = C.to_3x3()
+    for h in range(nh):
+        sL = per[-1] * h / nh; i = next(j for j in range(200) if per[j] >= sL)
+        x, y = pts[i]; v = Vector((x - cxp, y - cyp, 0)).normalized()
+        q = Vector((x * size * 1.12 + v.x * halo * .7, y * size * 1.12 + v.y * halo * .7, -.06))
+        S.add(halo, C @ q, r3 @ Vector((v.x * .25, v.y * .25, 1)).normalized())
+    import necklace as NK
+    ring = [(x * size * 1.12 * 1.18, y * size * 1.12 * 1.18) for x, y in pts[::4]]
+    _inst(tag + '_gal', NK.rim_mesh('pear_gal_%g' % size, ring, .05, .45), rg, C @ Matrix.Translation((0, 0, -.13)), root)
+
+LB = (.66, 1.1, .42)           # link body half-sizes (cm): along chain, across, dome height
 
 def _link_z(x, y):
     a, b, c = LB; q = 1 - (x / a) ** 2 - (y / b) ** 2; z = c * math.sqrt(max(q, 0))
     return z, Vector((x / a ** 2, y / b ** 2, z / c ** 2 + 1e-4)).normalized()
 
-def cuban_link(F, S, root, k, centre=.56, halo=.14, nh=15):
+def cuban_link(F, S, root, k, centre=.56, halo=.14, nh=15, pear=False):
     """F: link frame. Body: domed rose-gold curb link, twisted so its two halo clusters run on a diagonal (the Cuban 'scale' look).
     Every bit of the top not under a cluster is pavé, as in the source photos."""
     rg = J.M_rosegold(.1)
-    tw = Matrix.Rotation(math.radians(-20), 4, 'Z') @ Matrix.Rotation(math.radians(10), 4, 'Y')
+    tw = Matrix.Rotation(math.radians(-18), 4, 'Z') @ Matrix.Rotation(math.radians(24), 4, 'Y')   # strong scale tilt: chunky stacked look
     G = F @ tw
     _inst('link%02d' % k, _ellipsoid('link_body', *LB), rg, G, root)
     R = centre / 2 + halo * .62 + .02; rc = R + halo * .6
     cl = [(.05, .55), (-.05, -.55)]
     for i, (cx, cy) in enumerate(cl):
         z, _ = _link_z(cx, cy)
-        halo_cluster(G, S, cx, cy, z + centre * .43 + .07, root, 'l%02d%s' % (k, 'ab'[i]), centre, halo, nh)
+        if pear: pear_cluster(G, S, cx, cy, z + .38, root, 'l%02d%s' % (k, 'ab'[i]), .78, .11, i)
+        else: halo_cluster(G, S, cx, cy, z + centre * .43 + .07, root, 'l%02d%s' % (k, 'ab'[i]), centre, halo, nh)
     rot = G.to_3x3(); d = .118; sz = .1
     for j in range(-12, 13):
         for i in range(-8, 9):
@@ -221,14 +242,23 @@ def box_clasp(F, S, root, tag='clasp'):
     me = bpy.data.meshes.new(tag + '_wall'); bm.to_mesh(me); bm.free()
     for p in me.polygons: p.use_smooth = True
     _inst(tag + '_wall', me, rg, G, root)
-    pz, pn = dome(-.15, 0)
-    big = J.stone(tag + '_pear', pear, J.M_diamond(), 1.0, (0, 0, 0)); big.parent = root
-    big.matrix_basis = G @ Matrix.Translation((-.12, 0, pz + ML + .1)) @ Matrix.Rotation(-math.pi / 2, 4, 'Z')
-    for i in range(10):
-        a = math.radians(-150 + i * 300 / 9); r = .7
-        x, y = -.12 + r * math.cos(a) * 1.02, r * math.sin(a) * .74; z, n = dome(x, y)
-        s = J.stone('%s_p%d' % (tag, i), pear, J.M_diamond(), .36, (0, 0, 0)); s.parent = root
-        s.matrix_basis = G @ Matrix.Translation((x, y, z + ML)) @ Matrix.Rotation(a - math.pi / 2, 4, 'Z') @ Matrix.Rotation(-.22, 4, 'X')
+    # pear motif filled with pear-cut stones in rows, all pointing to the motif's tip, one larger pear at the heart (IMG_9407)
+    tipdir = Matrix.Rotation(math.pi / 2, 4, 'Z')            # pear mesh points +y; motif tip is toward -x
+    def inside(x, y, k=2.25):
+        xr, yr = -(x + .1) / k, y / k
+        if abs(xr) >= .5: return False
+        t = math.acos(max(-1, min(1, xr / .5))); return abs(yr) < abs((.31 / .7698) * math.sin(t) * math.sin(t / 2)) - .045
+    hx, hy = -.18, 0
+    big = J.stone(tag + '_pear', pear, J.M_diamond(), .62, (0, 0, 0)); big.parent = root
+    pz, pn = dome(hx, hy); big.matrix_basis = G @ Matrix.Translation((hx, hy, pz + ML + .1)) @ tipdir
+    k = 0; sp = .27
+    for j in range(-6, 7):
+        for i in range(-8, 8):
+            x = i * sp + (j % 2) * sp / 2; y = j * sp * .8
+            if not inside(x, y) or (x - hx) ** 2 / .42 ** 2 + (y - hy) ** 2 / .26 ** 2 < 1: continue
+            z, n = dome(x, y); dz = .06 * (1 - ((x + .1) / 1.2) ** 2 - (y / .7) ** 2)        # the motif itself is domed
+            s_ = J.stone('%s_p%d' % (tag, k), pear, J.M_diamond(), .25, (0, 0, 0)); s_.parent = root
+            s_.matrix_basis = G @ Matrix.Translation((x, y, z + ML + max(dz, 0))) @ tipdir; k += 1
     # micro pavé pear outline on the gallery rim
     for i in range(78):
         x, y = pear_xy(2 * math.pi * i / 78, 2.25); z, n = dome(x, y)
@@ -267,7 +297,7 @@ def build(root, clasp_at=.62, skip=()):
     for k, F in enumerate(frames):
         if k in skip: continue
         if k in (ci, (ci + 1) % n): continue
-        cuban_link(F, S, root, k)
+        cuban_link(F, S, root, k, pear=min((k - ci) % n, (ci - k) % n) <= 2)
     Fc = frames[ci].lerp(frames[(ci + 1) % n], .5) if hasattr(frames[ci], 'lerp') else frames[ci]
     clasp = box_clasp(frames[ci] @ Matrix.Translation((LINK_PITCH / 2, 0, .1)), S, root)
     S.emit(root, 'pave')

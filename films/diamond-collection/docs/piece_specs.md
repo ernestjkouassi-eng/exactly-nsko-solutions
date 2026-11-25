@@ -2,7 +2,7 @@
 
 Source photos are cleaned in `assets/clean/` (people, inset, phone UI and watermarks removed). Each piece below is read from those photos. Ernest confirmed these are **real NSKO pieces**, so pieces 1 to 3 are matched to the photos as closely as the photos allow. The watch stays an original NSKO design (brief).
 
-## 1. Rose-gold iced Cuban link (IMG_9414, IMG_9412) + clasp (IMG_9407 jpg/png)
+## 1. Rose-gold iced Cuban link: ONE piece (IMG_9414 bust, IMG_9412 close-up, IMG_9407 clasp and Ernest's bust video are all the same necklace)
 - **Chain type:** Miami Cuban, very wide (photo reads about 20 to 22 mm), heavy, double-thick curb links that interlock and lie flat.
 - **Count:** about 34 to 38 links around a standard neck (the bust shows ~17 on the visible front half).
 - **Metal:** 18k rose gold, visible only in the gaps and on the link sides. Base colour #F2B8A0, metallic 1, roughness 0.10.
@@ -58,3 +58,9 @@ Kept from the reference's feel, redesigned layout:
 - Necklace: 68 leaf units (2 marquises + a round), 5-marquise spray at the V, 2-unit drop, bail, 16 mm canary pear in a micro-pavé halo. Platinum.
 - Ring: 25 mm marquise, 6 claws, open two-rail basket, channel pavé shoulders, milgrain on both rails. Platinum.
 - Watch: see `stills/watch_design_*.png`. 44 mm rose-gold case with an arc window scooped through the bezel at 2, aventurine "night sky" floor, two tiers of tapered blue sapphire baguettes (narrower toward 6), three dark skeleton bridges, flying tourbillon at 7 whose upper bridge is the NSKO "N", blue sub-dial at 1 with dot indices only, six gem planets (amethyst, citrine, peridot, blue topaz, blue-and-gold Earth, banded agate), domed AR-coated sapphire crystal, stepped baguette lugs, blue leather strap. Only text: "NSKO" engraved on the caseband at 9.
+
+### Cuban update after Ernest's video (one piece)
+- Chain, close-ups and clasp are one necklace and are rendered as one model.
+- Chunkier, as in the video: links overlap like scales (pitch 9.8 mm, strong tilt), slim display bust with a short capped neck (neck ≈ 3.3 chain widths).
+- Clasp sits on the front-left of the neck base, as in the video. Its pear motif is filled with pear-cut stones in rows pointing to the tip, one larger pear at the heart, micro-pavé outline.
+- The two links each side of the clasp carry pear-in-halo clusters (IMG_9407).
