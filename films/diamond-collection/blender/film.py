@@ -196,30 +196,42 @@ def scene_watch(hero=False):
     return c, t, fo, state
 
 def scene_title(end=False):
-    """NSKO SOLUTIONS as 3D brushed rose-gold letters, revealed by a real light sweeping across them."""
+    """The website's own NSKO SOLUTIONS lockup (brand/logo SVG: same shapes, same font, white + the orange fragment),
+    extruded as brushed white metal with an orange enamel fragment, revealed by a real light sweeping across it."""
     J.reset(); J.world('#000000', 0)
-    def word(body, size, y, font):
-        cu = bpy.data.curves.new(body, 'FONT'); cu.body = body; cu.size = size; cu.extrude = size * .09; cu.bevel_depth = size * .012; cu.bevel_resolution = 3
-        cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.space_character = 1.06 if body == 'NSKO' else 1.25
-        try: cu.font = bpy.data.fonts.load(font)
-        except Exception: pass
-        o = bpy.data.objects.new(body, cu); J.sc.collection.objects.link(o); o.location = (0, 0, y); o.rotation_euler = (math.pi / 2, 0, 0)
-        return o
-    m = J.principled('brushed_rg', '#F2B8A0', 1, .22)
-    b = m.node_tree.nodes['Principled BSDF']
-    if 'Anisotropic' in b.inputs: b.inputs['Anisotropic'].default_value = .85
-    a = word('NSKO', .11, .03, '/mnt/skills/examples/canvas-design/canvas-fonts/BricolageGrotesque-Bold.ttf')
-    s = word('SOLUTIONS', .032, -.045, '/home/user/nsko-solutions/node_modules/geist/dist/fonts/geist-sans/Geist-Medium.ttf')
-    for o in (a, s): o.data.materials.append(m)
-    bpy.ops.mesh.primitive_plane_add(size=4, location=(0, .2, 0), rotation=(math.pi / 2, 0, 0)); bpy.context.active_object.data.materials.append(J.M_velvet('#0B0B0D', .3))
+    bpy.ops.import_curve.svg(filepath='/home/user/nsko-solutions/brand/logo/nsko-solutions-lockup-white.svg')
+    cur = [o for o in bpy.data.objects if o.type == 'CURVE']
+    white = J.principled('logo_white', '#F4F5F7', 1, .2)
+    bw = white.node_tree.nodes['Principled BSDF']
+    if 'Anisotropic' in bw.inputs: bw.inputs['Anisotropic'].default_value = .8
+    orange = J.principled('logo_orange', '#E8541A', 0, .28, coat=1)
+    lo = Vector((1e9, 1e9, 0)); hi = Vector((-1e9, -1e9, 0))
+    for o in cur:
+        col = o.data.materials[0].diffuse_color if o.data.materials else (1, 1, 1, 1)
+        o.data.materials.clear(); o.data.materials.append(orange if (col[0] > .5 and col[2] < .3) else white)
+        for c in o.bound_box:
+            w = o.matrix_world @ Vector(c); lo = Vector((min(lo.x, w.x), min(lo.y, w.y), 0)); hi = Vector((max(hi.x, w.x), max(hi.y, w.y), 0))
+    k = .25 / (hi.x - lo.x); ctr = (lo + hi) / 2
+    grp = bpy.data.objects.new('logo', None); J.sc.collection.objects.link(grp)
+    for o in cur:
+        o.data.extrude = .0016 / k; o.data.bevel_depth = .0003 / k; o.data.bevel_resolution = 3
+        o.parent = grp; o.location = o.location - ctr
+    grp.scale = (k, k, k); grp.rotation_euler = (math.pi / 2, 0, 0)
+    bpy.context.view_layer.update(); xs, zs = [], []
+    for o in cur:
+        for cb in o.bound_box: w = o.matrix_world @ Vector(cb); xs.append(w.x); zs.append(w.z)
+    grp.location = (-(min(xs) + max(xs)) / 2, 0, -(min(zs) + max(zs)) / 2)
+    bpy.ops.mesh.primitive_plane_add(size=4, location=(0, .2, 0), rotation=(math.pi / 2, 0, 0)); bpy.context.active_object.data.materials.append(J.principled('black_set', '#010101', 0, .9)); _bs = bpy.data.materials['black_set'].node_tree.nodes['Principled BSDF']; _bs.inputs['Specular IOR Level'].default_value = 0
     c, t, fo = cam_rig(85, 5.6)
     bar = J.area('sweep', (0, -.35, .25), t, .06, 60, (1, .97, .94), shape='RECTANGLE', sx=1.2)
     bar.data.size = .06; bar.data.size_y = 1.2
-    card = bpy.data.objects.new('card', None)
+    fill = J.area('fill', (0, -1.2, .3), t, 1.0, 0)
+    for L_ in (bar, fill): L_.visible_camera = False
     def state(tt):
         dur = 3.0 if not end else 2.0
         x = keys(tt, [(0, -.6), (dur * .85, .6)]) if not end else keys(tt, [(0, .6), (dur * .8, -.25)])
         bar.location = (x, -.35, .2); bar.data.energy = 60 * keys(tt, [(0, 0.), (.4, 1.)])
+        fill.data.energy = 6 * keys(tt, [(dur * .5, 0.), (dur, 1.)]) if not end else 6.
         campos = Vector((0, -1.5, .0)).lerp(Vector((0, -1.36, .0)), ease(tt / dur))
         return campos, Vector((0, 0, 0)), Vector((0, -.004, 0)), {}
     return c, t, fo, state
