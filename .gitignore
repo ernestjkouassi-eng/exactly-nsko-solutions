@@ -12,3 +12,7 @@ films/*/ref/*.mp4
 films/*/ref/*.mov
 films/*/assets/source/
 __pycache__/
+films/*/render/
+films/*/*.mp4
+films/*/audio/*.wav
+films/*/stills/*.png
