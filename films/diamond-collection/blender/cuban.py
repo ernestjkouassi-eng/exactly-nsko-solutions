@@ -4,7 +4,7 @@ import math, bpy, bmesh
 from mathutils import Vector, Matrix
 import jlib as J
 
-LINK_PITCH = .98      # cm between link centres: links overlap like scales, as in the photos and video
+LINK_PITCH = .9      # cm between link centres: links overlap like scales, as in the photos and video
 W = 2.2               # chain width, cm (photo reads 20 to 22 mm)
 
 # ---------------------------------------------------------------- bust (display form, not a person)
@@ -13,7 +13,7 @@ def _pchip_slopes(P):
     h = [P[i + 1][0] - P[i][0] for i in range(len(P) - 1)]; d = [(P[i + 1][1] - P[i][1]) / h[i] for i in range(len(h))]
     m = [d[0]] + [0 if d[i - 1] * d[i] <= 0 else 3 * (h[i - 1] + h[i]) / ((2 * h[i] + h[i - 1]) / d[i - 1] + (h[i] + 2 * h[i - 1]) / d[i]) for i in range(1, len(d))] + [d[-1]]
     return m
-_BP = [(z * .62, r * .62) for z, r in _BP]      # slim display bust: neck ≈ 3.3 chain widths (photos)
+_BP = [(z * .5, r * .5) for z, r in _BP]      # display bust sized so the chain is ~0.38 of the neck width (IMG_9414)
 _BM = _pchip_slopes(_BP)
 def _bust_r(z):
     """Profile radius of the bust at height z (cm): smooth monotone curve (no ripples), neck above 5, flaring to the shoulders."""
@@ -26,7 +26,7 @@ def _bust_r(z):
 
 def _bust_sy(z):
     """Front-to-back squash: round neck, flatter chest."""
-    t = min(1, max(0, (3.7 - z) / 8.7)); return 1 - .38 * t
+    t = min(1, max(0, (3.0 - z) / 7.0)); return 1 - .38 * t
 
 def bust_point(theta, z):
     r = _bust_r(z); return Vector((r * math.cos(theta), r * _bust_sy(z) * math.sin(theta), z))
@@ -39,7 +39,7 @@ def bust_normal(theta, z):
     if n.dot(Vector((p.x, p.y, 0))) < 0: n = -n
     return n
 
-def build_bust(root, col='#B3AEAA'):
+def build_bust(root, col='#CFC9C3'):
     bm = bmesh.new(); NT = 96; zs = [_BP[0][0] + i * .2 for i in range(int((_BP[-1][0] - _BP[0][0]) / .2) + 1)]
     rings = [[bm.verts.new(bust_point(2 * math.pi * i / NT, z)) for i in range(NT)] for z in zs]
     for A, B in zip(rings, rings[1:]):
@@ -58,7 +58,7 @@ def build_bust(root, col='#B3AEAA'):
     return o
 
 # ---------------------------------------------------------------- chain path on the bust
-def chain_frames(n_links=None, z_back=2.0, z_front=-2.8, lift=.42):
+def chain_frames(n_links=None, z_back=1.5, z_front=-2.6, lift=.42):
     """Link frames (4x4, cm) sitting on the bust: x = along the chain, z = out of the bust surface."""
     def z_of(th): return (z_back + z_front) / 2 + (z_back - z_front) / 2 * math.sin(th)    # th=-90° is the front (camera side)
     N = 2000; P = []
@@ -242,6 +242,15 @@ def box_clasp(F, S, root, tag='clasp'):
     me = bpy.data.meshes.new(tag + '_wall'); bm.to_mesh(me); bm.free()
     for p in me.polygons: p.use_smooth = True
     _inst(tag + '_wall', me, rg, G, root)
+    # polished rose-gold seat plate under the pear stones (the honeycomb metal seen between them in IMG_9407)
+    bm = bmesh.new(); ring = []
+    for i in range(96):
+        x, y = pear_xy(2 * math.pi * i / 96, 2.2); z, n = dome(x, y); ring.append(bm.verts.new((x, y, z + ML - .14)))
+    cz_, cn_ = dome(-.1, 0); c0 = bm.verts.new((-.1, 0, cz_ + ML - .14))
+    for i in range(96): bm.faces.new((c0, ring[i], ring[(i + 1) % 96]))
+    me2 = bpy.data.meshes.new(tag + '_seat'); bm.to_mesh(me2); bm.free()
+    for p_ in me2.polygons: p_.use_smooth = True
+    _inst(tag + '_seat', me2, rg, G, root)
     # pear motif filled with pear-cut stones in rows, all pointing to the motif's tip, one larger pear at the heart (IMG_9407)
     tipdir = Matrix.Rotation(math.pi / 2, 4, 'Z')            # pear mesh points +y; motif tip is toward -x
     def inside(x, y, k=2.25):
@@ -299,6 +308,6 @@ def build(root, clasp_at=.62, skip=()):
         if k in (ci, (ci + 1) % n): continue
         cuban_link(F, S, root, k, pear=min((k - ci) % n, (ci - k) % n) <= 2)
     Fc = frames[ci].lerp(frames[(ci + 1) % n], .5) if hasattr(frames[ci], 'lerp') else frames[ci]
-    clasp = box_clasp(frames[ci] @ Matrix.Translation((LINK_PITCH / 2, 0, .1)), S, root)
+    clasp = box_clasp(frames[ci] @ Matrix.Translation((LINK_PITCH / 2, 0, .42)), S, root)
     S.emit(root, 'pave')
     return frames, clasp, sum(len(v[0]) for v in S.b.values())
