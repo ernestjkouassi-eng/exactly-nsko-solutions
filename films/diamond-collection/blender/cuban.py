@@ -235,12 +235,13 @@ def box_clasp(F, S, root, tag='clasp', lock_root=None):
         q = 1 - (x / L) ** 2 - (y / Wd) ** 2; z = H * math.sqrt(max(q, 0)); n = Vector((x / L ** 2, y / Wd ** 2, z / H ** 2 + 1e-4)).normalized(); return z, n
     pear = J.brilliant('cut_pear', 'pear', 48)
     # raised pear motif: stones on a pear-shaped open gallery above the dome, so every pavilion sees air
+    MK = 1.9                                          # pear motif length (cm): ~60% of the clasp, as in IMG_9407
     ML = .44                                          # motif lift above the dome (cm)
     def pear_xy(t, k):
         py = .5 * math.cos(t); px = (.31 / .7698) * math.sin(t) * math.sin(t / 2); return -.1 - py * k, px * k
     bm = bmesh.new(); top, bot = [], []
     for i in range(96):
-        t = 2 * math.pi * i / 96; x, y = pear_xy(t, 2.25); z, n = dome(x, y)
+        t = 2 * math.pi * i / 96; x, y = pear_xy(t, MK); z, n = dome(x, y)
         top.append(bm.verts.new((x, y, z + ML - .05))); bot.append(bm.verts.new((x * .97, y * .97, z - .05)))
     for i in range(96):
         j = (i + 1) % 96; bm.faces.new((bot[i], bot[j], top[j], top[i]))
@@ -251,7 +252,7 @@ def box_clasp(F, S, root, tag='clasp', lock_root=None):
     # polished rose-gold seat plate under the pear stones (the honeycomb metal seen between them in IMG_9407)
     bm = bmesh.new(); ring = []
     for i in range(96):
-        x, y = pear_xy(2 * math.pi * i / 96, 2.2); z, n = dome(x, y); ring.append(bm.verts.new((x, y, z + ML - .14)))
+        x, y = pear_xy(2 * math.pi * i / 96, MK * .98); z, n = dome(x, y); ring.append(bm.verts.new((x, y, z + ML - .14)))
     cz_, cn_ = dome(-.1, 0); c0 = bm.verts.new((-.1, 0, cz_ + ML - .14))
     for i in range(96): bm.faces.new((c0, ring[i], ring[(i + 1) % 96]))
     me2 = bpy.data.meshes.new(tag + '_seat'); bm.to_mesh(me2); bm.free()
@@ -259,24 +260,25 @@ def box_clasp(F, S, root, tag='clasp', lock_root=None):
     _inst(tag + '_seat', me2, rg, G, root)
     # pear motif filled with pear-cut stones in rows, all pointing to the motif's tip, one larger pear at the heart (IMG_9407)
     tipdir = Matrix.Rotation(math.pi / 2, 4, 'Z')            # pear mesh points +y; motif tip is toward -x
-    def inside(x, y, k=2.25):
+    def inside(x, y, k=None):
+        k = k or MK
         xr, yr = -(x + .1) / k, y / k
         if abs(xr) >= .5: return False
         t = math.acos(max(-1, min(1, xr / .5))); return abs(yr) < abs((.31 / .7698) * math.sin(t) * math.sin(t / 2)) - .045
     hx, hy = -.18, 0
     big = J.stone(tag + '_pear', pear, J.M_diamond(), .62, (0, 0, 0)); big.parent = root
     pz, pn = dome(hx, hy); big.matrix_basis = G @ Matrix.Translation((hx, hy, pz + ML + .1)) @ tipdir
-    k = 0; sp = .27
+    k = 0; sp = .235
     for j in range(-6, 7):
         for i in range(-8, 8):
             x = i * sp + (j % 2) * sp / 2; y = j * sp * .8
             if not inside(x, y) or (x - hx) ** 2 / .42 ** 2 + (y - hy) ** 2 / .26 ** 2 < 1: continue
             z, n = dome(x, y); dz = .06 * (1 - ((x + .1) / 1.2) ** 2 - (y / .7) ** 2)        # the motif itself is domed
-            s_ = J.stone('%s_p%d' % (tag, k), pear, J.M_diamond(), .25, (0, 0, 0)); s_.parent = root
+            s_ = J.stone('%s_p%d' % (tag, k), pear, J.M_diamond(), .22, (0, 0, 0)); s_.parent = root
             s_.matrix_basis = G @ Matrix.Translation((x, y, z + ML + max(dz, 0))) @ tipdir; k += 1
     # micro pavé pear outline on the gallery rim
     for i in range(78):
-        x, y = pear_xy(2 * math.pi * i / 78, 2.25); z, n = dome(x, y)
+        x, y = pear_xy(2 * math.pi * i / 78, MK); z, n = dome(x, y)
         S.add(.07, G @ Vector((x, y, z + ML + .02)), rot @ Vector((0, 0, 1)))
     # six halo clusters on the shoulder
     for i in range(6):
@@ -288,18 +290,18 @@ def box_clasp(F, S, root, tag='clasp', lock_root=None):
     # pavé dome on what is left
     import random; rnd = random.Random(3)
     placed = []
-    for j in range(2600):
+    for j in range(9000):
         x, y = rnd.uniform(-L, L), rnd.uniform(-Wd, Wd)
         if (x / L) ** 2 + (y / Wd) ** 2 > .97: continue
-        xr, yr = -(x + .1) / 2.25, y / 2.25           # inside the pear outline? skip
+        xr, yr = -(x + .1) / MK, y / MK           # inside the pear outline? skip
         if abs(xr) < .5:
             t = math.acos(max(-1, min(1, xr / .5))); hw = abs((.31 / .7698) * math.sin(t) * math.sin(t / 2))
             if abs(yr) < hw + .03: continue
-        ok = all((x - a) ** 2 + (y - b) ** 2 > .105 ** 2 for a, b in placed)
+        ok = all((x - a) ** 2 + (y - b) ** 2 > .1 ** 2 for a, b in placed)
         if ok:
             for i in range(6):
                 a = math.radians(40 + i * 56); hx, hy = L * .72 * math.cos(a), Wd * .74 * math.sin(a)
-                if (x - hx) ** 2 + (y - hy) ** 2 < .42 ** 2: ok = False; break
+                if (x - hx) ** 2 + (y - hy) ** 2 < .36 ** 2: ok = False; break
         if not ok: continue
         placed.append((x, y)); z, n = dome(x, y); S.add(.095, G @ Vector((x, y, z)) + (rot @ n) * .045, rot @ n)
     return body

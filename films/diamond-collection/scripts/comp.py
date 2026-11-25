@@ -41,24 +41,20 @@ def frame(f):
 def spaced_w(t): return sum(FONT.getlength(c) for c in t) + 0.22 * 27 * (len(t) - 1)
 
 def callouts(im, an):
+    """Labels stack in a clean column in the empty part of the frame (above the piece if it sits low, below if it sits high),
+    left-aligned at the margin; a 1 px line runs from a 4 px dot on the part to a short tick beside its label."""
     if not an: return im
     lay = Image.new('RGBA', im.size, (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
-    items = sorted(an.items(), key=lambda kv: kv[1][1])[:4]                      # max 4 on screen
-    used = []
-    for label, (x, y, al) in items:
-        X, Y = x * W, y * H
-        if not (0 < X < W and 0 < Y < H): continue
-        a = int(255 * max(0, min(1, al)))
-        right = X < W / 2; tw = spaced_w(label)
-        lx = W - 110 - tw if right else 110                                         # labels sit in the side margins, never on a stone
-        ly = Y - 150 if Y > 400 else Y + 150
-        while any(abs(ly - u) < 70 for u in used): ly += 72
-        used.append(ly)
-        ex = lx - 24 if right else lx + tw + 24
-        col = (242, 246, 250, a)
+    items = [(k, v) for k, v in an.items() if 0 < v[0] < 1 and 0 < v[1] < 1][:4]                       # max 4 on screen
+    if not items: return im
+    low = sum(v[1] for _, v in items) / len(items) > .5
+    items.sort(key=lambda kv: -kv[1][0])                                                              # right-most part gets the top label: lines never cross
+    y0 = H * (.2 if low else .74)
+    for i, (label, (x, y, al)) in enumerate(items):
+        X, Y = x * W, y * H; a = int(255 * max(0, min(1, al))); col = (242, 246, 250, a)
+        ly = y0 + i * 78; lx = 150; tick = lx - 30
         d.ellipse((X - 4, Y - 4, X + 4, Y + 4), fill=col)
-        d.line([(X, Y), (ex, ly + 16)], fill=col, width=1)
-        d.line([(ex, ly + 16), (ex + (14 if right else -14), ly + 16)], fill=col, width=1)
+        d.line([(X, Y), (tick, ly + 16)], fill=col, width=1); d.line([(tick, ly + 16), (tick + 18, ly + 16)], fill=col, width=1)
         cx = lx
         for c in label:
             d.text((cx, ly), c, font=FONT, fill=col); cx += FONT.getlength(c) + .22 * 27

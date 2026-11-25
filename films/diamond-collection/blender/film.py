@@ -87,7 +87,7 @@ def scene_cuban(hero=False):
                 u = ease((t - 3.2) / 1.4); v = ease((t - 4.6) / 3.4)
                 campos = wide1.lerp(cview, u).lerp(cview2, v) if t > 4.6 else wide1.lerp(cview, u)
                 tgt = Vector((0, -.02, -.005)).lerp(clasp_p + cn * .006, u); foc = Vector(frames[0].translation * .01).lerp(clasp_p + cn * (.009 + lift * .01 * .5), u)
-                fill.data.energy = 6 * u
+                fill.data.energy = 2.5 * u
             lab = {k: (A[k], keys(t, [(.8, 0.), (1.3, 1.), (2.7, 1.), (3.1, 0.)])) for k in ('18K ROSE GOLD CUBAN LINK', 'HALO-SET ROUND BRILLIANTS', 'HAND-SET PAVÉ')}
             lab['PEAR-CUT CENTRE CLASP'] = (A['PEAR-CUT CENTRE CLASP'] + Vector((0, 0, 0)) + cn * lift, keys(t, [(5.0, 0.), (5.5, 1.), (7.0, 1.), (7.4, 0.)]))
             lab['HIDDEN BOX LOCK'] = (A['HIDDEN BOX LOCK'] + cn * drop, keys(t, [(5.6, 0.), (6.0, 1.), (7.0, 1.), (7.4, 0.)]))
