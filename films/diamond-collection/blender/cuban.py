@@ -13,8 +13,14 @@ def _pchip_slopes(P):
     h = [P[i + 1][0] - P[i][0] for i in range(len(P) - 1)]; d = [(P[i + 1][1] - P[i][1]) / h[i] for i in range(len(h))]
     m = [d[0]] + [0 if d[i - 1] * d[i] <= 0 else 3 * (h[i - 1] + h[i]) / ((2 * h[i] + h[i - 1]) / d[i - 1] + (h[i] + 2 * h[i - 1]) / d[i]) for i in range(1, len(d))] + [d[-1]]
     return m
+_BP0 = list(_BP)
 _BP = [(z * .5, r * .5) for z, r in _BP]      # display bust sized so the chain is ~0.38 of the neck width (IMG_9414)
 _BM = _pchip_slopes(_BP)
+_SY = [3.0, 7.0]
+def set_bust_scale(k):
+    """The necklace sits on a larger bust than the Cuban (its photos show a full chest)."""
+    global _BP, _BM
+    _BP = [(z * k, r * k) for z, r in _BP0]; _BM = _pchip_slopes(_BP); _SY[0], _SY[1] = 6 * k, 14 * k
 def _bust_r(z):
     """Profile radius of the bust at height z (cm): smooth monotone curve (no ripples), neck above 5, flaring to the shoulders."""
     P = _BP; z = max(P[0][0], min(P[-1][0], z))
@@ -26,7 +32,7 @@ def _bust_r(z):
 
 def _bust_sy(z):
     """Front-to-back squash: round neck, flatter chest."""
-    t = min(1, max(0, (3.0 - z) / 7.0)); return 1 - .38 * t
+    t = min(1, max(0, (_SY[0] - z) / _SY[1])); return 1 - .38 * t
 
 def bust_point(theta, z):
     r = _bust_r(z); return Vector((r * math.cos(theta), r * _bust_sy(z) * math.sin(theta), z))
@@ -214,7 +220,7 @@ def cuban_link(F, S, root, k, centre=.56, halo=.14, nh=15, pear=False):
             S.add(.095, G @ Vector((x, side * yy * .97, .06)) + (rot @ n) * .05, rot @ n)
 
 # ---------------------------------------------------------------- pear-motif box clasp
-def box_clasp(F, S, root, tag='clasp'):
+def box_clasp(F, S, root, tag='clasp', lock_root=None):
     """Domed pear clasp ≈1.8 links long: one large pear centre, 10 pears fanning round it, micro-pavé pear outline,
     six halo clusters around it and a pavé dome shoulder. Hidden box lock (tongue + box + latch) underneath."""
     rg = J.M_rosegold(.1)
@@ -222,8 +228,8 @@ def box_clasp(F, S, root, tag='clasp'):
     G = F
     body = _inst(tag + '_body', _ellipsoid('clasp_body', L, Wd, H, 64, 32), rg, G, root)
     # hidden box lock, visible only in the exploded view
-    lock = _inst(tag + '_box', _ellipsoid('clasp_box', L * .8, Wd * .78, .22, 32, 12), J.M_rosegold(.14), G @ Matrix.Translation((0, 0, -.32)), root)
-    tongue = _inst(tag + '_tongue', _ellipsoid('clasp_tongue', .9, .5, .08, 24, 8), J.M_rosegold(.14), G @ Matrix.Translation((L * .9, 0, -.32)), root)
+    lock = _inst(tag + '_box', _ellipsoid('clasp_box', L * .8, Wd * .78, .22, 32, 12), J.M_rosegold(.14), G @ Matrix.Translation((0, 0, -.32)), lock_root or root)
+    tongue = _inst(tag + '_tongue', _ellipsoid('clasp_tongue', .9, .5, .08, 24, 8), J.M_rosegold(.14), G @ Matrix.Translation((L * .9, 0, -.32)), lock_root or root)
     rot = G.to_3x3()
     def dome(x, y):
         q = 1 - (x / L) ** 2 - (y / Wd) ** 2; z = H * math.sqrt(max(q, 0)); n = Vector((x / L ** 2, y / Wd ** 2, z / H ** 2 + 1e-4)).normalized(); return z, n
@@ -308,6 +314,11 @@ def build(root, clasp_at=.62, skip=()):
         if k in (ci, (ci + 1) % n): continue
         cuban_link(F, S, root, k, pear=min((k - ci) % n, (ci - k) % n) <= 2)
     Fc = frames[ci].lerp(frames[(ci + 1) % n], .5) if hasattr(frames[ci], 'lerp') else frames[ci]
-    clasp = box_clasp(frames[ci] @ Matrix.Translation((LINK_PITCH / 2, 0, .42)), S, root)
-    S.emit(root, 'pave')
+    # the clasp top and its hidden lock hang off their own empties so the film can open it (real object motion)
+    top = bpy.data.objects.new('clasp_top', None); J.sc.collection.objects.link(top); top.parent = root
+    lock = bpy.data.objects.new('clasp_lock', None); J.sc.collection.objects.link(lock); lock.parent = root
+    Fc = frames[ci] @ Matrix.Translation((LINK_PITCH / 2, 0, .42)); S2 = Stones()
+    clasp = box_clasp(Fc, S2, top, lock_root=lock)
+    S.emit(root, 'pave'); S2.emit(top, 'clasppave')
+    build.clasp_frame = Fc
     return frames, clasp, sum(len(v[0]) for v in S.b.values())

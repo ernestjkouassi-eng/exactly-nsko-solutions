@@ -5,7 +5,7 @@ from mathutils import Vector
 J.reset(); J.world('#08080A', 1)
 root = bpy.data.objects.new('root', None); J.sc.collection.objects.link(root); root.scale = (.01, .01, .01)
 import cuban as C, necklace as NK
-bust = C.build_bust(root)
+C.set_bust_scale(.74); bust = C.build_bust(root)
 frames, Ff = NK.build(root); print('front', Ff.translation)
 print('units', len(frames))
 # backdrop: dark showroom wall, softly lit
