@@ -27,6 +27,10 @@ for r, (t, d) in routes.items():
     h = tpl.replace('{{TITLE}}', t).replace('{{DESC}}', d).replace('{{PATH}}', path).replace('{{ROUTE}}', r)
     out = R / 'public' / r / 'index.html' if r else R / 'public/index.html'
     out.parent.mkdir(parents=True, exist_ok=True); out.write_text(h)
-sm = ['/', '/trust/', '/impact/', '/privacy/', '/security/'] + ['/' + r + '/' for r in routes if r and r != 'start']
+# NSKO QUANT product page: its own template (site-src/nsko-quant.html), same Turnstile key injection.
+q = (R / 'site-src/nsko-quant.html').read_text()
+if TS: q = q.replace('<meta name="nsko-route"', f'<meta name="nsko-ts" content="{TS}"><meta name="nsko-route"')
+(R / 'public/nsko-quant').mkdir(parents=True, exist_ok=True); (R / 'public/nsko-quant/index.html').write_text(q)
+sm = ['/', '/nsko-quant/', '/trust/', '/impact/', '/privacy/', '/security/'] + ['/' + r + '/' for r in routes if r and r != 'start']
 (R / 'public/sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>https://nskosolutions.co.uk{u}</loc></url>\n' for u in sm) + '</urlset>\n')
 print('built', len(routes), 'pages')

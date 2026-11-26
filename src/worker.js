@@ -56,6 +56,7 @@ export default {
     if (p === '/api/contact') return contact(req, env);
     if (p === '/api/brief') return intake(req, env, 'brief');
     if (p === '/api/portfolio') return intake(req, env, 'portfolio');
+    if (p === '/api/quant-order') return intake(req, env, 'quant_order');   // NSKO QUANT checkout reservations (/nsko-quant)
     if (p.startsWith('/api/hq/')) return hqApi(req, env, url);
     if (p === '/hq') return hqPage(req, env);
     if (p.startsWith('/hq/')) return Response.redirect(url.origin + '/hq', 302);

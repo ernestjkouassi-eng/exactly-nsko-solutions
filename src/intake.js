@@ -1,4 +1,5 @@
-// v4.2 intake: Start-a-project briefs (with optional private file) and portfolio-pack requests.
+// v4.2 intake: Start-a-project briefs (with optional private file), portfolio-pack requests and NSKO QUANT order reservations.
+// quant_order rows go into the same `briefs` table (sector 'NSKO QUANT') so they show in the admin Inbox; no payment is taken.
 // Saves to the NSKO admin Supabase project with the service key (Worker secret SUPABASE_SERVICE_KEY, never sent to browsers).
 // Fallback: KV, so nothing is lost before the key is added. Notifies Ernest by email (Resend) and phone push (ntfy) if set.
 import {briefStore} from './hq/api.js';
@@ -53,14 +54,22 @@ export async function intake(req, env, kind) {
         if (up.ok) row.file_path = path;
       }
     }
+  } else if (kind === 'quant_order') {
+    const plan = clip(fd.get('plan'), 20), billing = clip(fd.get('billing'), 10), country = clip(fd.get('country'), 80), platform = clip(fd.get('platform'), 20);
+    if (!['standard', 'pro', 'founders'].includes(plan) || !['monthly', 'yearly', 'once'].includes(billing) || (plan === 'founders') !== (billing === 'once')
+      || !country || !['Windows', 'macOS', 'Linux'].includes(platform)) return json({ok: false, error: 'missing fields'}, 400);
+    const price = clip(fd.get('price'), 40);
+    row = {sector: 'NSKO QUANT', need: `quant_order · ${plan} · ${billing}`, budget: price, timeline: 'Reserve now', nda: false, name, company: '', email, phone: '', source: clip(fd.get('source'), 120) || '/nsko-quant',
+      message: `NSKO QUANT order reservation\nPlan: ${plan} (${billing})\nPrice shown: ${price}\nCountry: ${country}\nPlatform: ${platform}\nRisk warning and terms accepted: yes\nNext step: email a secure payment link and the licence within one working day.`};
+    table = 'briefs'; subject = `NSKO QUANT order: ${plan} ${billing} · ${price} · ${name}`;
   } else {
     row = {name, company: clip(fd.get('company'), 160), email, interest: clip(fd.get('interest'), 60)};
     table = 'portfolio_requests'; subject = `Portfolio pack request: ${row.company || name}`;
   }
   let saved = false;
   if (env.SUPABASE_SERVICE_KEY) { const r = await sb(env, '/rest/v1/' + table, {method: 'POST', headers: {'content-type': 'application/json', prefer: 'return=minimal'}, body: JSON.stringify(row)}); saved = r.ok; }
-  if (!saved) { const kv = briefStore(env); if (kv) { try { await kv.put(`${kind}:${new Date().toISOString()}:${crypto.randomUUID()}`, JSON.stringify({...row, at: new Date().toISOString(), state: 'new'})); saved = true; } catch {} } }
+  if (!saved) { const kv = briefStore(env); if (kv) { try { await kv.put(`${kind === 'quant_order' ? 'brief' : kind}:${new Date().toISOString()}:${crypto.randomUUID()}`, JSON.stringify({...row, at: new Date().toISOString(), state: 'new'})); saved = true; } catch {} } }
   if (!saved) return json({ok: false, error: 'not configured'}, 503);
-  await notify(env, subject, [`${name} (${row.company || 'no organisation'})`, email, kind === 'brief' ? row.message.slice(0, 400) : 'Interested in: ' + row.interest]);
+  await notify(env, subject, [`${name} (${row.company || 'no organisation'})`, email, kind !== 'portfolio' ? row.message.slice(0, 400) : 'Interested in: ' + row.interest]);
   return json({ok: true});
 }
