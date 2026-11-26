@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useS } from './store'
 import { initSource } from './source'
@@ -14,6 +14,14 @@ import Lock from './pages/Lock'
 const Agents = lazy(() => import('./pages/Agents'))
 const GodsEye = lazy(() => import('./pages/GodsEye'))
 const LiveDesk = lazy(() => import('./pages/LiveDesk'))
+
+// One broken page (for example a browser without WebGL for the globe) must never black out the whole desk.
+class PageBoundary extends Component<{ children: ReactNode; page: string }, { err: string | null }> {
+  state = { err: null as string | null }
+  static getDerivedStateFromError(e: Error) { return { err: e?.message || 'error' } }
+  componentDidUpdate(prev: { page: string }) { if (prev.page !== this.props.page && this.state.err) this.setState({ err: null }) }
+  render() { return this.state.err ? <div className="page"><div className="ptitle">This screen could not start</div><div className="psub">Your browser blocked part of it ({this.state.err}). The rest of the desk still works: pick another page from the menu.</div></div> : this.props.children }
+}
 
 initSource()
 const PAGES: Record<string, () => ReactNode> = {
@@ -43,7 +51,7 @@ export default function App() {
       <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
         <AnimatePresence mode="wait">
           <motion.div key={page} style={{ position: 'absolute', inset: 0 }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0, transition: { duration: .25, ease: [.2, .8, .2, 1] } }} exit={{ opacity: 0, transition: { duration: .15 } }}>
-            <Suspense fallback={<Loading />}>{PAGES[page]?.()}</Suspense>
+            <PageBoundary page={page}><Suspense fallback={<Loading />}>{PAGES[page]?.()}</Suspense></PageBoundary>
           </motion.div>
         </AnimatePresence>
       </div>

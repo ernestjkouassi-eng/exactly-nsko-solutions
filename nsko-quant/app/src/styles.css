@@ -46,3 +46,36 @@ td { padding: 6px 8px; border-bottom: 1px solid #12131B; font-variant-numeric: t
 .tick-wrap { overflow: hidden; white-space: nowrap; flex: 1; mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
 .empty { border: 1px dashed #2A2D3A; border-radius: 3px; padding: 10px; color: var(--lo); font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---------- phones and small tablets ---------- */
+.tb-menu, .sb-scrim { display: none; }
+@media (max-width: 820px) {
+  html, body { font-size: 13px; }
+  .tb-hide { display: none !important; }
+  .tb-menu { display: inline-block; }
+  .tb1 { gap: 8px !important; padding: 8px 10px !important; flex-wrap: nowrap; }
+  .tb1 .num { font-size: 15px !important; }
+  .tb1 button { font-size: 9px !important; padding: 4px 6px !important; }
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 60; width: 240px !important; transform: translateX(-100%); transition: transform .3s var(--ease); overflow-y: auto; padding-top: max(12px, env(safe-area-inset-top)) !important; }
+  .sidebar.open { transform: none; }
+  .sb-scrim.open { display: block; position: fixed; inset: 0; z-index: 59; background: rgba(0,0,0,.55); }
+  .page { padding: 12px 12px 60px; }
+  .ptitle { font-size: 22px; }
+  /* every multi-column grid stacks to one column */
+  .grid { grid-template-columns: 1fr !important; }
+  /* rows of KPI tiles wrap two per line */
+  .panel[style*="display: flex"] { flex-wrap: wrap; }
+  .panel[style*="display: flex"] > div { flex: 1 1 45% !important; min-width: 45% !important; border-bottom: 1px solid var(--line); }
+  .row { flex-wrap: wrap; }
+  table { display: block; overflow-x: auto; white-space: nowrap; }
+  input[style*="width: 2"], input[style*="width: 1"] { max-width: 100%; }
+  .panel[style*="width: 620"], .panel[style*="width: 600"], .panel[style*="width: 560"] { width: calc(100vw - 24px) !important; padding: 18px !important; }
+  [style*="width: 380px"][style*="position: fixed"], [style*="width: 380"][style*="right: 0"] { width: 100vw !important; }
+}
+@media (max-width: 820px) {
+  .panel { max-width: 100%; }
+  /* God's Eye: the globe takes the top of the screen, the panels stack underneath it */
+  .nq-cesium { bottom: auto !important; height: 52vh; }
+  .ge-float { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: auto !important; margin: 10px 12px; }
+  .ge-layers { margin-top: calc(52vh + 10px); }
+}

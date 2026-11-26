@@ -92,7 +92,7 @@ export default function LiveDesk() {
       // volume profile on the right edge (tick-volume profile on gold CFDs)
       const lo = Math.min(...d.slice(-120).map(x => x.low)), hi = Math.max(...d.slice(-120).map(x => x.high)); const bins = 36
       for (let i = 0; i < bins; i++) { const p = lo + (hi - lo) * (i + .5) / bins; const v = Math.exp(-(((i - 21) / 6) ** 2)) * .8 + Math.exp(-(((i - 9) / 4) ** 2)) * .4 + .08; const y = Y(p), bh = Math.max(1, Math.abs(Y(lo) - Y(hi)) / bins - 1)
-        c.fillStyle = i === 21 ? '#E8541A' : i > 14 && i < 28 ? 'rgba(232,168,80,.55)' : 'rgba(90,95,110,.5)'; c.fillRect(w - 70 - v * 120, y - bh / 2, v * 120, bh) }
+        c.fillStyle = i === 21 ? '#E8541A' : i > 14 && i < 28 ? 'rgba(232,168,80,.55)' : 'rgba(90,95,110,.5)'; { const pw = Math.min(120, w * .16); c.fillRect(w - 70 - v * pw, y - bh / 2, v * pw, bh) } }
       c.fillStyle = '#5A5F6E'; c.fillText('TICK-VOLUME PROFILE', w - 190, 14)
     }
     // Kronos fan: 1,000 possible paths (160 drawn)

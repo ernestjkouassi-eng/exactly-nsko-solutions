@@ -75,18 +75,19 @@ function Ticker() {
 export function TopBar({ openJarvis }: { openJarvis: () => void }) {
   const round = useS(s => s.round), budget = useS(s => s.budget), decisions = useS(s => s.decisions), mode = useS(s => s.mode), set = useS(s => s.set)
   return <div style={{ borderBottom: '1px solid var(--line)', background: '#07070D' }}>
-    <div className="row" style={{ padding: '8px 14px', gap: 14 }}>
-      <button onClick={openJarvis} style={{ padding: '2px 8px' }} title="JARVIS (Ctrl+J)">+</button>
+    <div className="row tb1" style={{ padding: '8px 14px', gap: 14 }}>
+      <button className="tb-menu" onClick={() => dispatchEvent(new Event('nq-menu'))} aria-label="Open menu" style={{ padding: '2px 9px' }}>☰</button>
+      <button className="tb-hide" onClick={openJarvis} style={{ padding: '2px 8px' }} title="JARVIS (Ctrl+J)">+</button>
       <Wordmark size={14} />
-      <span className="pill"><span className="dot pulse" /> JARVIS running</span>
-      <span className="pill"><span className="dot pulse" /> SCOUT reading</span>
-      <span className="pill">THINK BUDGET {useS.getState().source === 'engine' && !useS.getState().fallback ? `${budget.used.toFixed(1)} of ${budget.of} units today` : `£${budget.used.toFixed(0)} of £${budget.of} · ${budget.days} days`}
+      <span className="pill tb-hide"><span className="dot pulse" /> JARVIS running</span>
+      <span className="pill tb-hide"><span className="dot pulse" /> SCOUT reading</span>
+      <span className="pill tb-hide">THINK BUDGET {useS.getState().source === 'engine' && !useS.getState().fallback ? `${budget.used.toFixed(1)} of ${budget.of} units today` : `£${budget.used.toFixed(0)} of £${budget.of} · ${budget.days} days`}
         <span className="bar" style={{ width: 60, display: 'inline-block' }}><i style={{ width: `${budget.used / budget.of * 100}%` }} /></span></span>
       <SourceChips />
       <div style={{ marginLeft: 'auto' }} className="row">
-        <div style={{ textAlign: 'right', lineHeight: 1.3 }}><div className="lbl">ROUND <span className="num" style={{ color: 'var(--hi)' }}>{fmt(round)}</span></div>
+        <div className="tb-hide" style={{ textAlign: 'right', lineHeight: 1.3 }}><div className="lbl">ROUND <span className="num" style={{ color: 'var(--hi)' }}>{fmt(round)}</span></div>
           <div className="lbl">DECISIONS <span className="num" style={{ color: decisions.length ? 'var(--amber)' : 'var(--hi)' }}>{decisions.length}</span></div></div>
-        <span className="pill" style={{ cursor: 'pointer' }} onClick={() => set({ mode: mode === 'PAPER' ? 'PAPER' : 'PAPER' })} title="Live unlocks after the paper checklist">MODE: <b className="o">{mode}</b> <span className="lo">| LIVE 🔒</span></span>
+        <span className="pill tb-hide" style={{ cursor: 'pointer' }} onClick={() => set({ mode: mode === 'PAPER' ? 'PAPER' : 'PAPER' })} title="Live unlocks after the paper checklist">MODE: <b className="o">{mode}</b> <span className="lo">| LIVE 🔒</span></span>
         <KillSwitch />
         <Clock />
       </div>
@@ -106,10 +107,13 @@ export const NAV: [string, [string, string, boolean?][]][] = [
 export function Sidebar({ page, go }: { page: string; go: (p: string) => void }) {
   const decisions = useS(s => s.decisions), round = useS(s => s.round), source = useS(s => s.source), conn = useS(s => s.conn)
   const foot = source === 'demo' ? <><span className="a">●</span> demo simulator · round {fmt(round)}</> : conn === 'online' ? <><span className="g">●</span> engine online · round {fmt(round)}</> : <><span className="r">●</span> engine {CONN[conn][0].toLowerCase()}</>
-  return <div style={{ width: 168, borderRight: '1px solid var(--line)', padding: '12px 0', display: 'flex', flexDirection: 'column', background: '#07070D' }}>
+  const [open, setOpen] = useState(false)
+  useEffect(() => { const t = () => setOpen(o => !o); addEventListener('nq-menu', t); return () => removeEventListener('nq-menu', t) }, [])
+  const goClose = (id: string) => { go(id); setOpen(false) }
+  return <><div className={`sb-scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} /><div className={`sidebar${open ? ' open' : ''}`} style={{ width: 168, borderRight: '1px solid var(--line)', padding: '12px 0', display: 'flex', flexDirection: 'column', background: '#07070D' }}>
     {NAV.map(([g, items]) => <div key={g} style={{ marginBottom: 14 }}>
       <div className="lbl" style={{ padding: '0 16px 6px' }}>{g}</div>
-      {items.map(([id, name, live]) => <div key={id} data-nav={id} onClick={() => go(id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px', cursor: 'pointer', fontSize: 12.5,
+      {items.map(([id, name, live]) => <div key={id} data-nav={id} onClick={() => goClose(id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px', cursor: 'pointer', fontSize: 12.5,
         background: page === id ? '#11121B' : 'transparent', borderLeft: `2px solid ${page === id ? 'var(--orange)' : 'transparent'}`, color: page === id ? 'var(--hi)' : '#9A9EAA' }}>
         {name}{live && <span className="dot pulse" style={{ marginLeft: 4 }} />}
         {id === 'decisions' && decisions.length > 0 && <span className="badge">{decisions.length}</span>}
@@ -117,7 +121,7 @@ export function Sidebar({ page, go }: { page: string; go: (p: string) => void })
       </div>)}
     </div>)}
     <div className="lbl" style={{ marginTop: 'auto', padding: '0 16px', lineHeight: 1.6, fontSize: 8.5 }}>NSKO QUANT · by NSKO Solutions<br />{foot}</div>
-  </div>
+  </div></>
 }
 
 const SCRIPT: [RegExp, string][] = [
