@@ -8,3 +8,7 @@ brand/templates/film/out/
 brand/templates/film/*.log
 films/
 marketing/v42/
+nsko-quant/engine/.venv*/
+nsko-quant/tools/keys/
+**/__pycache__/
+nsko-quant/app/src-tauri/target/
