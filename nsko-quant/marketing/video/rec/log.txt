@@ -1,6 +1,0 @@
-overview frames 483 span 10.94 fps 44.2
-research frames 324 span 5.96 fps 54.3
-agents frames 149 span 5.95 fps 25.0
-lab frames 654 span 13.95 fps 46.9
-tradecard frames 312 span 12.92 fps 24.1
-desk frames 205 span 9.95 fps 20.6

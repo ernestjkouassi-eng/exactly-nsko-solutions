@@ -2,6 +2,15 @@
 ## Voice-over (video ad)
 - Piper TTS (MIT) with voice `en_GB-northern_english_male-medium`: dataset OpenSLR 83 (CC BY-SA 4.0), base model rdh (CC0). Credit: "Voice: Piper, OpenSLR 83 (CC BY-SA 4.0)". The en_GB "alan" voice was NOT used, because it is fine-tuned from lessac, whose dataset licence is unclear for commercial use.
 
+## Music and sound (video ad)
+- All music and sound effects in `marketing/video/out/*.mp4` were synthesised in code by NSKO Solutions (`marketing/video/audio.py`, numpy/scipy): a 64 BPM low pulse, sub drone, low-passed saw pad, tick-tock clock, typing clicks, noise risers and a sine bell. No samples, loops or downloaded music were used, so no third-party licence applies. numpy and scipy are BSD-3.
+
+## Marketing assets (video ad and posters)
+- Fonts: Inter (SIL OFL 1.1) and JetBrains Mono (SIL OFL 1.1), from `@fontsource`.
+- Every screen is the NSKO QUANT app in demo mode, recorded locally.
+- The God's Eye shot shows Esri World Imagery (credit "Esri, Maxar, Earthstar Geographics, and the GIS User Community", visible in the app's credit line). Esri's terms for using basemap imagery in advertising were not checked from the sandbox: re-check before paid media, or swap that shot for the brain sphere. The posters do not use it.
+- The Live Desk chart is TradingView Lightweight Charts (Apache-2.0); its attribution logo stays visible in the shot.
+
 ## Stage 3 data sources (engine: nsq/data, nsq/research, nsq/lab, nsq/godseye)
 Endpoints are from each provider's own public documentation. The docs sites could not be opened from the build sandbox, so terms marked "re-check" should be read again before NSKO QUANT is sold.
 

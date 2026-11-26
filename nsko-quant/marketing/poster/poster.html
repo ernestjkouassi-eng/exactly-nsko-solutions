@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>NSKO QUANT poster</title>
+<style>
+@font-face{font-family:Inter;font-weight:300;src:url(src/fonts/inter-latin-300-normal.woff2)}
+@font-face{font-family:Inter;font-weight:400;src:url(src/fonts/inter-latin-400-normal.woff2)}
+@font-face{font-family:Inter;font-weight:500;src:url(src/fonts/inter-latin-500-normal.woff2)}
+@font-face{font-family:Inter;font-weight:600;src:url(src/fonts/inter-latin-600-normal.woff2)}
+@font-face{font-family:Inter;font-weight:800;src:url(src/fonts/inter-latin-800-normal.woff2)}
+@font-face{font-family:Inter;font-weight:900;src:url(src/fonts/inter-latin-900-normal.woff2)}
+@font-face{font-family:JBM;font-weight:400;src:url(src/fonts/jetbrains-mono-latin-400-normal.woff2)}
+@font-face{font-family:JBM;font-weight:500;src:url(src/fonts/jetbrains-mono-latin-500-normal.woff2)}
+@page{size:297mm 420mm;margin:0}
+:root{--bg:#08080F;--hi:#E8E8EC;--mid:#9A9FAE;--lo:#5A5F6E;--or:#E8541A;--line:#1A1C26}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--hi);font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.P{position:relative;overflow:hidden;background:var(--bg)}
+.abs{position:absolute}
+.mono{font-family:JBM,monospace}
+.wm{position:absolute;font-family:Inter;font-weight:900;color:#E8E8EC;opacity:.045;white-space:nowrap;letter-spacing:-.02em;line-height:1;pointer-events:none}
+.hero{position:absolute;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 55%,transparent 100%)}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.card{position:absolute;transform-origin:50% 50%;border:1px solid #2A2C3A;border-radius:.6em;overflow:hidden;box-shadow:0 2em 5em rgba(0,0,0,.75),0 0 0 1px rgba(232,84,26,.25),0 0 3.5em rgba(232,84,26,.14)}
+.card img{display:block;width:100%}
+.chip{display:inline-block;border:1px solid #9A6A2A;color:#F4BC64;background:rgba(8,8,15,.92);font-family:JBM,monospace;letter-spacing:.2em;border-radius:3px}
+.pts{display:flex}
+.pt{flex:1;display:flex;align-items:flex-start}
+.pt svg{flex:none;width:100%;height:100%;display:block}
+.pt b{display:block;font-weight:600;color:var(--hi)}
+.pt span{display:block;color:var(--mid);font-weight:400}
+.rule{height:1px;background:linear-gradient(90deg,var(--or),rgba(232,84,26,0))}
+</style></head>
+<body>
+<div class="P" id="P"></div>
+<script>
+const fmt = new URLSearchParams(location.search).get('fmt') || 'a3'
+const DIM = { a3: [1123, 1587], ig: [1080, 1350], story: [1080, 1920] }[fmt]
+const [W, H] = DIM, u = W / 100
+const P = document.getElementById('P'); P.style.width = W + 'px'; P.style.height = H + 'px'; P.style.fontSize = u + 'px'
+const MARK = s => `<svg width="${s}" height="${s}" viewBox="0 0 100 100" style="display:block;flex:none"><rect x="0" y="0" width="22" height="100" fill="#E8E8EC"/><polygon points="26,0 56,0 58.88,16 28.88,16" fill="#E8541A"/><polygon points="29.96,22 59.96,22 74,100 44,100" fill="#E8E8EC"/><rect x="78" y="0" width="22" height="100" fill="#E8E8EC"/></svg>`
+const ICON = {
+  clock: `<svg viewBox="0 0 48 48" fill="none" stroke="#E8541A" stroke-width="2"><circle cx="24" cy="24" r="19"/><path d="M24 12v12l8 5"/><path d="M5 24h3M40 24h3M24 5v3M24 40v3" stroke="#5A5F6E"/></svg>`,
+  data: `<svg viewBox="0 0 48 48" fill="none" stroke="#E8541A" stroke-width="2"><path d="M6 40h36"/><path d="M11 34V22M19 34V14M27 34V26M35 34V9" /><circle cx="35" cy="9" r="2.5" fill="#E8541A"/><path d="M11 22l8-8 8 12 8-17" stroke="#5A5F6E" stroke-dasharray="2 3"/></svg>`,
+  vault: `<svg viewBox="0 0 48 48" fill="none" stroke="#E8541A" stroke-width="2"><path d="M6 18L24 7l18 11"/><path d="M9 20v16M17 20v16M31 20v16M39 20v16" stroke="#5A5F6E"/><path d="M5 40h38"/><rect x="20" y="22" width="8" height="10" rx="1.5"/><path d="M22 22v-3a2 2 0 0 1 4 0v3"/></svg>` }
+const points = [['clock', '24/7 automated', 'Research, testing and trading run around the clock on your own machine.'],
+  ['data', 'Hedge-fund-grade data', 'News, filings, flows and the physical world, read and scored every minute.'],
+  ['vault', 'Your money stays with your broker', 'It trades in your own account. Funds never pass through us.']]
+const orbits = (cx, cy, r, n = 3) => `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  ${Array.from({ length: n }, (_, i) => `<ellipse cx="${cx}" cy="${cy}" rx="${r * (1.18 + i * .2)}" ry="${r * (.36 + i * .07)}" fill="none" stroke="#E8541A" stroke-width="${i ? .8 : 1.2}" stroke-opacity="${.6 - i * .17}" transform="rotate(${-14 + i * 9} ${cx} ${cy})"/>`).join('')}
+  <circle cx="${cx + r * 1.18 * Math.cos(2.6) * Math.cos(-14 * Math.PI / 180) - r * .36 * Math.sin(2.6) * Math.sin(-14 * Math.PI / 180)}" cy="${cy + r * 1.18 * Math.cos(2.6) * Math.sin(-14 * Math.PI / 180) + r * .36 * Math.sin(2.6) * Math.cos(-14 * Math.PI / 180)}" r="${u * .55}" fill="#FF8A55"/>
+  <circle cx="${cx + r * 1.38 * Math.cos(5.9) * Math.cos(-5 * Math.PI / 180) - r * .43 * Math.sin(5.9) * Math.sin(-5 * Math.PI / 180)}" cy="${cy + r * 1.38 * Math.cos(5.9) * Math.sin(-5 * Math.PI / 180) + r * .43 * Math.sin(5.9) * Math.cos(-5 * Math.PI / 180)}" r="${u * .35}" fill="#E8541A"/></svg>`
+
+// layout per format. U(n) = n% of width, in px. Footer and points are anchored to the bottom; the hero fills the gap.
+const U = n => (n * u) + 'px'
+const Hu = H / u
+const L = {
+  a3:    { pad: 7, top: 6, head: 8.6, sub: 3.3, ptsF: 1.75, ptsH: 11, footH: 19, fine: 1.3, sphR: 21, cardW: 58, wm: 17 },
+  ig:    { pad: 6.5, top: 5.5, head: 7.8, sub: 3.1, ptsF: 1.7, ptsH: 10.5, footH: 17.5, fine: 1.3, sphR: 15, cardW: 52, wm: 17 },
+  story: { pad: 7, top: 13, head: 9.4, sub: 3.8, ptsF: 2.3, ptsH: 30, footH: 31, fine: 1.75, sphR: 22, cardW: 66, wm: 21 },
+}[fmt]
+const headTop = L.top + 11, headBottom = headTop + L.head * 3 * .98 + 1.2 + L.sub * 1.5
+const footTop = Hu - L.pad - L.footH, ptsTop = footTop - L.ptsH - (fmt === 'story' ? 4 : 3)
+const heroCy = (headBottom + ptsTop) / 2 + (fmt === 'story' ? -2 : -1.5), heroH = (ptsTop - headBottom) + 14
+const cardTop = ptsTop - 5 - L.cardW / 1.86, cardLeft = 100 - L.pad - L.cardW + 2
+const stack = fmt === 'story'
+P.innerHTML = `
+ <div class="hero" style="left:${U(50 - 75)};top:${U(heroCy - heroH / 2)};width:${U(150)};height:${U(heroH)}"><img src="src/hero_sphere.png" style="object-fit:contain"></div>
+ <div class="wm" style="left:${U(-2)};top:${U(heroCy - L.wm * .45)};font-size:${U(L.wm)}">NSKO SOLUTIONS</div>
+ ${orbits(50 * u, heroCy * u, L.sphR * u)}
+ <div class="card" style="left:${U(cardLeft)};top:${U(cardTop)};width:${U(L.cardW)};transform:perspective(${U(140)}) rotateY(-14deg) rotateX(5deg) rotateZ(-3deg)"><img src="src/tradecard_crop.png"></div>
+ <div class="abs chip" style="left:${U(cardLeft + 2)};top:${U(cardTop - 4.2)};font-size:${U(stack ? 1.6 : 1.3)};padding:.35em .8em">DEMO DATA</div>
+
+ <div class="abs" style="left:${U(L.pad)};right:${U(L.pad)};top:${U(L.top)};display:flex;align-items:center;gap:${U(1.4)}">${MARK(3.4 * u)}<div class="mono" style="font-size:${U(1.45)};letter-spacing:.32em;color:var(--mid)">NSKO <span style="color:var(--or)">QUANT</span></div>
+   <div class="mono" style="margin-left:auto;font-size:${U(1.3)};letter-spacing:.28em;color:var(--lo)">LONDON · 03:00</div></div>
+ <div class="abs" style="left:${U(L.pad)};right:${U(L.pad)};top:${U(headTop)}">
+   <div style="font-weight:800;font-size:${U(L.head)};line-height:.98;letter-spacing:-.035em">Your private<br>trading desk.<br><span style="color:var(--or)">Awake 24/7.</span></div>
+   <div style="margin-top:${U(1.6)};font-size:${U(L.sub)};font-weight:300;color:#C8CCD6;letter-spacing:-.005em">Research. Test. Trade. <span style="font-weight:500;color:var(--hi)">Automatically.</span></div>
+ </div>
+
+ <div class="abs pts" style="left:${U(L.pad)};right:${U(L.pad)};top:${U(ptsTop)};gap:${U(stack ? 3 : 3.4)};font-size:${U(L.ptsF)}${stack ? ';flex-direction:column' : ''}">
+   ${points.map(([ic, t, s]) => `<div class="pt" style="gap:.8em"><div style="width:2.5em;height:2.5em">${ICON[ic]}</div><div><b style="line-height:1.25">${t}</b><span style="font-size:.74em;line-height:1.4;margin-top:.3em">${s}</span></div></div>`).join('')}
+ </div>
+
+ <div class="abs" style="left:${U(L.pad)};right:${U(L.pad)};top:${U(footTop)}">
+   <div class="rule"></div>
+   <div style="display:flex;align-items:center;gap:${U(2)};margin-top:${U(stack ? 4 : 3)}">
+     ${MARK((stack ? 7.4 : 6) * u)}
+     <div><div style="font-weight:900;font-size:${U(stack ? 6.6 : 5.4)};letter-spacing:-.03em;line-height:.9;white-space:nowrap">NSKO <span style="color:var(--or)">QUANT</span></div>
+       <div class="mono" style="margin-top:${U(1.1)};font-size:${U(stack ? 1.7 : 1.3)};letter-spacing:.34em;color:var(--mid)">BY NSKO SOLUTIONS</div></div>
+     ${stack ? '' : `<div class="mono" style="margin-left:auto;font-size:${U(1.9)};letter-spacing:.06em;color:var(--or);text-align:right">nskosolutions.co.uk</div>`}
+   </div>
+   ${stack ? `<div class="mono" style="margin-top:${U(3.6)};font-size:${U(3)};letter-spacing:.06em;color:var(--or)">nskosolutions.co.uk</div>` : ''}
+   <div style="margin-top:${U(stack ? 3.4 : 2.6)};font-size:${U(L.fine)};line-height:1.5;color:#8A8F9E">Trading leveraged products carries a high risk of losing money. NSKO QUANT is software, not financial advice. Demo data shown.</div>
+ </div>`
+</script></body></html>
