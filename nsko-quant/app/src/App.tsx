@@ -13,6 +13,9 @@ import Lock from './pages/Lock'
 // Heavy pages load on demand: three.js (Agent Room), CesiumJS (God's Eye), lightweight-charts (Live Desk).
 const Agents = lazy(() => import('./pages/Agents'))
 const GodsEye = lazy(() => import('./pages/GodsEye'))
+const GodsEyeLite = lazy(() => import('./pages/GodsEyeLite'))
+// Phones get the light globe (fast, no map engine); a desktop browser that cannot run the full globe falls back to it too.
+const smallScreen = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 820px)').matches
 const LiveDesk = lazy(() => import('./pages/LiveDesk'))
 
 // One broken page (for example a browser without WebGL for the globe) must never black out the whole desk.
@@ -20,12 +23,13 @@ class PageBoundary extends Component<{ children: ReactNode; page: string }, { er
   state = { err: null as string | null }
   static getDerivedStateFromError(e: Error) { return { err: e?.message || 'error' } }
   componentDidUpdate(prev: { page: string }) { if (prev.page !== this.props.page && this.state.err) this.setState({ err: null }) }
-  render() { return this.state.err ? <div className="page"><div className="ptitle">This screen could not start</div><div className="psub">Your browser blocked part of it ({this.state.err}). The rest of the desk still works: pick another page from the menu.</div></div> : this.props.children }
+  render() { if (this.state.err && this.props.page === 'godseye') return <Suspense fallback={<Loading />}><GodsEyeLite /></Suspense>
+    return this.state.err ? <div className="page"><div className="ptitle">This screen could not start</div><div className="psub">Your browser blocked part of it ({this.state.err}). The rest of the desk still works: pick another page from the menu.</div></div> : this.props.children }
 }
 
 initSource()
 const PAGES: Record<string, () => ReactNode> = {
-  overview: () => <Overview />, lab: () => <Lab />, research: () => <Research />, strategies: () => <Strategies />, knowledge: () => <Knowledge />, agents: () => <Agents />, godseye: () => <GodsEye />,
+  overview: () => <Overview />, lab: () => <Lab />, research: () => <Research />, strategies: () => <Strategies />, knowledge: () => <Knowledge />, agents: () => <Agents />, godseye: () => smallScreen() ? <GodsEyeLite /> : <GodsEye />,
   desk: () => <LiveDesk />, tradecard: () => <TradeCard />, decisions: () => <Decisions />, paperlive: () => <PaperLive />, withdraw: () => <Withdraw />,
   brokers: () => <Brokers />, engine: () => <Engine />, costs: () => <Costs />, settings: () => <Settings />, help: () => <Help />,
 }
