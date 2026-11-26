@@ -100,6 +100,28 @@ def spread_ok(market: str, bid: float | None, ask: float | None) -> tuple[bool, 
     return bps <= cap, f"spread {bps:.1f} bps vs max {cap:.1f} bps"
 
 
+def _norm_asset(a: str) -> str:
+    return "".join(ch for ch in str(a).upper() if ch.isalnum())
+
+
+def godseye_flags(market: str) -> dict:
+    """God's Eye MARKET IMPACT risk flags for this market. Only honoured when the user set
+    godseye.risk_actions = "apply"; flags can only REDUCE risk: cut_size (smaller trade) or pause_new (no new entry)."""
+    out = {"applied": False, "pause": False, "cut": False, "factor": 1.0, "flags": []}
+    if get("godseye.risk_actions", "suggest") != "apply":
+        return out
+    try:
+        from ..godseye.impact import active_risk_flags
+        flags = [f for f in active_risk_flags() if _norm_asset(f["asset"]) == _norm_asset(market)]
+    except Exception:   # God's Eye unavailable: never loosen anything, just report nothing
+        return out
+    out.update(applied=True, flags=flags, pause=any(f["action"] == "pause_new" for f in flags),
+               cut=any(f["action"] == "cut_size" for f in flags))
+    if out["cut"]:
+        out["factor"] = min(1.0, max(0.0, float(get("godseye.cut_size_factor", 0.5) or 0.5)))
+    return out
+
+
 def check(ctx: TradeContext, record: bool = True) -> RiskResult:
     from .killswitch import is_locked
     m = ctx.mode
@@ -135,6 +157,10 @@ def check(ctx: TradeContext, record: bool = True) -> RiskResult:
     me = limit("risk.max_exposure_per_market_pct", m)
     exp = sum(float(p.get("risk_gbp", 0)) for p in ctx.open_positions if p.get("market") == ctx.market) + ctx.risk_gbp
     add("market_exposure", exp <= ctx.equity * me / 100 * 1.0001, f"£{exp:.2f} on {ctx.market} vs max {me}% of equity")
+    ge = godseye_flags(ctx.market)
+    if ge["applied"]:
+        why = "; ".join(f"{f['action']} ({f['impact_id'].split(':')[0]})" for f in ge["flags"]) or "no God's Eye flag on this market"
+        add("godseye_flags", not ge["pause"], ("God's Eye paused new entries: " if ge["pause"] else "God's Eye: ") + why)
 
     enforced = gate_enabled(m)
     blocked = [c for c in checks if not c["passed"]]

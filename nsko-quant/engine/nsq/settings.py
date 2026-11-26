@@ -69,6 +69,8 @@ DEFAULTS: dict[str, Any] = {
     # data feeds the engine runs while it is up (candle events, order flow)
     "data.feeds": ["XAU/USD", "BTC/USD"],
     "data.live_stream": True,                  # Kraken public trade stream for crypto order flow
+    # God's Eye risk flags in the risk gate (only when godseye.risk_actions = "apply")
+    "godseye.cut_size_factor": 0.5,
     # JARVIS chat
     "jarvis.ollama_model": None,               # falls back to research / debate model
 }

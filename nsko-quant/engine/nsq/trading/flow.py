@@ -183,8 +183,11 @@ class TradeFlow:
 
         # 6. SIZE
         acct = self.broker.account()
+        ge = risk.godseye_flags(market)            # God's Eye "cut_size" can only make the trade smaller
         sz = sizing.size_trade(acct.equity, float(get("risk.per_trade_pct")), entry, plan["stop"], market,
-                               size_factor=live_unlock.size_factor(mode))
+                               size_factor=live_unlock.size_factor(mode) * ge["factor"])
+        if ge["cut"]:
+            sz["godseye_cut"] = ge["factor"]
         plan["qty"] = sz["qty"]
         publish("size_calc", {"plan_id": plan["id"], "equity": acct.equity, "currency": acct.currency, **sz, "paper": mode == "paper"})
         steps.append("size")

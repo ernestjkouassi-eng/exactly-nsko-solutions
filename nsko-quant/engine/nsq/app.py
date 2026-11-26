@@ -207,7 +207,7 @@ class KillBody(BaseModel):
     reason: str = "kill switch pressed"
 
 
-PROTECTED_SETTINGS = {"mode", "live.unlocked_at", "trading.locked", "trading.lock_reason", "licence.key"}
+PROTECTED_SETTINGS = {"mode", "live.unlocked_at", "trading.locked", "trading.lock_reason", "licence.key", "notify.telegram_pair"}
 
 # The vault names each adapter reads its key and secret from (nsq.brokers.build).
 KEY_FIELDS = {"alpaca": ("key_id", "secret"), "kraken": ("key", "secret"), "coinbase": ("key", "secret"), "ibkr": ()}
@@ -504,7 +504,7 @@ def _routes(app: FastAPI) -> None:
     # ------------------------------------------------------------------ settings
     @app.get("/settings")
     def settings_all():
-        return {k: v for k, v in all_settings().items() if not k.startswith(("vault.", "licence.key", "strategy.pending"))}
+        return {k: v for k, v in all_settings().items() if not k.startswith(("vault.", "licence.key", "strategy.pending", "notify.telegram_pair"))}
 
     @app.post("/settings")
     def settings_set(b: SettingBody, s=Depends(need_session)):
@@ -622,6 +622,23 @@ def _routes(app: FastAPI) -> None:
         if not b.message.strip():
             raise HTTPException(400, "Ask something first.")
         return chat(b.message, b.history)
+
+    @app.post("/telegram/pair/begin")
+    def telegram_pair_begin(s=Depends(need_session)):
+        from .notify import pair_begin
+        if not vault.get("telegram.bot_token"):
+            raise HTTPException(400, "Save your Telegram bot token first.")
+        return pair_begin()
+
+    @app.post("/notify/test")
+    def notify_test(s=Depends(need_session)):
+        """Send a test alert now to every channel that is set up; returns what each channel answered."""
+        from .notify import notify
+        aid = notify("info", "NSKO QUANT test alert", "If you can read this on your phone, alerts work.", level="info", sync=True)
+        row = conn().execute("SELECT delivered FROM alerts WHERE id=?", (aid,)).fetchone()
+        return {"id": aid, "delivered": row["delivered"] if row else None,
+                "ntfy_topic_set": bool(get("notify.ntfy_topic")), "telegram_paired": bool(get("notify.telegram_chat_id")),
+                "telegram_token_set": bool(vault.get("telegram.bot_token"))}
 
     @app.post("/telegram/pair")
     def telegram_pair(b: CodeBody, s=Depends(need_session)):

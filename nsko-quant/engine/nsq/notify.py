@@ -94,6 +94,8 @@ def handle_telegram_update(update: dict) -> str | None:
     paired = str(get("notify.telegram_chat_id") or "")
     if not text.startswith("/"):
         return None
+    if text.startswith("/pair"):
+        return _pair(chat_id, text[5:].strip())
     if not paired or chat_id != paired:
         from .audit import audit
         audit("telegram", "command_refused", {"chat_id": chat_id, "cmd": text[:20]})
@@ -108,6 +110,36 @@ def handle_telegram_update(update: dict) -> str | None:
         notify("info", "Status", f"Equity £{a.equity:,.2f} · open positions {len(active().positions())}", level="info")
         return "status"
     return None
+
+
+def pair_begin(ttl_s: int = 600) -> dict:
+    """Start pairing: a one-time 6-digit code the user sends to their bot as `/pair 123456` (10 minutes)."""
+    import hashlib
+    import secrets
+    from .settings import set as sset
+    code = f"{secrets.randbelow(10 ** 6):06d}"
+    sset("notify.telegram_pair", {"hash": hashlib.sha256(code.encode()).hexdigest(), "expires": time.time() + ttl_s, "tries": 0})
+    return {"code": code, "expires_in_s": ttl_s, "how": f"Send /pair {code} to your bot in Telegram within {ttl_s // 60} minutes."}
+
+
+def _pair(chat_id: str, code: str) -> str:
+    import hashlib
+    import hmac
+    from .audit import audit
+    from .settings import set as sset
+    p = get("notify.telegram_pair", None) or {}
+    if not p or time.time() > float(p.get("expires", 0)) or int(p.get("tries", 0)) >= 5:
+        audit("telegram", "pair_refused", {"chat_id": chat_id, "why": "no pairing in progress"})
+        return "refused"
+    if not hmac.compare_digest(hashlib.sha256(code.encode()).hexdigest(), p.get("hash", "")):
+        sset("notify.telegram_pair", {**p, "tries": int(p.get("tries", 0)) + 1})
+        audit("telegram", "pair_refused", {"chat_id": chat_id, "why": "wrong code"})
+        return "refused"
+    sset("notify.telegram_chat_id", chat_id)
+    sset("notify.telegram_pair", None)
+    audit("telegram", "paired", {"chat_id": chat_id})
+    publish("alert", {"kind": "info", "level": "info", "title": "Telegram paired", "body": "Alerts and /kill now work from that chat."})
+    return "paired"
 
 
 def poll_telegram() -> None:

@@ -308,3 +308,84 @@ def test_cli_version_and_localhost_only():
     r = subprocess.run([sys.executable, str(eng.parent / "deploy" / "pyinstaller" / "entry.py"), "--version"], cwd=eng,
                        capture_output=True, text=True, timeout=60, env={**env, "PYTHONPATH": str(eng)})
     assert r.returncode == 0 and "NSKO QUANT engine" in r.stdout
+
+
+# ------------------------------------------------------------------ God's Eye risk flags in the risk gate
+def _flag(asset, action):
+    from nsq.godseye import impact
+    from nsq.db import conn
+    impact.ensure()
+    import time
+    conn().execute("INSERT INTO godseye_risk_flags (impact_id, asset, action, expires_at, created_at) VALUES (?,?,?,?,?)",
+                   (f"test_rule:{action}:x", asset, action, int(time.time() * 1000) + 3_600_000, int(time.time() * 1000)))
+
+
+def _run_trade(paper):
+    from nsq.trading import strategies as st
+    from nsq.trading.flow import TradeFlow
+    from test_flow import NOW, RECIPE, last_bar_signal
+    from conftest import trend_candles
+    sset("forecast.paths", 400)
+    sset("timemachine.replays", 2000)
+    df = trend_candles()
+    paper.set_price("XAU/USD", float(df["close"].iloc[-1]), ts=NOW.timestamp())
+    st.create(RECIPE, status="paper")
+    return TradeFlow(paper, signals_fn=last_bar_signal).run(st.approved()[0], now=NOW, df=df)
+
+
+def test_godseye_pause_new_blocks_only_when_apply(paper):
+    from nsq.trading import risk
+    _flag("XAU/USD", "pause_new")
+    assert risk.godseye_flags("XAU/USD")["applied"] is False, "suggest mode: flags are ignored"
+    sset("godseye.risk_actions", "apply")
+    g = risk.godseye_flags("XAU/USD")
+    assert g["pause"] and not risk.godseye_flags("BTC/USD")["pause"], "only the flagged market"
+    r = _run_trade(paper)
+    assert r["result"] == "skipped" and r["step"] == "risk" and "God's Eye paused new entries" in r["why"]
+    assert paper.positions() == []
+
+
+def test_godseye_cut_size_halves_the_trade(paper):
+    base = _run_trade(paper)
+    assert base["result"] == "executed"
+    q_full = base["size"]["qty"]
+    for p in paper.positions():
+        paper.close(p.id)
+    from nsq.db import conn
+    conn().execute("DELETE FROM strategies"); conn().execute("DELETE FROM strategy_versions")
+    sset("godseye.risk_actions", "apply")
+    _flag("XAUUSD", "cut_size")            # asset names are matched without punctuation
+    r = _run_trade(paper)
+    assert r["result"] == "executed" and r["size"]["godseye_cut"] == 0.5
+    assert r["size"]["qty"] <= q_full / 2 + 1e-9
+    assert any(c["rule"] == "godseye_flags" and c["passed"] for c in r["risk"]["checks"])
+
+
+# ------------------------------------------------------------------ alerts set-up: telegram pairing, test alert
+def test_telegram_pairing_flow(client, auth):
+    from nsq import notify, vault
+    assert client.post("/telegram/pair/begin", headers=auth).status_code == 400, "token first"
+    assert client.post("/vault/telegram.bot_token", json={"value": "123:ABC"}, headers=auth).json()["ok"]
+    assert "123:ABC" not in str(client.get("/vault").json()) and "telegram.bot_token" in client.get("/vault").json()["names"]
+    code = client.post("/telegram/pair/begin", headers=auth).json()["code"]
+    assert "notify.telegram_pair" not in client.get("/settings").json(), "the code hash never leaves the engine"
+    upd = lambda chat, text: {"message": {"chat": {"id": chat}, "text": text}}
+    assert notify.handle_telegram_update(upd(42, "/pair 000000" if code != "000000" else "/pair 111111")) == "refused"
+    assert notify.handle_telegram_update(upd(99, "/kill")) == "refused", "not paired yet"
+    assert notify.handle_telegram_update(upd(42, f"/pair {code}")) == "paired"
+    assert get("notify.telegram_chat_id") == "42"
+    assert notify.handle_telegram_update(upd(7, f"/pair {code}")) == "refused", "a code works once"
+    assert vault.get("telegram.bot_token") == "123:ABC"
+
+
+def test_notify_test_endpoint(client, auth, monkeypatch):
+    from nsq import notify
+    monkeypatch.setattr(notify, "_ntfy", lambda t, b, l: "ok")
+    monkeypatch.setattr(notify, "_telegram", lambda t, b: "skipped")
+    sset("notify.ntfy_topic", "my-topic")
+    r = client.post("/notify/test", headers=auth).json()
+    assert "'ntfy': 'ok'" in r["delivered"] and r["ntfy_topic_set"] is True and r["telegram_paired"] is False
+    sset("notify.ntfy_enabled", False)
+    r = client.post("/notify/test", headers=auth).json()
+    assert "off in settings" in r["delivered"]
+    assert client.post("/notify/test", headers=H).status_code == 401
