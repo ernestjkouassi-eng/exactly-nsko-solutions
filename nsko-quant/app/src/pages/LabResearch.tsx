@@ -14,30 +14,36 @@ export function EquityFan() {
   const variants = useS(s => s.variants); const [mode, setMode] = useState<'outcome' | 'idea' | 'nocost'>('outcome'); const [hov, setHov] = useState<Variant | null>(null)
   const mouse = useRef<[number, number] | null>(null)
   const bank = useMemo(() => { const v: Variant[] = []; for (let i = 0; i < 520; i++) { const s = (i * 7919) % 99991; const is = .3 + ((s % 100) / 100) * 1.4; const oos = is - ((s % 37) / 37) * 1.6 + ((s % 11) - 5) / 20; v.push({ id: -i, recipe: `${['Range', 'Trend', 'Sweep', 'Spread', 'ORB'][i % 5]}-XAU ${i % 20 + 1}`, market: 'XAU', tf: '4h', sharpeIS: +is.toFixed(2), sharpeOOS: +oos.toFixed(2), trades: 200, win: 50, rr: 1.4, dd: -12, outcome: oos >= 1.4 ? 'clear' : oos > .7 && i % 2 ? 'sieve' : 'failed', why: oos < 1.4 ? 'Max drawdown too deep' : null, seed: s + 1 }) } return v }, [])
-  const all = [...bank, ...variants]; const paths = useRef(new Map<number, number[]>())
+  const all = [...bank, ...variants]; const paths = useRef(new Map<number, number[]>()); const cache = useRef<{ key: string; img: HTMLCanvasElement | null }>({ key: '', img: null })
   const draw = (c: CanvasRenderingContext2D, w: number, h: number, t: number) => {
-    c.clearRect(0, 0, w, h); const n = 220, mid = h * .55, sx = (i: number) => 30 + (i / (n - 1)) * (w - 60), sy = (y: number) => mid - y * 5
+    c.clearRect(0, 0, w, h); const n = 220, mid = h * .55, sx = (i: number) => 30 + (i / (n - 1)) * (w - 60), K = h * .4 / 14, sy = (y: number) => mid - y * K   // ±14 units fills the panel
     c.fillStyle = 'rgba(255,255,255,.015)'; c.fillRect(30, 0, (w - 60) / 2, h)
     c.font = '10px JetBrains Mono'; c.fillStyle = '#5A5F6E'; c.fillText('IN-SAMPLE (IS) 2009–2019', 40, 18); c.fillText('OUT-OF-SAMPLE (OOS) 2020–2026', w / 2 + 10, 18)
     c.strokeStyle = '#2A2D3A'; c.beginPath(); c.moveTo(w / 2, 26); c.lineTo(w / 2, h - 10); c.stroke()
     let best: Variant | null = null, bd = 14
-    all.slice(-560).forEach((v, k) => {
+    const list = all.slice(-560), d = Math.min(2, devicePixelRatio || 1), key = `${w}x${h}|${mode}|${variants.length}`
+    const line = (cc: CanvasRenderingContext2D, v: Variant, upto: number, running: boolean) => {
       let p = paths.current.get(v.id); if (!p) { p = path(v, n); paths.current.set(v.id, p) }
-      const running = k === all.slice(-560).length - 1
-      const col = running ? '#FFFFFF' : mode === 'idea' ? IDEA_COL[Math.abs(v.seed) % 7] : v.outcome === 'clear' ? '#78D880' : v.outcome === 'sieve' ? '#E8A850' : '#5A5F6E'
-      c.strokeStyle = col; c.globalAlpha = running ? 1 : v.outcome === 'failed' && mode !== 'idea' ? .12 : .45; c.lineWidth = running ? 1.6 : .7
-      if (mode === 'nocost') c.setLineDash([3, 3])
-      const upto = running ? Math.floor(((t * .5) % 1) * n) : n
-      c.beginPath(); for (let i = 0; i < upto; i++) { const x = sx(i), y = sy(p[i] + (mode === 'nocost' && i > n / 2 ? (i - n / 2) * .02 : 0)); i ? c.lineTo(x, y) : c.moveTo(x, y) } c.stroke(); c.setLineDash([])
-      if (running && upto > 0) { c.globalAlpha = 1; c.fillStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 12; c.beginPath(); c.arc(sx(upto - 1), sy(p[upto - 1]), 3, 0, 7); c.fill(); c.shadowBlur = 0 }
-      if (mouse.current) { const i = Math.round((mouse.current[0] - 30) / (w - 60) * (n - 1)); if (i >= 0 && i < n) { const d = Math.abs(sy(p[i]) - mouse.current[1]); if (d < bd) { bd = d; best = v } } }
-    })
+      cc.strokeStyle = running ? '#FFFFFF' : mode === 'idea' ? IDEA_COL[Math.abs(v.seed) % 7] : v.outcome === 'clear' ? '#78D880' : v.outcome === 'sieve' ? '#E8A850' : '#5A5F6E'
+      cc.globalAlpha = running ? 1 : v.outcome === 'failed' && mode !== 'idea' ? .12 : .45; cc.lineWidth = running ? 1.6 : .7
+      if (mode === 'nocost') cc.setLineDash([3, 3])
+      cc.beginPath(); for (let i = 0; i < upto; i++) { const x = sx(i), y = sy(p[i] + (mode === 'nocost' && i > n / 2 ? (i - n / 2) * .02 : 0)); i ? cc.lineTo(x, y) : cc.moveTo(x, y) } cc.stroke(); cc.setLineDash([]); cc.globalAlpha = 1
+      return p
+    }
+    if (cache.current.key !== key) {        // the settled lines are drawn once into an offscreen canvas; only the running test redraws each frame
+      const oc = document.createElement('canvas'); oc.width = w * d; oc.height = h * d; const cc = oc.getContext('2d')!; cc.setTransform(d, 0, 0, d, 0, 0)
+      list.slice(0, -1).forEach(v => line(cc, v, n, false)); cache.current = { key, img: oc }
+    }
+    c.drawImage(cache.current.img!, 0, 0, w, h)
+    const run = list[list.length - 1], upto = Math.floor(((t * .5) % 1) * n); const rp = line(c, run, upto, true)
+    if (upto > 0) { c.fillStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 12; c.beginPath(); c.arc(sx(upto - 1), sy(rp[upto - 1]), 3, 0, 7); c.fill(); c.shadowBlur = 0 }
+    if (mouse.current) { const i = Math.round((mouse.current[0] - 30) / (w - 60) * (n - 1)); if (i >= 0 && i < n) list.forEach(v => { const p = paths.current.get(v.id); if (!p) return; const dd = Math.abs(sy(p[i]) - mouse.current![1]); if (dd < bd) { bd = dd; best = v } }) }
     c.globalAlpha = 1
     if (best) { const p = paths.current.get((best as Variant).id)!; c.strokeStyle = '#E8541A'; c.lineWidth = 2; c.beginPath(); p.forEach((y, i) => i ? c.lineTo(sx(i), sy(y)) : c.moveTo(sx(i), sy(y))); c.stroke() }
     if (best !== hov) setHov(best)
     // THE BAR
-    c.strokeStyle = '#78D880'; c.setLineDash([6, 4]); c.beginPath(); c.moveTo(w / 2, mid); c.lineTo(w - 30, mid - 1.4 * .035 * 110 * 5); c.stroke(); c.setLineDash([])
-    c.fillStyle = '#78D880'; c.fillText('THE BAR · SHARPE 1.40', w - 190, mid - 1.4 * .035 * 110 * 5 - 8)
+    c.strokeStyle = '#78D880'; c.setLineDash([6, 4]); c.beginPath(); c.moveTo(w / 2, mid); c.lineTo(w - 30, mid - 1.4 * .035 * 110 * K); c.stroke(); c.setLineDash([])
+    c.fillStyle = '#78D880'; c.fillText('THE BAR · SHARPE 1.40', w - 190, mid - 1.4 * .035 * 110 * K - 8)
     // scan beam
     const bx = 30 + ((t * .12) % 1) * (w - 60); const g = c.createLinearGradient(bx - 40, 0, bx, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,.12)'); c.fillStyle = g; c.fillRect(bx - 40, 26, 40, h - 36)
   }
