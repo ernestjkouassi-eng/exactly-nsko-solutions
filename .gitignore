@@ -4,3 +4,6 @@ node_modules/
 assets-src/
 render/out/
 render/*.log
+brand/templates/film/out/
+brand/templates/film/*.log
+films/
