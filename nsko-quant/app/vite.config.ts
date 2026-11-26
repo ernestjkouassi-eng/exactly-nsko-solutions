@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     viteStaticCopy({ targets: ['Workers', 'ThirdParty', 'Assets', 'Widgets'].map(d => ({ src: `${cesium}/${d}`, dest: 'cesium', rename: { stripBase: 4 } })) }),
   ],
-  define: { CESIUM_BASE_URL: JSON.stringify('/cesium/') },
+  define: { CESIUM_BASE_URL: JSON.stringify('./cesium/') },
   // Tauri: fixed port for `tauri dev`, and keep the terminal readable
   server: { port: 5173, strictPort: true },
   clearScreen: false,
