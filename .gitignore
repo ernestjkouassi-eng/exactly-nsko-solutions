@@ -4,3 +4,10 @@ node_modules/
 assets-src/
 render/out/
 render/*.log
+
+# work kept on other branches (v42, nsko-quant)
+brand/templates/film/film.log
+brand/templates/film/out/
+films/
+marketing/v42/
+nsko-quant/
