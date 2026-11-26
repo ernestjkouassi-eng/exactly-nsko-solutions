@@ -15,6 +15,9 @@
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-cache
 
+/demo/objective-specimen-b9f04eec/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /admin
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
