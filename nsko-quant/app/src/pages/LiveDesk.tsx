@@ -64,7 +64,7 @@ export default function LiveDesk() {
     c.font = '9px JetBrains Mono'
     if (pr?.bins?.length) {   // profile on the right edge + POC / value area lines
       const mx = Math.max(...pr.bins.map((b: any) => b.vol)) || 1, bh = Math.max(1, Math.abs(Y(pr.bins[0].price) - Y(pr.bins[pr.bins.length - 1].price)) / pr.bins.length - 1)
-      for (const b of pr.bins) { const inVa = pr.val != null && b.price >= pr.val && b.price <= pr.vah; c.fillStyle = Math.abs(b.price - pr.poc) < 1e-9 ? '#E8541A' : inVa ? 'rgba(232,168,80,.5)' : 'rgba(90,95,110,.45)'; c.fillRect(w - 70 - b.vol / mx * 120, Y(b.price) - bh / 2, b.vol / mx * 120, bh) }
+      for (const b of pr.bins) { const inVa = pr.val != null && b.price >= pr.val && b.price <= pr.vah; c.fillStyle = Math.abs(b.price - pr.poc) < 1e-9 ? '#E8541A' : inVa ? 'rgba(232,168,80,.5)' : 'rgba(90,95,110,.45)'; c.fillRect(w - 70 - b.vol / mx * Math.min(120, w * .14), Y(b.price) - bh / 2, b.vol / mx * Math.min(120, w * .14), bh) }
       for (const [k, col] of [['poc', '#E8541A'], ['vah', '#E8A850'], ['val', '#E8A850']] as const) if (pr[k] != null) { c.strokeStyle = col; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(0, Y(pr[k])); c.lineTo(w - 70, Y(pr[k])); c.stroke(); c.setLineDash([]); c.fillStyle = col; c.fillText(k.toUpperCase(), 6, Y(pr[k]) - 3) }
       c.fillStyle = '#5A5F6E'; c.fillText(String(pr.label || (pr.volume_kind === 'exchange' ? 'VOLUME PROFILE' : 'TICK-VOLUME PROFILE')).toUpperCase() + (pr.synthetic ? ' · SYNTHETIC' : ''), w - 260, 14)
     }
@@ -92,7 +92,7 @@ export default function LiveDesk() {
       // volume profile on the right edge (tick-volume profile on gold CFDs)
       const lo = Math.min(...d.slice(-120).map(x => x.low)), hi = Math.max(...d.slice(-120).map(x => x.high)); const bins = 36
       for (let i = 0; i < bins; i++) { const p = lo + (hi - lo) * (i + .5) / bins; const v = Math.exp(-(((i - 21) / 6) ** 2)) * .8 + Math.exp(-(((i - 9) / 4) ** 2)) * .4 + .08; const y = Y(p), bh = Math.max(1, Math.abs(Y(lo) - Y(hi)) / bins - 1)
-        c.fillStyle = i === 21 ? '#E8541A' : i > 14 && i < 28 ? 'rgba(232,168,80,.55)' : 'rgba(90,95,110,.5)'; { const pw = Math.min(120, w * .16); c.fillRect(w - 70 - v * pw, y - bh / 2, v * pw, bh) } }
+        c.fillStyle = i === 21 ? '#E8541A' : i > 14 && i < 28 ? 'rgba(232,168,80,.55)' : 'rgba(90,95,110,.5)'; { const pw = Math.min(120, w * .14); c.fillRect(w - 70 - v * pw, y - bh / 2, v * pw, bh) } }
       c.fillStyle = '#5A5F6E'; c.fillText('TICK-VOLUME PROFILE', w - 190, 14)
     }
     // Kronos fan: 1,000 possible paths (160 drawn)

@@ -79,3 +79,10 @@ td { padding: 6px 8px; border-bottom: 1px solid #12131B; font-variant-numeric: t
   .ge-float { position: relative !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: auto !important; margin: 10px 12px; }
   .ge-layers { margin-top: calc(52vh + 10px); }
 }
+@media (max-width: 820px) {
+  .bc-side { display: none; }               /* Brain Core: the sphere alone on phones; the numbers are in the KPI tiles above */
+  .ph { flex-wrap: wrap; }
+  .ph .s { display: none; }                 /* panel subtitles hide on phones so titles stay on one line */
+  .ph .rt { margin-left: 0; width: 100%; flex-wrap: wrap; }
+  .ph .rt:empty { display: none; }
+}

@@ -53,13 +53,13 @@ function BrainCore() {
       <Corners />
       <Canvas draw={draw} />
       <div className="mono" style={{ position: 'absolute', top: 10, left: 0, right: 0, textAlign: 'center', fontSize: 11 }}><span className="lo">NOW</span> {engine ? (labRunning ? <>the lab is testing <span className="o">{labRunning}</span></> : 'the lab is idle') : <>the lab is testing <span className="o">Range-XAU 16 · 4h</span></>}</div>
-      <div style={{ position: 'absolute', left: 14, top: 26, width: 180 }}>
+      <div className="bc-side" style={{ position: 'absolute', left: 14, top: 26, width: 180 }}>
         <div className="lbl" style={{ marginBottom: 6 }}>{engine ? `SOURCES THIS SESSION ↓${sources.length}` : 'SOURCES IN TODAY ↓100'}</div>
         {(engine ? [['YOUTUBE', byKind('YouTube'), 1], ['GITHUB', byKind('GitHub'), 2], ['ARXIV', byKind('arXiv'), 3], ['WEB', sources.length - byKind('YouTube') - byKind('GitHub') - byKind('arXiv'), 4]] : [['YOUTUBE', 45, 1], ['GITHUB', 23, 2], ['ARXIV', 12, 3], ['WEB', 20, 4]]).map(([k, v, s]) =>
           <div key={k as string} className="panel" style={{ padding: '7px 10px', marginBottom: 22, borderLeft: '2px solid var(--cyan)' }}>
             <div className="row" style={{ justifyContent: 'space-between' }}><span className="lbl">{k}</span><span className="num">{v}</span></div><Spark data={walk(s as number, 30)} color="#20E0F0" w={155} h={16} /></div>)}
       </div>
-      <div style={{ position: 'absolute', right: 14, top: 40, width: 180 }}>
+      <div className="bc-side" style={{ position: 'absolute', right: 14, top: 40, width: 180 }}>
         <div className="lbl" style={{ marginBottom: 6 }}>OUTPUT TODAY</div>
         {(engine ? [['SOURCES READ', sources.length], ['VARIANTS TESTED', tested], ['CLEAR THE BAR', clear]] : [['THOUGHT UP', 103], ['VARIANTS TESTED', useS.getState().demo ? 532 + (tested - 1251) : tested], ['APPROVED', 2]]).map(([k, v], i) =>
           <div key={k as string} className="panel" style={{ padding: '9px 10px', marginBottom: 52, borderLeft: `2px solid ${i === 2 ? 'var(--green)' : 'var(--hi)'}`, ...(i === 1 ? { animation: 'none' } : {}) }}>
