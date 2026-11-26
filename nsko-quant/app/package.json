@@ -1,13 +1,17 @@
 {
-  "name": "app",
+  "name": "nsko-quant-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "engine:stub": "node -e \"const fs=require('fs'),cp=require('child_process');const t=cp.execSync('rustc -vV').toString().match(/host: (.+)/)[1];const w=t.includes('windows');const f='src-tauri/binaries/nsko-quant-engine-'+t+(w?'.exe':'');fs.mkdirSync('src-tauri/binaries',{recursive:true});if(!fs.existsSync(f)){fs.writeFileSync(f,'#!/bin/sh\\necho placeholder engine >&2\\nexit 1\\n',{mode:0o755});console.log('wrote',f)}\""
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

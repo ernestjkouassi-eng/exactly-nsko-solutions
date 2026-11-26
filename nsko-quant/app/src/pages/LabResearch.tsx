@@ -57,7 +57,7 @@ export function EquityFan() {
 }
 
 export function Lab() {
-  const tested = useS(s => s.tested), sieve = useS(s => s.sieve), clear = useS(s => s.clear), fails = useS(s => s.fails), lastFail = useS(s => s.lastFail), variants = useS(s => s.variants); const mx = Math.max(...Object.values(fails))
+  const tested = useS(s => s.tested), sieve = useS(s => s.sieve), clear = useS(s => s.clear), fails = useS(s => s.fails), lastFail = useS(s => s.lastFail), variants = useS(s => s.variants); const mx = Math.max(1, ...Object.values(fails))
   const avgDecl = variants.length ? variants.reduce((a, v) => a + v.sharpeIS - v.sharpeOOS, 0) / variants.length : 1.2
   return <div className="page">
     <div className="lbl g"><span className="dot pulse" /> LAB · LIVE</div>
@@ -73,7 +73,7 @@ export function Lab() {
         <div key={k} style={{ display: 'grid', gridTemplateColumns: '220px 1fr 70px', gap: 10, alignItems: 'center', marginBottom: 7 }}>
           <span style={{ fontSize: 12 }}>{k}</span>
           <div style={{ height: 6, background: '#12131B', borderRadius: 1, overflow: 'hidden' }}><i key={k === lastFail ? v : 0} style={{ display: 'block', height: '100%', width: `${v / mx * 100}%`, background: k === lastFail ? 'linear-gradient(90deg,#5A5F6E,#E8C060)' : '#5A5F6E', transition: 'width .6s var(--ease)' }} /></div>
-          <span className="num" style={{ fontSize: 11, textAlign: 'right' }}>{v} <span className="lo">{Math.round(v / tested * 100)}%</span></span></div>)}</div></div>
+          <span className="num" style={{ fontSize: 11, textAlign: 'right' }}>{v} <span className="lo">{tested ? Math.round(v / tested * 100) : 0}%</span></span></div>)}</div></div>
     </div>
     <EquityFan />
     <div className="panel" style={{ display: 'flex', margin: '12px 0' }}>{[['VARIANTS', fmt(553 + variants.length)], ['CLEAR THE BAR', String(clear)], ['SHARPE DECLINE IS→OOS', avgDecl.toFixed(2)], ['CHANCE SCORE', '1.54'], ['OVERFITTING CHANCE', '64%']].map(([l, v]) =>

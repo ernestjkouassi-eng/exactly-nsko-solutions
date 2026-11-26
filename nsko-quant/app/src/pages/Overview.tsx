@@ -57,7 +57,7 @@ function BrainCore() {
       </div>
       <div style={{ position: 'absolute', right: 14, top: 40, width: 180 }}>
         <div className="lbl" style={{ marginBottom: 6 }}>OUTPUT TODAY</div>
-        {[['THOUGHT UP', 103], ['VARIANTS TESTED', 532 + (tested - 1251)], ['APPROVED', 2]].map(([k, v], i) =>
+        {[['THOUGHT UP', 103], ['VARIANTS TESTED', useS.getState().demo ? 532 + (tested - 1251) : tested], ['APPROVED', 2]].map(([k, v], i) =>
           <div key={k as string} className="panel" style={{ padding: '9px 10px', marginBottom: 52, borderLeft: `2px solid ${i === 2 ? 'var(--green)' : 'var(--hi)'}`, ...(i === 1 ? { animation: 'none' } : {}) }}>
             <div className="lbl">{k}</div><div key={i === 1 ? String(v) : k as string} className="big" style={{ fontSize: 20, ...(i === 1 ? { animation: 'flash .6s var(--ease)' } : {}) }}>{fmt(v as number)}</div></div>)}
       </div>
@@ -114,8 +114,8 @@ export default function Overview() {
     <div className="panel" style={{ display: 'flex', marginBottom: 12 }}>
       <Kpi l="THOUGHT UP" v="1,308" cap="ideas from sources" />
       <Kpi l="TESTED" v={fmt(tested)} cap={`${Math.round(tested / 1308 * 100)}% of thought up`} />
-      <Kpi l="THROUGH THE SIEVE" v={fmt(sieve)} cap={`${Math.round(sieve / tested * 100)}%`} dot="var(--amber)" />
-      <Kpi l="APPROVED" v={fmt(clear)} cap={`${(clear / tested * 100).toFixed(1)}%`} dot="var(--green)" />
+      <Kpi l="THROUGH THE SIEVE" v={fmt(sieve)} cap={`${tested ? Math.round(sieve / tested * 100) : 0}%`} dot="var(--amber)" />
+      <Kpi l="APPROVED" v={fmt(clear)} cap={`${tested ? (clear / tested * 100).toFixed(1) : '0.0'}%`} dot="var(--green)" />
       <Kpi l="ON PAPER" v="3" cap="day 9 of 21"><div className="bar" style={{ marginTop: 6 }}><i style={{ width: '43%' }} /></div></Kpi>
       <Kpi l="LIVE" dashed cap="waiting for you" />
       <Kpi l="PROFIT LIVE" dashed cap="not started" />

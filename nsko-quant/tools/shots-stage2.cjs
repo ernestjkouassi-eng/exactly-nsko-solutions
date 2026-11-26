@@ -45,6 +45,6 @@ const B = 'http://localhost:4173', OUT = 'docs/screenshots/stage-2', MOCK = proc
 
   // 6 · Strategy Book version history
   await p.goto(`${B}/?page=strategies&source=demo&history=1`); await p.waitForTimeout(1500)
-  await p.getByText('Trend-follower XAU').first().click(); await p.waitForTimeout(800); await shot('15-strategy-version-history')
+  await p.getByText('OF-1 Sweep XAU').first().click(); await p.waitForTimeout(800); await shot('15-strategy-version-history')
   await b.close()
 })()

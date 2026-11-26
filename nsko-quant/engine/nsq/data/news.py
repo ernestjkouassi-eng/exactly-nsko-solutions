@@ -132,20 +132,31 @@ def _utc(t) -> pd.Timestamp:
     return t.tz_localize("UTC") if t.tzinfo is None else t.tz_convert("UTC")
 
 
-def calendar(start=None, end=None, min_impact: str = "high") -> list[dict]:
+def calendar(start=None, end=None, min_impact: str = "high", include_user: bool = True) -> list[dict]:
     """High-impact events between start and end (UTC). Merges the shipped fallback file, the user's
-    file (news.calendar_file) and the news.events setting."""
+    file (news.calendar_file: our {"recurring","fixed"} format or a plain list of events) and the
+    news.events setting. Pass include_user=False to get only the shipped fallback rules."""
     s = _utc(start if start is not None else pd.Timestamp.now(tz="UTC"))
     e = _utc(end) if end is not None else s + pd.Timedelta(days=14)
     start, end = s.to_pydatetime(), e.to_pydatetime()
     cals = [json.loads(CAL_FILE.read_text())]
-    user_file = setting("news.calendar_file", DEFAULTS | {"news.calendar_file": ""})
-    if user_file and Path(user_file).exists():
-        cals.append(json.loads(Path(user_file).read_text()))
+    extra: list[dict] = []
+    if include_user:
+        user_file = setting("news.calendar_file", DEFAULTS | {"news.calendar_file": ""})
+        if user_file and Path(user_file).exists():
+            try:
+                u = json.loads(Path(user_file).read_text())
+                if isinstance(u, list):          # a plain list of {"time" (UTC ISO), "title", "impact", "currency"}
+                    extra += u
+                elif isinstance(u, dict):
+                    cals.append(u)
+            except (OSError, ValueError):
+                pass
+        extra += list(setting("news.events", {"news.events": []}) or [])
     evs = []
     for cal in cals:
         evs += _events_from_rules(cal, start, end)
-    for ev in setting("news.events", {"news.events": []}) or []:
+    for ev in extra:
         t = _utc(ev["time"])
         if start <= t.to_pydatetime() < end:
             evs.append({**ev, "time": t.isoformat()})

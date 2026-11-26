@@ -46,7 +46,8 @@ export async function probe(ms = 1500): Promise<any | null> {
 // ---------------- account, licence, lock
 export type CreateAccount = { name: string; email: string; password: string; licence_key: string; pin?: string; totp: boolean }
 export type Created = { token?: string; recovery_code: string; totp_secret?: string; totp_uri?: string; totp_pending?: boolean }
-const demoRecovery = () => Array.from({ length: 6 }, (_, i) => ((i * 7919 + 4242) % 9000 + 1000).toString(36).toUpperCase().padStart(4, 'X')).join('-')
+const B32 = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const demoRecovery = () => Array.from({ length: 6 }, (_, i) => Array.from({ length: 4 }, (_, k) => B32[(Math.imul(i * 4 + k + 11, 2654435761) >>> 27)]).join('')).join('-')
 export const createAccount = (b: CreateAccount) => call<Created>('POST', '/account/create', b,
   () => ({ token: 'demo', recovery_code: demoRecovery(), ...(b.totp ? { totp_secret: 'JBSWY3DPEHPK3PXP', totp_uri: 'otpauth://totp/NSKO%20QUANT:demo?secret=JBSWY3DPEHPK3PXP&issuer=NSKO%20QUANT' } : {}) }), { what: 'account creation' })
 

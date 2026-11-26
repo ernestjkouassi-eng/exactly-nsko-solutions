@@ -30,8 +30,8 @@ const TONE: Record<string, string> = { cyan: 'var(--cyan)', blue: '#5A8CFF', red
 
 const THERMAL = `uniform sampler2D colorTexture; in vec2 v_textureCoordinates;
 void main() {
-  vec3 c = texture(colorTexture, v_textureCoordinates).rgb; float l = clamp(dot(c, vec3(0.299, 0.587, 0.114)) * 1.25, 0.0, 1.0);
-  vec3 t = l < 0.25 ? mix(vec3(0.02, 0.0, 0.08), vec3(0.35, 0.0, 0.55), l / 0.25)
+  vec3 c = texture(colorTexture, v_textureCoordinates).rgb; float l = clamp(dot(c, vec3(0.299, 0.587, 0.114)) * 0.95, 0.0, 1.0);
+  vec3 t = l < 0.25 ? mix(vec3(0.016, 0.02, 0.04), vec3(0.35, 0.0, 0.55), l / 0.25)
          : l < 0.5 ? mix(vec3(0.35, 0.0, 0.55), vec3(0.9, 0.15, 0.1), (l - 0.25) / 0.25)
          : l < 0.75 ? mix(vec3(0.9, 0.15, 0.1), vec3(1.0, 0.75, 0.0), (l - 0.5) / 0.25)
          : mix(vec3(1.0, 0.75, 0.0), vec3(1.0, 1.0, 0.92), (l - 0.75) / 0.25);
@@ -74,7 +74,8 @@ function Globe({ on, sensor, basemap, cutoff }: { on: Record<string, boolean>; s
     const L = v.imageryLayers; L.removeAll()
     L.add(ImageryLayer.fromProviderAsync(TileMapServiceImageryProvider.fromUrl(buildModuleUrl('Assets/Textures/NaturalEarthII')), { brightness: .7 }))
     if (basemap === 'satellite') L.add(new ImageryLayer(new UrlTemplateImageryProvider({ url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', maximumLevel: 18, credit: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community' }), { brightness: .82, saturation: .85 }))
-    if (basemap === 'map') L.add(new ImageryLayer(new OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/', maximumLevel: 19 }), { brightness: .42, contrast: 1.25, saturation: .25, gamma: 1.1 }))
+    v.scene.globe.showGroundAtmosphere = basemap !== 'map'
+    if (basemap === 'map') L.add(new ImageryLayer(new OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/', maximumLevel: 19 }), { brightness: .3, contrast: 1.45, saturation: .2, gamma: 1.2 }))
   }, [basemap])
 
   useEffect(() => {   // sensor modes as post-process stages

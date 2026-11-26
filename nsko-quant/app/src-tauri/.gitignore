@@ -2,3 +2,5 @@
 /gen/schemas
 # The engine sidecar is built per OS by CI (PyInstaller) and must not be committed.
 /binaries/nsko-quant-engine-*
+/engine-mac/
+/tauri.macos.conf.json
