@@ -1,0 +1,125 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>NSKO QUANT cards</title>
+<style>
+@font-face{font-family:Inter;font-weight:300;src:url(fonts/inter-latin-300-normal.woff2)}
+@font-face{font-family:Inter;font-weight:400;src:url(fonts/inter-latin-400-normal.woff2)}
+@font-face{font-family:Inter;font-weight:500;src:url(fonts/inter-latin-500-normal.woff2)}
+@font-face{font-family:Inter;font-weight:600;src:url(fonts/inter-latin-600-normal.woff2)}
+@font-face{font-family:Inter;font-weight:800;src:url(fonts/inter-latin-800-normal.woff2)}
+@font-face{font-family:Inter;font-weight:900;src:url(fonts/inter-latin-900-normal.woff2)}
+@font-face{font-family:JBM;font-weight:400;src:url(fonts/jetbrains-mono-latin-400-normal.woff2)}
+@font-face{font-family:JBM;font-weight:500;src:url(fonts/jetbrains-mono-latin-500-normal.woff2)}
+:root{--bg:#08080F;--hi:#E8E8EC;--lo:#5A5F6E;--mid:#8A8F9E;--or:#E8541A;--gr:#78D880;--rd:#E04858}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);overflow:hidden;color:var(--hi);font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased}
+html.alpha,body.alpha{background:transparent}
+.stage{position:absolute;inset:0;overflow:hidden}
+.mono{font-family:JBM,monospace}
+.abs{position:absolute}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+</style></head>
+<body><div class="stage" id="S"></div>
+<script>
+const q = new URLSearchParams(location.search), card = q.get('card'), W = innerWidth, H = innerHeight, V = H > W
+const S = document.getElementById('S')
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x))
+const ease = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2 }   // cubic in-out
+const eout = x => 1 - Math.pow(1 - clamp(x), 3)
+const seg = (t, a, b) => clamp((t - a) / (b - a))
+const MARK = (s, op = 1) => `<svg width="${100 * s}" height="${100 * s}" viewBox="0 0 100 100" style="opacity:${op};display:block"><rect x="0" y="0" width="22" height="100" fill="#E8E8EC"/><polygon points="26,0 56,0 58.88,16 28.88,16" fill="#E8541A"/><polygon points="29.96,22 59.96,22 74,100 44,100" fill="#E8E8EC"/><rect x="78" y="0" width="22" height="100" fill="#E8E8EC"/></svg>`
+let render = () => { }
+
+if (card === 'intro') {
+  // black; a single orange line draws across; caption types "LONDON · 03:00"
+  const cap = 'LONDON · 03:00'
+  S.innerHTML = `<div class="abs" id="ln" style="left:0;top:${H / 2}px;height:2px;background:linear-gradient(90deg,rgba(232,84,26,0),#E8541A 18%,#E8541A 82%,rgba(232,84,26,0));box-shadow:0 0 18px rgba(232,84,26,.55)"></div>
+  <div class="abs" id="hd" style="top:${H / 2}px;width:10px;height:10px;margin:-4px 0 0 -5px;border-radius:50%;background:#FFB08A;box-shadow:0 0 24px 6px rgba(232,84,26,.8)"></div>
+  <div class="abs mono" id="cp" style="left:0;right:0;top:${H / 2 + (V ? 46 : 38)}px;text-align:center;font-size:${V ? 34 : 26}px;letter-spacing:.32em;color:#E8E8EC"></div>
+  <div class="abs mono" id="sub" style="left:0;right:0;top:${H / 2 - (V ? 80 : 66)}px;text-align:center;font-size:${V ? 22 : 16}px;letter-spacing:.4em;color:#5A5F6E">ALL MARKETS · ALL NIGHT</div>`
+  const ln = document.getElementById('ln'), hd = document.getElementById('hd'), cp = document.getElementById('cp'), sub = document.getElementById('sub')
+  render = t => {
+    const k = ease(seg(t, .5, 2.4)); const w = W * (V ? .8 : .7) * k, x0 = W * (V ? .1 : .15)
+    ln.style.left = x0 + 'px'; ln.style.width = w + 'px'; ln.style.opacity = 1 - .45 * seg(t, 3.2, 4.4)
+    hd.style.left = (x0 + w) + 'px'; hd.style.opacity = seg(t, .5, .7) * (1 - seg(t, 2.3, 2.8))
+    const n = Math.floor(seg(t, 1.9, 3.1) * cap.length + 1e-6); const blink = (Math.floor(t * 2.2) % 2 === 0) && t < 4.2
+    cp.innerHTML = cap.slice(0, n).replace('·', '<span style="color:#E8541A">·</span>') + `<span style="opacity:${t > 1.7 && blink ? 1 : 0};color:#E8541A">▍</span>`
+    sub.style.opacity = .9 * ease(seg(t, 3.0, 3.9))
+  }
+}
+
+if (card === 'wordmark') {
+  // NSKO // QUANT lights up, letter by letter, with "by NSKO Solutions"
+  const letters = [...'NSKO'].map(c => [c, '#E8541A']).concat([[' ', ''], ['/', '#5A5F6E'], ['/', '#5A5F6E'], [' ', '']]).concat([...'QUANT'].map(c => [c, '#E8E8EC']))
+  const fs = V ? 92 : 120
+  S.innerHTML = `<div class="abs" id="glow" style="left:50%;top:50%;width:${V ? 1000 : 1400}px;height:${V ? 700 : 600}px;margin:-${V ? 350 : 300}px 0 0 -${V ? 500 : 700}px;background:radial-gradient(closest-side,rgba(232,84,26,.10),rgba(232,84,26,0))"></div>
+  <div class="center" id="wrap" style="text-align:center">
+   <div id="wm" class="mono" style="font-weight:500;font-size:${fs}px;letter-spacing:.14em;white-space:pre;line-height:1">${letters.map(([c, col], i) => `<span data-i="${i}" style="color:${col};opacity:0">${c}</span>`).join('')}</div>
+   <div id="rule" style="height:2px;background:#E8541A;margin:${V ? 40 : 44}px auto 0;width:0;box-shadow:0 0 14px rgba(232,84,26,.6)"></div>
+   <div id="by" style="margin-top:${V ? 34 : 30}px;font-size:${V ? 32 : 30}px;font-weight:300;color:#B8BCC8;letter-spacing:.02em;opacity:0">by NSKO Solutions</div>
+  </div>
+  <div class="abs mono" id="st" style="left:0;right:0;bottom:${V ? 260 : 90}px;text-align:center;font-size:${V ? 20 : 15}px;letter-spacing:.4em;color:#5A5F6E;opacity:0">PERSONAL TRADING DESK · RUNS ON YOUR MACHINE</div>`
+  const sp = [...document.querySelectorAll('#wm span')], wrap = document.getElementById('wrap'), rule = document.getElementById('rule'), by = document.getElementById('by'), st = document.getElementById('st'), glow = document.getElementById('glow')
+  render = t => {
+    sp.forEach((s, i) => { const a = ease(seg(t, .35 + i * .085, .95 + i * .085)); s.style.opacity = a; s.style.textShadow = s.style.color === 'rgb(232, 84, 26)' ? `0 0 ${24 * a}px rgba(232,84,26,${.55 * a})` : `0 0 ${18 * a}px rgba(232,232,236,${.18 * a})` })
+    rule.style.width = (V ? 760 : 980) * ease(seg(t, 1.2, 2.6)) + 'px'
+    by.style.opacity = ease(seg(t, 2.0, 2.9)); st.style.opacity = .9 * ease(seg(t, 2.6, 3.6))
+    glow.style.opacity = ease(seg(t, .4, 2.5))
+    wrap.style.transform = `translate(-50%,-50%) scale(${1 + .035 * ease(seg(t, 0, 5.5))})`
+  }
+}
+
+if (card === 'end') {
+  // lockup with slow push-in, tagline, URL, fine print; thin orange orbit lines behind
+  const s = V ? .64 : 1
+  S.innerHTML = `<svg class="abs" id="orb" width="${W}" height="${H}" style="left:0;top:0" viewBox="0 0 ${W} ${H}">
+    ${[0, 1, 2].map(i => `<ellipse id="o${i}" cx="${W / 2}" cy="${H / 2 - (V ? 40 : 20)}" rx="${(V ? 480 : 760) + i * (V ? 70 : 120)}" ry="${(V ? 150 : 210) + i * (V ? 26 : 40)}" fill="none" stroke="#E8541A" stroke-width="1" stroke-opacity="${.22 - i * .06}"/>`).join('')}
+    <circle id="sat" r="3.2" fill="#FF9A6A"/></svg>
+  <div class="center" id="wrap" style="text-align:center;margin-top:${V ? -60 : -20}px">
+   <div style="display:flex;align-items:center;justify-content:center;gap:${36 * s}px" id="lk">
+     ${MARK(1.22 * s)}
+     <div style="text-align:left;white-space:nowrap"><div style="font-weight:900;font-size:${118 * s}px;letter-spacing:-3px;line-height:.9;color:#E8E8EC">NSKO <span style="color:#E8541A">QUANT</span></div>
+     <div class="mono" style="margin-top:${16 * s}px;font-size:${20 * s}px;letter-spacing:.34em;color:#8A8F9E">BY NSKO SOLUTIONS</div></div>
+   </div>
+   <div id="tag" style="margin-top:${V ? 90 : 64}px;font-size:${V ? 50 : 48}px;font-weight:300;letter-spacing:-.01em;color:#E8E8EC;opacity:0">Trade the markets. <span style="font-weight:500">Automatically.</span></div>
+   <div id="url" class="mono" style="margin-top:${V ? 40 : 30}px;font-size:${V ? 30 : 26}px;letter-spacing:.14em;color:#E8541A;opacity:0">nskosolutions.co.uk</div>
+  </div>
+  <div class="abs" id="fp" style="left:0;right:0;bottom:${V ? 150 : 46}px;text-align:center;font-size:${V ? 24 : 18}px;color:#8A8F9E;letter-spacing:.02em;opacity:0">Demo data. Trading involves risk. You can lose money.</div>`
+  const wrap = document.getElementById('wrap'), lk = document.getElementById('lk'), tag = document.getElementById('tag'), url = document.getElementById('url'), fp = document.getElementById('fp'), sat = document.getElementById('sat'), orb = document.getElementById('orb')
+  const o = [0, 1, 2].map(i => document.getElementById('o' + i))
+  render = t => {
+    lk.style.opacity = ease(seg(t, .1, 1.3)); lk.style.filter = `blur(${6 * (1 - ease(seg(t, .1, 1.3)))}px)`
+    tag.style.opacity = ease(seg(t, 1.6, 2.6)); url.style.opacity = ease(seg(t, 2.4, 3.3)); fp.style.opacity = ease(seg(t, 2.8, 3.8))
+    wrap.style.transform = `translate(-50%,-50%) scale(${1 + .06 * ease(seg(t, 0, 8.5))})`
+    orb.style.opacity = ease(seg(t, .2, 2.2)); orb.style.transform = `scale(${1 + .08 * ease(seg(t, 0, 8.5))})`
+    o.forEach((e, i) => e.setAttribute('transform', `rotate(${-8 + i * 5 + t * (1.2 - i * .3)} ${W / 2} ${H / 2})`))
+    const a = t * .55, rx = V ? 480 : 760, ry = V ? 150 : 210, cy = H / 2 - (V ? 40 : 20), r = (-8 + t * 1.2) * Math.PI / 180
+    const x = rx * Math.cos(a), y = ry * Math.sin(a); sat.setAttribute('cx', W / 2 + x * Math.cos(r) - y * Math.sin(r)); sat.setAttribute('cy', cy + x * Math.sin(r) + y * Math.cos(r))
+  }
+}
+
+if (card === 'notif') {
+  // phone-style notification card (transparent PNG overlay)
+  document.documentElement.classList.add('alpha');document.body.classList.add('alpha')
+  S.innerHTML = `<div class="abs" style="left:20px;top:20px;width:${W - 40}px;padding:22px 26px;border-radius:26px;background:rgba(22,23,32,.94);border:1px solid #2A2C3A;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+   <div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:9px;background:#08080F;border:1px solid #2A2C3A;display:flex;align-items:center;justify-content:center">${MARK(.22)}</div>
+   <div class="mono" style="font-size:16px;letter-spacing:.16em;color:#8A8F9E">NSKO QUANT</div><div style="margin-left:auto;font-size:16px;color:#5A5F6E">now</div></div>
+   <div style="margin-top:14px;font-size:27px;font-weight:600;color:#E8E8EC">Trade closed <span style="color:#78D880">+1.8R</span> <span style="font-weight:400;color:#8A8F9E;font-size:22px">(demo)</span></div>
+   <div style="margin-top:6px;font-size:20px;color:#B8BCC8">XAU/USD long · stop and target held at your broker</div></div>`
+}
+
+if (card === 'demo') {
+  document.documentElement.classList.add('alpha');document.body.classList.add('alpha')
+  S.innerHTML = `<div class="abs mono" style="right:0;top:0;padding:7px 13px;border:1px solid #6A4A20;background:rgba(8,8,15,.82);color:#E8A850;font-size:${q.get('fs') || 17}px;letter-spacing:.22em;border-radius:3px">DEMO DATA</div>`
+}
+
+if (card === 'kick') {
+  // small scene label: "01 · THE BRAIN"
+  document.documentElement.classList.add('alpha');document.body.classList.add('alpha')
+  const [n, txt] = (q.get('text') || '01|LABEL').split('|')
+  S.innerHTML = `<div class="abs" style="left:0;top:0;display:flex;align-items:center;gap:16px;padding:12px 18px 12px 0">
+   <div style="width:3px;height:44px;background:#E8541A;box-shadow:0 0 10px rgba(232,84,26,.6)"></div>
+   <div><div class="mono" style="font-size:${q.get('fs') || 15}px;letter-spacing:.3em;color:#E8541A">${n}</div>
+   <div class="mono" style="margin-top:6px;font-size:${(+(q.get('fs') || 15)) * 1.45}px;letter-spacing:.22em;color:#E8E8EC;text-shadow:0 2px 14px rgba(0,0,0,.9)">${txt}</div></div></div>`
+}
+window.render = render
+</script></body></html>

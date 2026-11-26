@@ -101,7 +101,8 @@ class TradeFlow:
 
     def _skip(self, plan: dict, step: str, why: str, steps: list) -> dict:
         self._plan_row(plan, "skipped", {"step": step, "why": why})
-        publish("ticker_log", {"verb": "REJECT", "msg": f"{plan['market']} {step}: {why}"})
+        publish("ticker_log", {"verb": "REJECT", "msg": f"{plan['market']} {step}: {why}", "plan_id": plan["id"],
+                               "step": step, "why": why})
         return {"plan_id": plan["id"], "result": "skipped", "step": step, "why": why, "steps": steps}
 
     # ------------------------------------------------------------------ the flow
@@ -120,6 +121,8 @@ class TradeFlow:
         # 1. SCANNER (approved strategies only)
         if strategy.get("status") not in ("paper", "live") or (mode == "live" and strategy.get("status") != "live"):
             return {"result": "skipped", "step": "scanner", "why": "strategy not approved for this mode", "steps": steps}
+        if get("trading.paused", False):
+            return {"result": "skipped", "step": "scanner", "why": "new trades are paused", "steps": steps}
         if mode == "live" and not live_unlock.is_unlocked():
             return {"result": "skipped", "step": "scanner", "why": "live is locked: finish the live checklist", "steps": steps}
         raw = df if df is not None else self._candles(market, tf, now)
@@ -218,7 +221,7 @@ class TradeFlow:
                 _approvals[plan["id"]] = {"event": ev, "decision": None}
             self._plan_row(plan, "awaiting_approval")
             timeout = float(manual_timeout_s if manual_timeout_s is not None else get("manual_timeout_s"))
-            publish("decision_needed", {"id": plan["id"], "tag": "APPROVE TRADE", "title": f"{sig['side'].upper()} {market}",
+            publish("decision_needed", {"id": plan["id"], "plan_id": plan["id"], "tag": "APPROVE TRADE", "title": f"{sig['side'].upper()} {market}",
                                         "desc": f"entry {entry:.5g} · stop {plan['stop']:.5g} · target {plan['target']:.5g} · size {plan['qty']}",
                                         "timeout_s": timeout, "default": "skip"})
             ev.wait(timeout)

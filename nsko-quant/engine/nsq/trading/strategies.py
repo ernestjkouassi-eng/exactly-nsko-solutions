@@ -122,13 +122,30 @@ def apply_pending(sid: str) -> bool:
     return True
 
 
-def rollback(sid: str, actor: str = "user") -> dict:
-    """One click: the active version (live if live, else paper) goes back to the version before it."""
+def active_version(s: dict) -> int | None:
+    """The version the strategy runs: live if live, else paper, else (lab) the newest one."""
+    v = s["live_version"] if s["status"] == "live" else s["paper_version"]
+    if v:
+        return v
+    return conn().execute("SELECT MAX(version) v FROM strategy_versions WHERE strategy_id=?", (s["id"],)).fetchone()["v"]
+
+
+def rollback(sid: str, actor: str = "user", to_version: int | None = None) -> dict:
+    """One click: the active version (live if live, else paper) goes back to the version before it,
+    or to `to_version` when the user picked one in the version history."""
     s = get_strategy(sid)
     field = "live_version" if s["status"] == "live" else "paper_version"
-    cur = s[field]
-    prev = conn().execute("SELECT MAX(version) v FROM strategy_versions WHERE strategy_id=? AND version<?",
-                          (sid, cur or 0)).fetchone()["v"]
+    cur = active_version(s)
+    if to_version is not None:
+        ok = conn().execute("SELECT 1 FROM strategy_versions WHERE strategy_id=? AND version=?", (sid, to_version)).fetchone()
+        if not ok:
+            raise StrategyError(f"{sid} has no version {to_version}")
+        if to_version == cur:
+            raise StrategyError(f"v{to_version} is already the active version")
+        prev = to_version
+    else:
+        prev = conn().execute("SELECT MAX(version) v FROM strategy_versions WHERE strategy_id=? AND version<?",
+                              (sid, cur or 0)).fetchone()["v"]
     if not prev:
         raise StrategyError("nothing to roll back to")
     if field == "live_version" and has_open_position(sid):
@@ -149,6 +166,10 @@ def manual_update(sid: str, new_rules: dict, lab_metrics: dict | None = None, ac
 
 
 def auto_update(sid: str, variant_rules: dict, variant_metrics: dict, live_metrics: dict) -> dict:
+    how = get("updates.mode") or "auto_paper"
+    if how == "manual":
+        audit("engine", "strategy.auto_update_rejected", {"strategy_id": sid, "why": "updates.mode is manual"})
+        return {"accepted": False, "why": "strategy updates are set to manual"}
     margin = float(get("updates.auto_margin_sharpe"))
     better = float(variant_metrics.get("sharpeOOS", 0)) >= float(live_metrics.get("sharpeOOS", 0)) + margin
     if not better:
@@ -156,6 +177,11 @@ def auto_update(sid: str, variant_rules: dict, variant_metrics: dict, live_metri
                                                           "live": live_metrics.get("sharpeOOS"), "margin": margin})
         return {"accepted": False, "why": f"variant does not beat live OOS Sharpe by {margin}"}
     v = add_version(sid, variant_rules, "auto", variant_metrics, f"beat live OOS by >= {margin}", actor="engine")
+    if how == "ask":
+        publish("decision_needed", {"id": f"paper-{sid}-{v}", "tag": "TO PAPER", "title": f"{sid} v{v}", "strategy_id": sid,
+                                    "version": v, "desc": f"Sharpe OOS {variant_metrics.get('sharpeOOS')} vs live "
+                                                          f"{live_metrics.get('sharpeOOS')}. Send it to paper?"})
+        return {"accepted": True, "version": v, "live": False, "asked": True, "paper": False}
     promote(sid, "paper", v, actor="engine")
     mode = get("updates.promote_live")
     if mode == "auto":

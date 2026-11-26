@@ -1,0 +1,251 @@
+{
+ "when": "2026-11-26T05:11:09.418Z",
+ "data_dir": "/tmp/nsq-e2e-EGgozq",
+ "results": [
+  {
+   "name": "engine starts and answers /health",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "desk preview server starts",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "engine wrote the tray shared secret (owner-only file)",
+   "ok": true,
+   "detail": "/tmp/nsq-e2e-EGgozq/shell.token"
+  },
+  {
+   "name": "first run on a new engine shows onboarding",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "expired licence is refused by the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "invalid licence is refused by the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "valid licence accepted (Ed25519, offline)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "account created on the engine, recovery code shown once",
+   "ok": true,
+   "detail": "••••-••••-••••-••••-••••-••••"
+  },
+  {
+   "name": "desk opens on the engine (ENGINE · ONLINE)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "reload asks for login (token kept in memory only)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "wrong password is refused",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "right password unlocks the desk and the WebSocket connects",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "API login for the test driver",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "settings load from the engine (not the DEMO SETTINGS chip)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "settings saved to the engine (risk.per_trade_pct = 0.8)",
+   "ok": true,
+   "detail": "engine value 0.8"
+  },
+  {
+   "name": "brokers list from the engine (paper connected, OANDA coming soon)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "dev demo trade started (NSQ_DEV=1, session needed)",
+   "ok": true,
+   "detail": "{\"state\":\"running\",\"strategy\":\"dev-demo-xau\",\"synthetic\":true}"
+  },
+  {
+   "name": "Trade Card fills from engine events up to the order",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Trade Card shows the exit (scale-out, target, journal)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "journal has the closed paper trade",
+   "ok": true,
+   "detail": "1 row(s), 1.54R"
+  },
+  {
+   "name": "audit has an entry per step (trade.open, position.scale_out, trade.exit)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "audit hash chain verifies",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Manual mode saved to the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Manual: Approve appears at the order ticket",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Manual: approved trade is filled",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "kill switch: engine locked",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "kill switch: no open positions or orders left",
+   "ok": true,
+   "detail": "0 positions, 0 orders"
+  },
+  {
+   "name": "desk shows TRADING LOCKED",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "release: trading re-enabled (needs the login)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "tray pause works with the shared secret, no login",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "tray kill works without any login",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "withdraw helper loads from the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "withdraw step 1 pauses new trades on the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "withdraw step 4 rescales and resumes",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "rollback to v1 on the engine",
+   "ok": true,
+   "detail": "active v1"
+  },
+  {
+   "name": "promote to live is refused while live is locked",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "promote Trend-XAU to paper on the engine",
+   "ok": true,
+   "detail": "paper"
+  },
+  {
+   "name": "paper & live checklist from the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Go live stays disabled until every box is ticked",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Live Desk: candles from the engine, flagged synthetic for gold",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Live Desk: BTC candles",
+   "ok": true,
+   "detail": "REAL · kraken+cache"
+  },
+  {
+   "name": "Lab run started (session needed)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Lab run finished",
+   "ok": true,
+   "detail": "0 clear · 0 sieve · 10 failed · synthetic=false"
+  },
+  {
+   "name": "Lab fan draws the real variants",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "research round started",
+   "ok": true,
+   "detail": "{\"state\":\"running\",\"mode\":\"offline\"}"
+  },
+  {
+   "name": "Research: sources and terms from the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Agent Room: handoffs from the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "JARVIS answers through the engine (honest without Ollama)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "no uncaught page errors",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

@@ -1,7 +1,7 @@
 # NSKO QUANT engine, optional "advanced server" route (for example a small always-on Linux box).
 # Build from nsko-quant/engine:   docker build -f ../deploy/docker/Dockerfile -t nsko-quant-engine .
 FROM python:3.12-slim
-ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 NSQ_DATA=/data NSQ_VAULT_BACKEND=file
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 NSQ_DATA=/data NSQ_VAULT_BACKEND=file NSQ_ALLOW_NON_LOCAL=1
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt

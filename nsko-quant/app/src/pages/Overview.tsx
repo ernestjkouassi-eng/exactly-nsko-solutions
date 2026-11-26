@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
-import { useS } from '../store'
+import { useS, notify } from '../store'
+import { approveTrade } from '../api'
 import { Canvas, Spark, walk } from '../viz/canvas'
 import { Head, Corners, fmt } from '../shell/Shell'
 import { VERB_COL } from '../tokens'
@@ -101,11 +102,16 @@ function Pipeline() {
 
 export function DecisionCards() {
   const decisions = useS(s => s.decisions), set = useS(s => s.set)
-  const out = (id: number) => { const el = document.getElementById('dec' + id); if (el) { el.style.transform = 'translateX(120%)'; el.style.opacity = '0' } setTimeout(() => set({ decisions: useS.getState().decisions.filter(d => d.id !== id) }), 350) }
+  const out = (id: number | string) => { const el = document.getElementById('dec' + id); if (el) { el.style.transform = 'translateX(120%)'; el.style.opacity = '0' } setTimeout(() => set({ decisions: useS.getState().decisions.filter(d => d.id !== id) }), 350) }
+  // a Manual-mode trade goes to the engine (approve or skip); other cards are acknowledged on the desk
+  const act = async (d: (typeof decisions)[number], yes: boolean) => {
+    if (d.planId) { const r = await approveTrade(d.planId, yes ? 'approve' : 'skip'); if (!r.ok) { notify(`${yes ? 'Not approved' : 'Not skipped'}: ${r.error}`, 'bad'); out(d.id); return } if (!r.demo) notify(yes ? 'Approved · the order goes to the broker now' : 'Skipped', yes ? 'good' : 'info') }
+    out(d.id)
+  }
   return <>{decisions.length === 0 && <div className="empty">Nothing waiting on you.</div>}
-    {decisions.map(d => <div key={d.id} id={'dec' + d.id} className="panel" style={{ borderLeft: '2px solid var(--amber)', padding: 12, marginBottom: 10, transition: 'transform .35s var(--ease), opacity .35s var(--ease)' }}>
+    {decisions.map(d => <div key={d.id} id={'dec' + d.id} data-testid="decision" className="panel" style={{ borderLeft: '2px solid var(--amber)', padding: 12, marginBottom: 10, transition: 'transform .35s var(--ease), opacity .35s var(--ease)' }}>
       <div className="lbl a">{d.tag}</div><div style={{ fontSize: 15, margin: '4px 0' }}>{d.title}</div><div className="lo" style={{ fontSize: 11.5, lineHeight: 1.5 }}>{d.desc}</div>
-      <div className="row" style={{ marginTop: 10, gap: 8 }}><button className="primary" onClick={() => out(d.id)}>Approve</button><button onClick={() => out(d.id)}>Back</button></div></div>)}</>
+      <div className="row" style={{ marginTop: 10, gap: 8 }}><button className="primary" onClick={() => act(d, true)}>Approve</button><button onClick={() => act(d, false)}>{d.planId ? 'Skip' : 'Back'}</button></div></div>)}</>
 }
 
 export default function Overview() {

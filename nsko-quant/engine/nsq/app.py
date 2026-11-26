@@ -1,11 +1,15 @@
 """FastAPI app: REST + the /ws event bus. Bound to 127.0.0.1:8787 only.
 
 Security on localhost:
-- CORS allows only the desktop app origins.
+- CORS allows only the desktop app origins (Tauri on macOS/Linux and Windows, and the Vite dev/preview servers).
 - Every POST must carry the header `X-NSQ-Client` (browsers cannot add it cross-site without a CORS
   pre-flight we refuse), which blocks drive-by requests from web pages.
-- Sensitive endpoints need `Authorization: Bearer <session token>` from /account/login.
+- Sensitive endpoints need `Authorization: Bearer <session token>` from /account/login. That includes every
+  state-changing POST of the data / research / Lab / God's Eye routers.
 - /kill needs X-NSQ-Client but NOT a login, so it always works.
+- The tray (Rust shell, no user session) may pause / resume and quit the engine with the local shared secret
+  in `<data_dir>/shell.token` (header X-NSQ-Shell), see nsq/localauth.py.
+- The WebSocket /ws needs `?token=<session token>`.
 """
 from __future__ import annotations
 
@@ -13,25 +17,29 @@ import asyncio
 import base64
 import contextlib
 import json
+import os
+import threading
+import time
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
-from . import __version__, account, bus, health, licence, vault
+from . import __version__, account, bus, health, licence, localauth, vault
 from .audit import tail as audit_tail, verify_chain
 from .brokers import BrokerError, active, build, catalogue, set_active
 from .db import conn
 from .settings import all_settings, get, set as sset
 
 ORIGINS = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:5173",
-           "http://127.0.0.1:5173", "http://localhost:4173"]
+           "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173"]
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
     from .engine import engine
+    localauth.write()
     if app.state.start_engine:
         engine.start()
     yield
@@ -42,8 +50,6 @@ async def lifespan(app: FastAPI):
 def create_app(start_engine: bool = True) -> FastAPI:
     app = FastAPI(title="NSKO QUANT engine", version=__version__, lifespan=lifespan)
     app.state.start_engine = start_engine
-    app.add_middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET", "POST"],
-                       allow_headers=["Authorization", "Content-Type", "X-NSQ-Client"])
 
     @app.middleware("http")
     async def csrf_guard(request: Request, call_next):
@@ -51,12 +57,19 @@ def create_app(start_engine: bool = True) -> FastAPI:
             return JSONResponse({"detail": "missing X-NSQ-Client header"}, status_code=403)
         return await call_next(request)
 
+    # added last = outermost, so even a refused request carries the CORS headers the desk needs to read it
+    app.add_middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET", "POST"],
+                       allow_headers=["Authorization", "Content-Type", "X-NSQ-Client"])
+
+    import importlib
     for mod in ("nsq.data.api", "nsq.research.api", "nsq.lab.api", "nsq.godseye.api"):
         try:
-            import importlib
-            app.include_router(importlib.import_module(mod).router)
+            app.include_router(importlib.import_module(mod).router, dependencies=[Depends(post_needs_session)])
         except Exception:
             pass
+    from . import devtools
+    if devtools.enabled():
+        app.include_router(devtools.router, dependencies=[Depends(need_session)])
     _routes(app)
     return app
 
@@ -69,6 +82,20 @@ def need_session(authorization: str | None = Header(default=None)) -> account.Se
     return s
 
 
+def post_needs_session(request: Request, authorization: str | None = Header(default=None)) -> None:
+    """Stage-3 routers: reading is open on localhost, every state-changing POST needs a signed-in user."""
+    if request.method == "POST":
+        need_session(authorization)
+
+
+def need_session_or_shell(authorization: str | None = Header(default=None),
+                          x_nsq_shell: str | None = Header(default=None)) -> str:
+    """A signed-in user, or the desktop shell's tray with the local shared secret. Returns the actor name."""
+    if localauth.check(x_nsq_shell):
+        return "tray"
+    return need_session(authorization).email
+
+
 def _err(e: account.AccountError, status: int = 400):
     raise HTTPException(status, {"code": e.code, "message": e.msg})
 
@@ -78,10 +105,11 @@ class CreateBody(BaseModel):
     password: str
     name: str = ""
     pin: str | None = None
+    licence_key: str | None = None
 
 
 class LoginBody(BaseModel):
-    email: str
+    email: str | None = None     # one account per desk: the stored email is used when it is left out
     password: str
     totp: str | None = None
 
@@ -114,8 +142,9 @@ class PhraseBody(BaseModel):
 
 
 class SettingBody(BaseModel):
-    key: str
-    value: object
+    key: str | None = None
+    value: object = None
+    values: dict[str, object] | None = None     # several at once: {key: value}
 
 
 class BrokerBody(BaseModel):
@@ -131,11 +160,43 @@ class SecretBody(BaseModel):
 class PassBody(BaseModel):
     passphrase: str
     data_b64: str | None = None
+    format: str = "file"           # export: "file" (download) | "json" ({filename, data_b64}, for the desk)
 
 
 class PromoteBody(BaseModel):
     to: str
     version: int | None = None
+
+
+class RollbackBody(BaseModel):
+    version: int | None = None     # roll back to this version; empty = the one before the active version
+
+
+class VersionBody(BaseModel):
+    rules: dict
+    note: str = "manual edit"
+
+
+class PauseBody(BaseModel):
+    paused: bool = True
+
+
+class WithdrawBody(BaseModel):
+    action: str
+
+
+class BrokerConnectBody(BaseModel):
+    environment: str = "demo"              # demo | live
+    api_key: str | None = None             # browser preview only: sent to this localhost engine, never stored by the UI
+    api_secret: str | None = None
+    keychain_service: str | None = None    # desktop app: the key is in the OS keychain under this service / account
+    keychain_account: str | None = None
+    account_id: str | None = None
+
+
+class ChatBody(BaseModel):
+    message: str
+    history: list[dict] | None = None
 
 
 class PackBody(BaseModel):
@@ -146,7 +207,21 @@ class KillBody(BaseModel):
     reason: str = "kill switch pressed"
 
 
-PROTECTED_SETTINGS = {"mode", "live.unlocked_at", "trading.locked", "licence.key"}
+PROTECTED_SETTINGS = {"mode", "live.unlocked_at", "trading.locked", "trading.lock_reason", "licence.key"}
+
+# The vault names each adapter reads its key and secret from (nsq.brokers.build).
+KEY_FIELDS = {"alpaca": ("key_id", "secret"), "kraken": ("key", "secret"), "coinbase": ("key", "secret"), "ibkr": ()}
+
+
+def _new_version(sid: str, b, actor: str) -> int:
+    from .trading.strategies import add_version
+    return add_version(sid, b.rules, "manual", None, b.note, actor=actor)
+
+
+def _stop_process() -> None:
+    """Ask uvicorn to shut down cleanly (SIGINT runs the lifespan: scheduler stopped, audit written)."""
+    import signal
+    os.kill(os.getpid(), signal.SIGINT)
 
 
 def _routes(app: FastAPI) -> None:
@@ -155,14 +230,15 @@ def _routes(app: FastAPI) -> None:
     def get_health():
         from .connectivity import is_online
         from .trading.killswitch import is_locked
-        return {**health.snapshot(), "version": __version__, "mode": get("mode"), "broker": active().name,
-                "online": is_online(), "locked": is_locked()[0], "demo": bool(get("demo")), "vault": vault.backend()}
+        return {**health.snapshot(), "version": __version__, "mode": get("mode"), "trade_mode": get("trade_mode"),
+                "broker": active().name, "online": is_online(), "locked": is_locked()[0], "demo": bool(get("demo")),
+                "vault": vault.backend(), "account_exists": account.exists()}
 
     @app.websocket("/ws")
     async def ws(sock: WebSocket):
         origin = sock.headers.get("origin")
-        if origin and origin not in ORIGINS:
-            await sock.close(code=1008)
+        if (origin and origin not in ORIGINS) or not account.session(sock.query_params.get("token")):
+            await sock.close(code=1008)   # policy violation: wrong origin, or not signed in
             return
         await sock.accept()
         loop = asyncio.get_running_loop()
@@ -192,15 +268,25 @@ def _routes(app: FastAPI) -> None:
     # ------------------------------------------------------------------ account
     @app.post("/account/create")
     def acc_create(b: CreateBody):
+        lic = None
+        if b.licence_key and b.licence_key.strip():
+            lic = licence.check(b.licence_key)
+            if lic["status"] != "valid":
+                raise HTTPException(400, {"code": f"licence_{lic['status']}", "message": lic["reason"]})
         try:
-            return account.create(b.email, b.password, b.name, b.pin)
+            r = account.create(b.email, b.password, b.name, b.pin)
         except account.AccountError as e:
             _err(e, 409 if e.code == "exists" else 400)
+        if lic:
+            sset("licence.key", b.licence_key.strip())
+            r["licence"] = lic.get("licence")
+        return r
 
     @app.post("/account/login")
     def acc_login(b: LoginBody):
         try:
-            return account.login(b.email, b.password, b.totp)
+            email = b.email or ((account.profile() or {}).get("email") or "")
+            return account.login(email, b.password, b.totp)
         except account.AccountError as e:
             _err(e, 401 if e.code in ("wrong_password", "wrong_totp", "totp_required") else 429 if e.code == "locked" else 400)
 
@@ -247,8 +333,9 @@ def _routes(app: FastAPI) -> None:
         return r
 
     @app.get("/licence/check")
-    def lic_status():
-        return licence.check(get("licence.key", "") or "")
+    def lic_status(key: str | None = None):
+        """With ?key= checks that key (nothing is saved); without, the licence stored on this desk."""
+        return licence.check(key if key is not None else (get("licence.key", "") or ""))
 
     # ------------------------------------------------------------------ trading control
     @app.post("/kill")
@@ -260,6 +347,26 @@ def _routes(app: FastAPI) -> None:
     def trading_enable(s=Depends(need_session)):
         from .trading.killswitch import enable
         return enable(s.email)
+
+    @app.post("/trading/pause")
+    def trading_pause(b: PauseBody, actor: str = Depends(need_session_or_shell)):
+        """Pause / resume NEW trades. Open trades keep their broker-side stops and are still managed."""
+        from .trading.withdraw import set_paused
+        r = set_paused(b.paused, actor)
+        health.beat()   # the tray and the desk see it within a second
+        return r
+
+    @app.post("/engine/shutdown")
+    def engine_shutdown(actor: str = Depends(need_session_or_shell)):
+        """The tray's "Quit engine…". Stops this engine process cleanly (an OS service may start it again)."""
+        from .audit import audit
+        audit(actor, "engine.shutdown", {})
+
+        def _later():
+            time.sleep(0.4)
+            _stop_process()
+        threading.Thread(target=_later, daemon=True).start()
+        return {"ok": True, "stopping": True}
 
     @app.post("/trade/approve")
     def trade_approve(b: ApproveBody, s=Depends(need_session)):
@@ -294,7 +401,37 @@ def _routes(app: FastAPI) -> None:
     # ------------------------------------------------------------------ brokers
     @app.get("/brokers")
     def brokers():
-        return {"active": active().name, "brokers": catalogue()}
+        names = set(vault.names())
+        out = [{**x, "key_stored": any(n.startswith(x["name"] + ".") for n in names)} for x in catalogue()]
+        return {"active": active().name, "brokers": out}
+
+    @app.post("/brokers/{name}/connect")
+    def broker_connect_desk(name: str, b: BrokerConnectBody, s=Depends(need_session)):
+        """The desk's Connect: the key comes from the OS keychain (desktop app) or, in the browser preview only,
+        in the request to this localhost engine. Either way it goes into the vault, never into settings or logs."""
+        fields = KEY_FIELDS.get(name)
+        if fields is None and name != "paper":
+            return broker_connect(BrokerBody(name=name), s)     # gives the "coming soon" / unknown reason
+        key, secret = b.api_key, b.api_secret
+        if b.keychain_account:
+            if b.keychain_service != vault.SERVICE:
+                raise HTTPException(400, f"keychain_service must be {vault.SERVICE}")
+            try:
+                import keyring
+                key = keyring.get_password(vault.SERVICE, f"{b.keychain_account}:key")
+                secret = keyring.get_password(vault.SERVICE, f"{b.keychain_account}:secret")
+            except Exception as e:
+                raise HTTPException(400, f"Could not read the key from the keychain: {type(e).__name__}")
+            if not key:
+                raise HTTPException(400, "No key found in the keychain for that broker.")
+        keys = {}
+        if fields:
+            if not key:
+                raise HTTPException(400, "Paste the API key first.")
+            keys[fields[0]] = key
+            if secret:
+                keys[fields[1]] = secret
+        return broker_connect(BrokerBody(name=name, keys=keys, live=b.environment == "live"), s)
 
     @app.post("/brokers/connect")
     def broker_connect(b: BrokerBody, s=Depends(need_session)):
@@ -334,6 +471,18 @@ def _routes(app: FastAPI) -> None:
         from .trading.withdraw import helper
         return helper()
 
+    @app.post("/withdraw/helper")
+    def withdraw_step(b: WithdrawBody, s=Depends(need_session)):
+        """pause | close_positions | rescale | resume. Nothing here moves money."""
+        from .trading.withdraw import action
+        try:
+            r = action(b.action, actor=s.email)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        if not r.get("ok"):
+            raise HTTPException(400, r.get("message") or "; ".join(r.get("errors") or []) or "refused")
+        return r
+
     @app.get("/account/summary")
     def acct_summary():
         b = active()
@@ -359,21 +508,33 @@ def _routes(app: FastAPI) -> None:
 
     @app.post("/settings")
     def settings_set(b: SettingBody, s=Depends(need_session)):
-        if b.key in PROTECTED_SETTINGS:
-            raise HTTPException(400, f"{b.key} cannot be set here")
-        if b.key == "risk.gate_enabled" and not b.value and get("mode") == "live":
-            raise HTTPException(400, "The risk gate cannot be switched off in live mode.")
-        sset(b.key, b.value)
+        """One setting ({key, value}) or several ({values: {key: value}}). All are checked before any is saved."""
+        pairs = dict(b.values or {})
+        if b.key is not None:
+            pairs[b.key] = b.value
+        if not pairs:
+            raise HTTPException(400, "nothing to save")
+        for k, v in pairs.items():
+            if k in PROTECTED_SETTINGS or k.startswith(("vault.", "strategy.pending")):
+                raise HTTPException(400, f"{k} cannot be set here")
+            if k == "risk.gate_enabled" and not v and get("mode") == "live":
+                raise HTTPException(400, "The risk gate cannot be switched off in live mode.")
         from .audit import audit
-        audit(s.email, "settings.set", {"key": b.key, "value": b.value})
-        return {"ok": True}
+        for k, v in pairs.items():
+            sset(k, v)
+            audit(s.email, "settings.set", {"key": k, "value": v})
+        return {"ok": True, "saved": sorted(pairs)}
 
     # ------------------------------------------------------------------ backup
     @app.post("/backup/export")
     def backup_export(b: PassBody, s=Depends(need_session)):
         from .backup import export
-        return Response(export(b.passphrase), media_type="application/octet-stream",
-                        headers={"Content-Disposition": 'attachment; filename="my-desk.nsko"'})
+        blob = export(b.passphrase)
+        name = f"nsko-quant-desk-{time.strftime('%Y%m%d')}.nsko"
+        if b.format == "json":
+            return {"filename": name, "data_b64": base64.b64encode(blob).decode()}
+        return Response(blob, media_type="application/octet-stream",
+                        headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
     @app.post("/backup/restore")
     def backup_restore(b: PassBody, s=Depends(need_session)):
@@ -402,8 +563,14 @@ def _routes(app: FastAPI) -> None:
 
     # ------------------------------------------------------------------ strategies
     @app.get("/strategies")
-    def strategies():
-        return {"strategies": conn().execute("SELECT * FROM strategies ORDER BY updated_at DESC").fetchall()}
+    def strategies(include: str | None = None):
+        rows = conn().execute("SELECT * FROM strategies ORDER BY updated_at DESC").fetchall()
+        if include == "versions":
+            from .trading.strategies import active_version, versions
+            for r in rows:
+                r["versions"] = versions(r["id"])
+                r["active_version"] = active_version(r)
+        return {"strategies": rows}
 
     @app.get("/strategies/{sid}/versions")
     def strategy_versions(sid: str):
@@ -423,12 +590,22 @@ def _routes(app: FastAPI) -> None:
             raise HTTPException(400, str(e))
 
     @app.post("/strategies/{sid}/rollback")
-    def strategy_rollback(sid: str, s=Depends(need_session)):
+    def strategy_rollback(sid: str, b: RollbackBody | None = None, s=Depends(need_session)):
         from .trading.strategies import StrategyError, rollback
         try:
-            return rollback(sid, actor=s.email)
+            return rollback(sid, actor=s.email, to_version=b.version if b else None)
         except StrategyError as e:
             raise HTTPException(400, str(e))
+
+    @app.post("/strategies/{sid}/versions")
+    def strategy_new_version(sid: str, b: VersionBody, s=Depends(need_session)):
+        """Edit rules: a new version in the Lab. It runs nowhere until it is promoted."""
+        from .trading.strategies import StrategyError, get_strategy
+        try:
+            get_strategy(sid)
+        except StrategyError as e:
+            raise HTTPException(404, str(e))
+        return {"version": _new_version(sid, b, s.email), "where": "lab"}
 
     @app.post("/strategies/pack")
     def strategy_pack(b: PackBody, s=Depends(need_session)):
@@ -437,6 +614,14 @@ def _routes(app: FastAPI) -> None:
             return {"installed": install_pack(b.pack), "where": "lab"}
         except StrategyError as e:
             raise HTTPException(400, str(e))
+
+    # ------------------------------------------------------------------ JARVIS
+    @app.post("/jarvis/chat")
+    def jarvis_chat(b: ChatBody, s=Depends(need_session)):
+        from .jarvis import chat
+        if not b.message.strip():
+            raise HTTPException(400, "Ask something first.")
+        return chat(b.message, b.history)
 
     @app.post("/telegram/pair")
     def telegram_pair(b: CodeBody, s=Depends(need_session)):

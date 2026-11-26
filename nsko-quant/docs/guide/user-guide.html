@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>NSKO QUANT · User Guide</title>
+<link rel="stylesheet" href="guide.css">
+<style>@page { @top-right { content: "NSKO QUANT · USER GUIDE"; } }</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <div class="glow"></div>
+  <img class="lock" src="img/nsko-quant-lockup-dark.svg" alt="NSKO QUANT by NSKO Solutions">
+  <div class="kicker">USER GUIDE · STEP BY STEP</div>
+  <h1>NSKO QUANT<br>User Guide</h1>
+  <div class="tag">Trade the markets. <b>Automatically.</b></div>
+  <div class="hero"><img src="img/desk.jpg" alt=""></div>
+  <div class="warnbar">Trading leveraged products like CFDs and spread bets carries a high risk of losing money rapidly. Most retail investor accounts lose money. Only trade with money you can afford to lose. NSKO QUANT is software, not financial advice. Past and simulated results do not guarantee future results. Screens show DEMO data.</div>
+  <div class="foot"><span>NSKO QUANT · BY NSKO SOLUTIONS</span><span>NSKOSOLUTIONS.CO.UK</span></div>
+</div>
+
+<!-- ================= CONTENTS ================= -->
+<section>
+  <div class="lbl">Contents</div>
+  <h2>What is in this guide</h2>
+  <p class="lead" style="font-size:11pt;color:var(--mid);max-width:150mm">NSKO QUANT is your own automated trading desk. It is a desktop app plus a small engine that runs all the time on your own computer. It trades in <b>your own</b> broker account. NSKO never holds your money.</p>
+  <div class="toc">
+    <div><span class="n">01</span>What's included<span class="d">the app, the engine, the paper account</span></div>
+    <div><span class="n">02</span>What it does<span class="d">the trade flow on one page</span></div>
+    <div><span class="n">03</span>Before you start<span class="d">computer and broker account</span></div>
+    <div><span class="n">04</span>Download, install and create your account<span class="d">step by step</span></div>
+    <div><span class="n">05</span>Keeping it running 24/7<span class="d">tray, start on boot, power</span></div>
+    <div><span class="n">06</span>Connect your broker<span class="d">a page per broker</span></div>
+    <div><span class="n">07</span>Set your risk limits<span class="d">every setting and its default</span></div>
+    <div><span class="n">08</span>Paper trading first, then live<span class="d">the live unlock checklist</span></div>
+    <div><span class="n">09</span>A tour of every screen<span class="d">annotated screenshots</span></div>
+    <div><span class="n">10</span>Auto vs Manual · Kill switch · Phone alerts</div>
+    <div><span class="n">11</span>Updating your strategy<span class="d">manual, automatic, packs, rollback</span></div>
+    <div><span class="n">12</span>How to withdraw your money<span class="d">the Withdraw helper</span></div>
+    <div><span class="n">13</span>Troubleshooting &amp; FAQ</div>
+    <div><span class="n">14</span>Risk warning &amp; legal</div>
+  </div>
+  <div class="riskbox"><span class="lbl">Risk warning</span><p>Trading leveraged products like CFDs and spread bets carries a high risk of losing money rapidly. Most retail investor accounts lose money. Only trade with money you can afford to lose. NSKO QUANT is software, not financial advice. Past and simulated results do not guarantee future results.</p></div>
+  <div class="note grey"><span class="lbl">About the pictures</span><p>Every screenshot in this guide was taken in <b>demo mode</b>. The numbers on them (prices, profits, win rates, trade counts) come from a built-in simulator. They are <b>not</b> real results and say nothing about how much you could make or lose.</p></div>
+</section>
+
+<!-- ================= 01 ================= -->
+<section class="sec">
+  <div class="lbl">01 · What's included</div>
+  <h2>What you get</h2>
+  <p class="lead">Three parts that work together on your computer, plus your broker, which you choose.</p>
+  <div class="cols3">
+    <div class="card"><span class="lbl">1 · The desktop app</span><p>The screens you look at: charts, the Lab, the Trade Card, Settings and more. Windows, Mac and Linux. Closing the window hides it to the tray. Trading carries on.</p></div>
+    <div class="card"><span class="lbl">2 · The engine</span><p>A background program that does the trading. It runs 24/7 as long as the computer is on and online. It talks only to the app on the same computer.</p></div>
+    <div class="card"><span class="lbl">3 · The paper account</span><p>A built-in practice account with pretend money (in £). Every new desk starts here. You cannot skip it.</p></div>
+  </div>
+  <h4>Also inside</h4>
+  <div class="cols">
+    <ul class="ticks">
+      <li>A research team of software "agents" that reads trading ideas and turns them into rules to test.</li>
+      <li>The Lab, which tests every idea against a strict pass mark, after costs.</li>
+      <li>A hard risk gate. It cannot be switched off when you trade live.</li>
+      <li>A kill switch in the app, in the tray and on Telegram.</li>
+    </ul>
+    <ul class="ticks">
+      <li>Phone alerts through ntfy and Telegram.</li>
+      <li>God's Eye: a world map of events (flights, quakes, weather) for context only.</li>
+      <li>A Withdraw helper that shows what is free to take out. It never moves money.</li>
+      <li>Export / Restore my desk: an encrypted backup (never your broker keys).</li>
+    </ul>
+  </div>
+  <h4>What NSKO QUANT does not do</h4>
+  <ul class="ticks cross">
+    <li>It does not hold your money. Your money stays with your broker, in your name.</li>
+    <li>It cannot withdraw money. There is no withdrawal code in the engine at all.</li>
+    <li>It does not give financial advice, and it cannot promise a profit.</li>
+    <li>It does not send your account, password or keys to NSKO. Your login lives on your computer only. There is no NSKO login server.</li>
+  </ul>
+</section>
+
+<!-- ================= 02 ================= -->
+<section class="sec">
+  <div class="lbl">02 · What it does</div>
+  <h2>Every trade walks the same steps</h2>
+  <p class="lead">The engine checks a trade idea step by step. Any step can say no. A "no" means the trade is skipped and the reason is written down.</p>
+  <div class="diagram">
+  <svg viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8541A"/></marker></defs>
+    <g font-size="11.5">
+      <!-- row 1 -->
+      <g transform="translate(6,20)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">1</text><text x="34" y="22" font-weight="700">Scanner</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Looks for a setup in your</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">approved strategies, on</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">finished (closed) bars only.</text></g>
+      <g transform="translate(176,20)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">2</text><text x="34" y="22" font-weight="700">News check</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">No new trade within ±15 min</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">of a high-impact event</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">(for example US jobs data).</text></g>
+      <g transform="translate(346,20)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">3</text><text x="34" y="22" font-weight="700">Forecast</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">1,000 possible price paths.</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">At least 55% must agree</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">with the trade's direction.</text></g>
+      <g transform="translate(516,20)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">4</text><text x="34" y="22" font-weight="700">Entry trigger</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Signal from a closed bar.</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">Enters at the live price, and</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">only if still inside stop/target.</text></g>
+      <!-- row 2 (right to left) -->
+      <g transform="translate(516,130)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">5</text><text x="34" y="22" font-weight="700">Time Machine</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Replays the rest of the</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">session 10,000 times. Needs</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">an edge after costs.</text></g>
+      <g transform="translate(346,130)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">6</text><text x="34" y="22" font-weight="700">Size</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Sized so that hitting the stop</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">loses at most 1% of your</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">equity. Rounded down.</text></g>
+      <g transform="translate(176,130)"><rect width="150" height="78" rx="6" fill="#0B0B12" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">7</text><text x="34" y="22" font-weight="700" fill="#fff">Risk gate</text><text x="10" y="44" font-size="9.5" fill="#C9CAD2">Daily, weekly and per-trade</text><text x="10" y="57" font-size="9.5" fill="#C9CAD2">limits, spread, fresh data.</text><text x="10" y="70" font-size="9.5" fill="#E8541A" font-weight="600">Always on in live.</text></g>
+      <g transform="translate(6,130)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">8</text><text x="34" y="22" font-weight="700">Execute</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Bracket order: entry, stop</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">and target together. Manual</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">mode waits for your OK here.</text></g>
+      <!-- row 3 -->
+      <g transform="translate(6,240)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="10" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="10" class="mono">9</text><text x="34" y="22" font-weight="700">Manage</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">At +1R: take 50% off and</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">move the stop to breakeven</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">(your entry price).</text></g>
+      <g transform="translate(176,240)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="11" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="9.5" class="mono">10</text><text x="34" y="22" font-weight="700">Exit</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Target, stop, or end of the</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">session for day-trading</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">strategies.</text></g>
+      <g transform="translate(346,240)"><rect width="150" height="78" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.3"/><circle cx="18" cy="18" r="11" fill="#E8541A"/><text x="18" y="22" text-anchor="middle" fill="#fff" font-weight="700" font-size="9.5" class="mono">11</text><text x="34" y="22" font-weight="700">Journal + alert</text><text x="10" y="44" font-size="9.5" fill="#4A4D57">Result written to the journal.</text><text x="10" y="57" font-size="9.5" fill="#4A4D57">Alert to your phone (ntfy</text><text x="10" y="70" font-size="9.5" fill="#4A4D57">and Telegram).</text></g>
+      <g transform="translate(516,240)"><rect width="150" height="78" rx="6" fill="#F6F6F8" stroke="#B8BAC2" stroke-dasharray="4 3"/><text x="12" y="22" font-weight="700" fill="#C8322B">Any step says no?</text><text x="12" y="44" font-size="9.5" fill="#4A4D57">The trade is skipped. The</text><text x="12" y="57" font-size="9.5" fill="#4A4D57">reason is logged. Nothing</text><text x="12" y="70" font-size="9.5" fill="#4A4D57">is sent to the broker.</text></g>
+      <!-- arrows -->
+      <g stroke="#E8541A" stroke-width="1.8" fill="none" marker-end="url(#ar)">
+        <path d="M156,59 L174,59"/><path d="M326,59 L344,59"/><path d="M496,59 L514,59"/>
+        <path d="M591,98 L591,128"/>
+        <path d="M516,169 L498,169"/><path d="M346,169 L328,169"/><path d="M176,169 L158,169"/>
+        <path d="M81,208 L81,238"/>
+        <path d="M156,279 L174,279"/><path d="M326,279 L344,279"/>
+      </g>
+      <!-- debate tag -->
+      <g transform="translate(196,216)"><rect width="110" height="16" rx="8" fill="#FBF4F0" stroke="#E8541A"/><text x="55" y="11.5" text-anchor="middle" font-size="8" fill="#E8541A" font-weight="600">team check: can only veto</text></g>
+      <!-- bottom note -->
+      <text x="6" y="350" font-size="10" fill="#4A4D57">Between steps 7 and 8 a small "debate" (analyst, bull, bear, risk, trader) looks at the facts. It can only say take it or pass.</text>
+      <text x="6" y="366" font-size="10" fill="#4A4D57">It can never loosen the risk gate, or change the size, stop or target.</text>
+      <text x="6" y="392" font-size="9" fill="#80838E" class="mono">"1R" = the amount you would lose if the stop is hit. +1R = the trade has gained that same amount.</text>
+    </g>
+  </svg></div>
+  <div class="note"><span class="lbl">Stops always sit at the broker</span><p>The stop order is placed with your broker, not only on your computer. So if your computer or internet goes down, the stop still protects the trade. If a stop cannot be placed and checked after 3 tries, the engine closes the position.</p></div>
+</section>
+
+<section>
+  <h3 style="margin-top:0"><span class="n">2.2</span>Where trading ideas come from</h3>
+  <p>Before anything trades, an idea has to earn its place. This is the research pipeline:</p>
+  <div class="diagram">
+  <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8541A"/></marker></defs>
+    <g font-size="10.5">
+      <g transform="translate(4,30)"><rect width="104" height="120" rx="6" fill="#F6F6F8" stroke="#B8BAC2"/><text x="10" y="20" font-weight="700">Sources</text><text x="10" y="42" font-size="9.5" fill="#4A4D57">GitHub</text><text x="10" y="58" font-size="9.5" fill="#4A4D57">arXiv papers</text><text x="10" y="74" font-size="9.5" fill="#4A4D57">YouTube (own key)</text><text x="10" y="90" font-size="9.5" fill="#4A4D57">RSS news feeds</text><text x="10" y="108" font-size="8.5" fill="#80838E">headlines + links</text></g>
+      <g transform="translate(132,30)"><rect width="122" height="120" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="20" font-weight="700">JARVIS team</text><text x="10" y="42" font-size="9.5" fill="#4A4D57">Finds, reads and</text><text x="10" y="58" font-size="9.5" fill="#4A4D57">summarises ideas.</text><text x="10" y="74" font-size="9.5" fill="#4A4D57">Rejects hype like</text><text x="10" y="90" font-size="9.5" fill="#4A4D57">"always wins".</text><text x="10" y="108" font-size="8.5" fill="#80838E">local AI or offline rules</text></g>
+      <g transform="translate(278,30)"><rect width="110" height="120" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="20" font-weight="700">Recipe</text><text x="10" y="42" font-size="9.5" fill="#4A4D57">The idea written as</text><text x="10" y="58" font-size="9.5" fill="#4A4D57">exact rules: market,</text><text x="10" y="74" font-size="9.5" fill="#4A4D57">timeframe, entry,</text><text x="10" y="90" font-size="9.5" fill="#4A4D57">stop, target.</text></g>
+      <g transform="translate(412,30)"><rect width="122" height="120" rx="6" fill="#0B0B12"/><text x="10" y="20" font-weight="700" fill="#fff">The Lab</text><text x="10" y="42" font-size="9.5" fill="#C9CAD2">10 versions tested on</text><text x="10" y="58" font-size="9.5" fill="#C9CAD2">old data, then on newer</text><text x="10" y="74" font-size="9.5" fill="#C9CAD2">data it has never seen.</text><text x="10" y="96" font-size="9.5" fill="#E8541A" font-weight="700">Pass mark: Sharpe</text><text x="10" y="110" font-size="9.5" fill="#E8541A" font-weight="700">≥ 1.40 after costs</text></g>
+      <g transform="translate(558,30)"><rect width="118" height="120" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="20" font-weight="700">Strategy Book</text><text x="10" y="42" font-size="9.5" fill="#4A4D57">Passed ideas wait</text><text x="10" y="58" font-size="9.5" fill="#4A4D57">for you. You decide:</text><text x="10" y="74" font-size="9.5" fill="#4A4D57">to paper, then later</text><text x="10" y="90" font-size="9.5" fill="#4A4D57">to live.</text></g>
+      <g stroke="#E8541A" stroke-width="1.8" marker-end="url(#ar2)"><path d="M108,90 L130,90"/><path d="M254,90 L276,90"/><path d="M388,90 L410,90"/><path d="M534,90 L556,90"/></g>
+      <path d="M473,150 L473,186 L60,186" stroke="#C8322B" stroke-width="1.4" fill="none" stroke-dasharray="4 3"/>
+      <text x="200" y="204" font-size="9.5" fill="#C8322B">Most ideas fail here, and that is the point. Failures are kept, so you can see why.</text>
+      <text x="4" y="236" font-size="9" fill="#80838E" class="mono">Results from made-up (synthetic) practice data can never become a strategy.</text>
+    </g>
+  </svg></div>
+  <div class="cols">
+    <div class="card"><span class="lbl">Who decides</span><p>You do. A strategy only reaches paper trading when you press <b>To paper</b>. It only reaches live when you have finished the live checklist (section 8).</p></div>
+    <div class="card"><span class="lbl">What "Sharpe" means</span><p>A score for how smooth returns were compared with their ups and downs. Higher is better. NSKO QUANT asks for at least <b>1.40</b> on data the strategy never saw, after trading costs.</p></div>
+  </div>
+  <figure><div class="shot"><img src="img/lab.jpg"></div>
+    <figcaption><span class="tagd">DEMO DATA</span>The Lab. Each thin line is one tested version. The dashed line is the pass mark. Numbers are from the simulator.</figcaption></figure>
+</section>
+
+<!-- ================= 03 ================= -->
+<section class="sec">
+  <div class="lbl">03 · Before you start</div>
+  <h2>What you need</h2>
+  <p class="lead">A computer that can stay on, a broker account in your name, and a phone for alerts.</p>
+  <h3><span class="n">3.1</span>Your computer</h3>
+  <table>
+    <tr><th style="width:42mm">Item</th><th>What you need</th></tr>
+    <tr><td><b>System</b></td><td>Windows (64-bit), a Mac (Apple Silicon or Intel), or Linux (64-bit; AppImage or .deb).</td></tr>
+    <tr><td><b>Screen</b></td><td>At least 1280 × 800. The app opens at 1600 × 960.</td></tr>
+    <tr><td><b>Power</b></td><td>Plugged in. A desktop, or a laptop that stays on charge.</td></tr>
+    <tr><td><b>Internet</b></td><td>Always on. A wired connection is best.</td></tr>
+    <tr><td><b>Disk</b></td><td>About 1 GB free (a guideline).</td></tr>
+    <tr><td><b>Optional: local AI</b></td><td>The research team and the trade debate can use a free local AI model (Ollama). Without it they use simple built-in rules. A local model needs a faster computer with plenty of memory.</td></tr>
+  </table>
+  <div class="note"><span class="lbl">It only trades while the computer is on</span><p>The engine lives on your computer. If the computer is off, asleep or offline, no new trades open. Stops already placed at your broker keep protecting open trades. If you cannot keep a computer on, see the always-on server route in section 5.</p></div>
+  <h3><span class="n">3.2</span>A broker account</h3>
+  <p>You need your own account with a broker that NSKO QUANT can connect to. Open it on the broker's own website, in your own name. Fund it yourself. NSKO never touches that money.</p>
+  <table>
+    <tr><th>Broker</th><th>Status</th><th>Good for</th></tr>
+    <tr><td><b>Paper</b> (built in)</td><td><span class="status ready">READY</span></td><td>Practice with pretend £. No account needed.</td></tr>
+    <tr><td><b>Alpaca</b></td><td><span class="status ready">READY</span></td><td>US shares and crypto. Free paper account.</td></tr>
+    <tr><td><b>Kraken</b></td><td><span class="status ready">READY</span></td><td>Crypto (spot). Gold via the PAXG token.</td></tr>
+    <tr><td><b>Coinbase Advanced</b></td><td><span class="status beta">BUILT · UNTESTED</span></td><td>Crypto (spot). Not yet tested with a real account.</td></tr>
+    <tr><td><b>Interactive Brokers</b></td><td><span class="status beta">BUILT · UNTESTED</span></td><td>Shares, gold, FX. Not yet tested with a real account.</td></tr>
+    <tr><td><b>Capital.com, IG, OANDA, MT5</b></td><td><span class="status soon">COMING SOON</span></td><td>Not available yet.</td></tr>
+    <tr><td><b>CMC Markets</b></td><td><span class="status no">NOT SUPPORTED</span></td><td>No bot / trading API for retail accounts.</td></tr>
+  </table>
+  <h3><span class="n">3.3</span>Also have ready</h3>
+  <p>Your <b>licence key</b> (<code>NSQ-XXXX-XXXX-XXXX</code>) · a <b>phone</b> with the free <b>ntfy</b> app and/or <b>Telegram</b> · optional: an <b>authenticator app</b> · <b>pen and paper</b> for your recovery code (shown once).</p>
+</section>
+
+<!-- ================= 04 ================= -->
+<section class="sec">
+  <div class="lbl">04 · Download, install and create your account</div>
+  <h2>Install in about ten minutes</h2>
+  <p class="lead">Download the installer for your computer from NSKO Solutions, install it, then follow the 7-step welcome.</p>
+  <h3><span class="n">4.1</span>Install the app</h3>
+  <div class="cols3">
+    <div class="card"><span class="lbl">Windows</span><ol class="steps" style="margin:0"><li>Download the <b>.msi</b> or <b>.exe</b> installer.</li><li>Double-click it and follow the steps.</li><li>Open <b>NSKO QUANT</b> from the Start menu.</li></ol></div>
+    <div class="card"><span class="lbl">Mac</span><ol class="steps" style="margin:0"><li>Download the <b>.dmg</b> (works on Apple Silicon and Intel).</li><li>Drag NSKO QUANT into Applications.</li><li>Open it from Applications.</li></ol></div>
+    <div class="card"><span class="lbl">Linux</span><ol class="steps" style="margin:0"><li>Download the <b>.AppImage</b> or <b>.deb</b>.</li><li>AppImage: allow it to run, then open it. .deb: install it with your software centre.</li></ol></div>
+  </div>
+  <div class="note"><span class="lbl">If your computer shows a warning</span><p>Early builds are not code-signed yet. Windows may show a blue "Windows protected your PC" box: click <b>More info</b>, then <b>Run anyway</b>. A Mac may say the app is from an unidentified developer: right-click the app, choose <b>Open</b>, then <b>Open</b> again. Only do this for an installer you downloaded from NSKO Solutions.</p></div>
+  <h3><span class="n">4.2</span>The 7-step welcome</h3>
+  <p>The first time you open the app, a short welcome walks you through set-up:</p>
+  <table>
+    <tr><th style="width:12mm">Step</th><th style="width:40mm">Name</th><th>What you do</th></tr>
+    <tr><td class="v">1</td><td><b>Welcome</b></td><td>Read the risk warning. Press Continue.</td></tr>
+    <tr><td class="v">2</td><td><b>Your account</b></td><td>Name, email, password (10+ characters, twice), licence key. Optional PIN and 2FA.</td></tr>
+    <tr><td class="v">3</td><td><b>24/7 setup</b></td><td>Start on boot, keep awake, power settings, phone alerts. See section 5.</td></tr>
+    <tr><td class="v">4</td><td><b>Connect broker</b></td><td>Pick a broker. You paste the key later on the Brokers page (section 6).</td></tr>
+    <tr><td class="v">5</td><td><b>Risk limits</b></td><td>Check the defaults: 1%, 3%, 6%, 5 trades, 2 open (section 7).</td></tr>
+    <tr><td class="v">6</td><td><b>Markets &amp; mode</b></td><td>Choose markets, and Auto or Manual (section 10).</td></tr>
+    <tr><td class="v">7</td><td><b>Start on paper</b></td><td>Press <b>Open my desk</b>. You start in paper mode. Live stays locked.</td></tr>
+  </table>
+  <div class="cols">
+    <figure><div class="shot"><img src="img/ob-welcome-crop.jpg"></div><figcaption><span class="tagd">DEMO</span>Step 1: welcome and risk warning.</figcaption></figure>
+    <figure><div class="shot"><img src="img/ob-account-crop.jpg"></div><figcaption><span class="tagd">DEMO</span>Step 2: your account and licence key.</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h3 style="margin-top:0"><span class="n">4.3</span>Create your account (step 2)</h3>
+  <ol class="steps">
+    <li><b>Type your name and email.</b> The email is your login name on this computer.</li>
+    <li><b>Choose a password</b> of at least 10 characters. Type it twice.</li>
+    <li><b>Paste your licence key</b> and press <b>Check</b>. You should see a green "Licence valid". The check happens on your computer; it does not need the internet.</li>
+    <li><b>Optional: add a 6-digit PIN.</b> The PIN only unlocks the screen quickly. It never unlocks your data. After 5 wrong tries it locks for 5 minutes.</li>
+    <li><b>Optional: tick "Authenticator app (2FA)".</b> You will add a key to an authenticator app and type a 6-digit code to turn it on.</li>
+    <li><b>Press Create account.</b></li>
+    <li><b>Write down your recovery code on paper.</b> It is shown <b>once</b>. It is the only way back in if you forget your password. Tick "I have written down my recovery code", then Continue.</li>
+  </ol>
+  <div class="note red"><span class="lbl">Keep the recovery code safe</span><p>NSKO cannot reset your password. There is no NSKO login server: your account lives on your computer, encrypted. Lose both the password and the recovery code and you will need to set up a new desk.</p></div>
+  <div class="cols">
+    <figure><div class="shot"><img src="img/ob-recovery-crop.jpg"></div><figcaption><span class="tagd">DEMO</span>The recovery code, shown once. (This one is a demo code.)</figcaption></figure>
+    <figure><div class="shot"><img src="img/lock-pw-crop.jpg"></div><figcaption><span class="tagd">DEMO</span>The lock screen: email and password.</figcaption></figure>
+  </div>
+  <h3><span class="n">4.4</span>The lock screen</h3>
+  <p>Each time the app starts, it asks for your password. If you turned on 2FA or a PIN, it then asks for the 6-digit code. The engine keeps trading while the screen is locked. Your login is checked on your computer; nothing is sent to NSKO.</p>
+  <div class="cols w">
+    <figure><div class="shot"><img src="img/lock-2fa-crop.jpg"></div><figcaption><span class="tagd">DEMO</span>Second step: the code from your authenticator app.</figcaption></figure>
+    <div class="card" style="align-self:start"><span class="lbl">Use demo data instead</span><p>The lock screen always has a <b>Use demo data instead</b> button. It shows the built-in simulator, so you can explore safely. Demo screens are marked <b>DEMO DATA</b> in the top bar.</p></div>
+  </div>
+</section>
+
+<!-- ================= 05 ================= -->
+<section class="sec">
+  <div class="lbl">05 · Keeping it running 24/7</div>
+  <h2>Keep the engine awake</h2>
+  <p class="lead">The engine is a separate program from the window. Closing the window does not stop trading. Turning the computer off does.</p>
+  <div class="diagram">
+  <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8541A"/></marker></defs>
+    <rect x="4" y="10" width="440" height="180" rx="8" fill="#F6F6F8" stroke="#B8BAC2"/>
+    <text x="18" y="32" font-size="10" font-weight="700" class="mono" fill="#80838E" letter-spacing="2">YOUR COMPUTER</text>
+    <g transform="translate(20,48)"><rect width="120" height="76" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="20" font-size="11" font-weight="700">Desktop app</text><text x="10" y="40" font-size="9.5" fill="#4A4D57">The screens.</text><text x="10" y="54" font-size="9.5" fill="#4A4D57">Can be closed;</text><text x="10" y="68" font-size="9.5" fill="#4A4D57">lives in the tray.</text></g>
+    <g transform="translate(176,48)"><rect width="130" height="76" rx="6" fill="#0B0B12"/><text x="10" y="20" font-size="11" font-weight="700" fill="#fff">Engine (service)</text><text x="10" y="40" font-size="9.5" fill="#C9CAD2">Does the trading.</text><text x="10" y="54" font-size="9.5" fill="#C9CAD2">Starts with the</text><text x="10" y="68" font-size="9.5" fill="#C9CAD2">computer. 24/7.</text></g>
+    <g transform="translate(330,48)"><rect width="100" height="76" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="20" font-size="11" font-weight="700">Watchdog</text><text x="10" y="40" font-size="9.5" fill="#4A4D57">Restarts the</text><text x="10" y="54" font-size="9.5" fill="#4A4D57">engine if it</text><text x="10" y="68" font-size="9.5" fill="#4A4D57">gets stuck.</text></g>
+    <g transform="translate(20,140)"><rect width="410" height="36" rx="6" fill="#fff" stroke="#B8BAC2"/><text x="10" y="15" font-size="9.5" font-weight="700">Keep-awake + start on boot</text><text x="10" y="29" font-size="9" fill="#4A4D57">The engine asks the computer not to sleep while it runs. The screen may still turn off.</text></g>
+    <g transform="translate(500,30)"><rect width="176" height="58" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="22" font-size="11" font-weight="700">Your broker</text><text x="10" y="40" font-size="9.5" fill="#4A4D57">Your money. Stops and</text><text x="10" y="52" font-size="9.5" fill="#4A4D57">targets sit here.</text></g>
+    <g transform="translate(500,112)"><rect width="176" height="58" rx="6" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="10" y="22" font-size="11" font-weight="700">Your phone</text><text x="10" y="40" font-size="9.5" fill="#4A4D57">Alerts (ntfy, Telegram).</text><text x="10" y="52" font-size="9.5" fill="#4A4D57">/kill from Telegram.</text></g>
+    <g stroke="#E8541A" stroke-width="1.8" fill="none"><path d="M140,86 L174,86" marker-end="url(#ar3)" marker-start="url(#ar3)"/><path d="M446,70 L498,60" marker-end="url(#ar3)" marker-start="url(#ar3)"/><path d="M446,120 L498,140" marker-end="url(#ar3)" marker-start="url(#ar3)"/></g>
+  </svg></div>
+  <div class="cols">
+    <div>
+      <h3><span class="n">5.1</span>The tray icon</h3>
+      <p>NSKO QUANT puts an icon in the tray (Windows, bottom right) or menu bar (Mac, top right). Its dot shows the state:</p>
+      <ul>
+        <li><b class="g">Green</b>: trading.</li>
+        <li><b style="color:#B7791F">Amber</b>: paused (no new trades).</li>
+        <li><b class="r">Red</b>: a problem: the engine is not answering, or the kill switch is on.</li>
+      </ul>
+      <p>Click it for the menu: <b>Open NSKO QUANT</b>, <b>Pause / Resume new trades</b>, <b>Kill switch…</b> and <b>Quit engine…</b>. The last two ask you to confirm first.</p>
+    </div>
+    <div class="diagram" style="margin-top:8mm">
+      <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="6" width="280" height="188" rx="8" fill="#14141C"/>
+        <text x="26" y="32" font-size="11" fill="#9A9DA8" class="mono">● </text><circle cx="30" cy="28" r="4.5" fill="#2FBF71"/><text x="42" y="32" font-size="11" fill="#E8E8EC">Trading · paper · engine online</text>
+        <line x1="22" y1="46" x2="278" y2="46" stroke="#2A2A36"/>
+        <text x="30" y="70" font-size="12" fill="#E8E8EC">Open NSKO QUANT</text>
+        <text x="30" y="98" font-size="12" fill="#E8E8EC">Pause new trades</text>
+        <line x1="22" y1="112" x2="278" y2="112" stroke="#2A2A36"/>
+        <text x="30" y="136" font-size="12" fill="#FF5A4E">Kill switch…</text>
+        <text x="30" y="164" font-size="12" fill="#E8E8EC">Quit engine…</text>
+        <text x="200" y="136" font-size="8.5" fill="#80838E" class="mono">confirm</text><text x="200" y="164" font-size="8.5" fill="#80838E" class="mono">confirm</text>
+      </svg>
+      <div class="tiny" style="margin-top:1mm">ILLUSTRATIVE drawing of the tray menu. The look depends on your system.</div>
+    </div>
+  </div>
+  <h3><span class="n">5.2</span>Start on boot and keep-awake</h3>
+  <ul>
+    <li><b>Start on boot.</b> Welcome step 3 turns this on. You can change it in <b>Settings → Desktop</b>: "Start NSKO QUANT when the computer turns on (window hidden, tray icon only)".</li>
+    <li><b>Keep-awake.</b> While the engine runs it asks the computer not to sleep. The screen can still switch off; that is fine. The Engine screen shows <b>KEEP-AWAKE: ON</b>.</li>
+    <li><b>Engine as a service (best for 24/7).</b> The engine can be installed as a background service, so it starts with the computer and restarts if it stops. NSKO support can set this up with you.</li>
+  </ul>
+</section>
+
+<section>
+  <h3 style="margin-top:0"><span class="n">5.3</span>Power settings</h3>
+  <div class="cols">
+    <div class="card"><span class="lbl">Windows</span>
+      <ol class="small"><li>Open <b>Settings → System → Power</b> (on some versions <b>Power &amp; battery</b>).</li>
+      <li>Set "When plugged in, put my device to sleep after" to <b>Never</b>. The screen can still turn off.</li>
+      <li>Laptops: in Control Panel → Power Options → "Choose what closing the lid does", set <b>When I close the lid (plugged in)</b> to <b>Do nothing</b>.</li>
+      <li>Turn off automatic restarts for updates at times you are trading, or set "active hours".</li></ol>
+      <p class="tiny">Menu names may differ between Windows versions.</p></div>
+    <div class="card"><span class="lbl">Mac</span>
+      <ol class="small"><li>Open <b>System Settings → Energy</b> (or <b>Battery → Options</b> on a laptop).</li>
+      <li>Turn on "Prevent automatic sleeping when the display is off" (wording varies).</li>
+      <li>Laptops: keep it plugged in. Closing the lid normally puts a Mac to sleep unless an external display is connected, so leave the lid open.</li>
+      <li>Turn on "Start up automatically after a power failure" if your Mac offers it.</li></ol>
+      <p class="tiny">Menu names may differ between macOS versions.</p></div>
+  </div>
+  <h3><span class="n">5.4</span>What happens if…</h3>
+  <table>
+    <tr><th style="width:44mm">Event</th><th>What NSKO QUANT does</th></tr>
+    <tr><td><b>The internet drops</b></td><td>No new trades open. Nothing is cancelled: your stops and targets are already at the broker and keep protecting you. The engine retries, and checks everything with the broker when the connection is back.</td></tr>
+    <tr><td><b>The computer restarts</b></td><td>With start on boot or the service, the engine comes back by itself. It asks the broker what is open. The broker is the source of truth. Any open position missing a stop or target gets them put back. If a stop still cannot be placed, the position is closed.</td></tr>
+    <tr><td><b>The engine gets stuck</b></td><td>A watchdog checks every 15 seconds. If the engine has not answered for 60 seconds, it is restarted.</td></tr>
+    <tr><td><b>The window is closed</b></td><td>Nothing changes. The window hides to the tray. Use <b>Quit engine…</b> in the tray menu to really stop.</td></tr>
+    <tr><td><b>The app cannot reach the engine</b></td><td>The screens switch to demo data with a notice, and keep retrying. The tray dot turns red.</td></tr>
+  </table>
+  <h3><span class="n">5.5</span>Optional: an always-on server</h3>
+  <p>If you cannot keep a computer on, the engine can also run on a small always-on machine (for example a home mini-PC or a rented server) using Docker. On a server the engine only listens on that machine itself, never on the open internet, and your keys are protected by a passphrase you set. This route is more technical: ask NSKO support before you try it.</p>
+  <div class="note grey"><span class="lbl">Good habit</span><p>Once a week, open the <b>Engine</b> screen and check: status running, keep-awake on, last heartbeat a few seconds ago.</p></div>
+</section>
+
+<!-- ================= 06 ================= -->
+<section class="sec">
+  <div class="lbl">06 · Connect your broker</div>
+  <h2>Your money stays with your broker</h2>
+  <p class="lead">NSKO QUANT only needs a key that can place trades. You switch withdrawals OFF on that key. Then even if the key were stolen, it could not move your money out.</p>
+  <div class="diagram">
+  <svg viewBox="0 0 680 170" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8541A"/></marker><marker id="ar4g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1E8E4E"/></marker></defs>
+    <g transform="translate(4,40)"><rect width="150" height="80" rx="8" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="12" y="24" font-size="12" font-weight="700">Your bank</text><text x="12" y="46" font-size="9.5" fill="#4A4D57">You move money in</text><text x="12" y="60" font-size="9.5" fill="#4A4D57">and out yourself.</text></g>
+    <g transform="translate(264,30)"><rect width="170" height="100" rx="8" fill="#0B0B12"/><text x="12" y="26" font-size="12" font-weight="700" fill="#fff">Your broker account</text><text x="12" y="48" font-size="9.5" fill="#C9CAD2">In your name.</text><text x="12" y="62" font-size="9.5" fill="#C9CAD2">Your money is here.</text><text x="12" y="84" font-size="9.5" fill="#E8541A" font-weight="600">Stops + targets live here.</text></g>
+    <g transform="translate(540,40)"><rect width="136" height="80" rx="8" fill="#fff" stroke="#0B0B12" stroke-width="1.2"/><text x="12" y="24" font-size="12" font-weight="700">NSKO QUANT</text><text x="12" y="46" font-size="9.5" fill="#4A4D57">on your computer,</text><text x="12" y="60" font-size="9.5" fill="#4A4D57">with a trade-only key.</text></g>
+    <path d="M154,80 L262,80" stroke="#1E8E4E" stroke-width="2" marker-end="url(#ar4g)" marker-start="url(#ar4g)"/>
+    <text x="160" y="62" font-size="8.5" fill="#1E8E4E" font-weight="600">you, with your</text><text x="160" y="73" font-size="8.5" fill="#1E8E4E" font-weight="600">login + 2FA</text>
+    <path d="M538,68 L436,68" stroke="#E8541A" stroke-width="2" marker-end="url(#ar4)"/>
+    <text x="450" y="60" font-size="9" fill="#E8541A" font-weight="600">trades: ON</text>
+    <path d="M436,100 L538,100" stroke="#C8322B" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="450" y="118" font-size="9" fill="#C8322B" font-weight="600">withdrawals: OFF ✕</text>
+  </svg></div>
+  <h3><span class="n">6.1</span>The same six steps for every broker</h3>
+  <ol class="steps">
+    <li><b>Open the account.</b> Do it on the broker's own website. Use a demo or paper account first if the broker has one.</li>
+    <li><b>Create an API key.</b> An API key is a password for software. Brokers usually keep this under Settings, Security or API.</li>
+    <li><b>Set the permissions: trading ON, withdrawals OFF.</b> Tick only what is needed to view your account and place orders. Never tick withdraw or transfer.</li>
+    <li><b>Paste it into NSKO QUANT.</b> Go to <b>Brokers</b>, press <b>Connect</b> on your broker, choose <b>Demo account</b> or <b>Live account</b>, paste the key (and secret, if there is one), then press <b>Save key and connect</b>.</li>
+    <li><b>Test.</b> The box shows "Connected · trading ON · withdrawals OFF ✓", or explains what is wrong.</li>
+    <li><b>Demo first.</b> Run on paper or the broker's demo account before any real money. Live stays locked until the checklist in section 8 is done.</li>
+  </ol>
+  <div class="cols w">
+    <figure><div class="shot"><img src="img/connect-modal.jpg"></div><figcaption><span class="tagd">DEMO</span>The Connect box on the Brokers page.</figcaption></figure>
+    <div class="note" style="align-self:start;margin-top:3mm"><span class="lbl">Where your key goes</span><p>The key is saved in your computer's own secure keychain (Keychain on Mac, Credential Manager on Windows). The window can save a key but can never read it back. Keys are never in backups and never in logs.</p><p class="tiny" style="margin-top:2mm">Broker menus change from time to time. The steps on the next pages are generic: menu names may differ.</p></div>
+  </div>
+</section>
+
+<!-- Paper -->
+<section class="sec">
+  <div class="broker-head"><h3>Paper (built in)</h3><span class="status ready">READY · DEFAULT</span></div>
+  <p>The paper broker is a practice account inside NSKO QUANT. It is switched on from the start. No key, no website, no money.</p>
+  <div class="kv"><div>Currency</div><div>GBP (£). Prices in US dollars are converted at fixed rates in Settings.</div><div>Costs</div><div>Spread, slippage and commission are added to every fill. They are approximations, not quotes from any broker.</div><div>Orders</div><div>Real bracket orders: stop and target together, one cancels the other. Partial closes and gaps through the stop are simulated.</div><div>After a restart</div><div>It picks up where it left off.</div></div>
+  <div class="note"><span class="lbl">Why paper matters</span><p>Live trading unlocks only after <b>21 days and 30 trades</b> on paper (section 8). Paper results are a rehearsal. Real fills, costs and slippage can be worse.</p></div>
+
+  <div class="broker-head" style="margin-top:8mm"><h3>Alpaca</h3><span class="status ready">READY</span></div>
+  <div class="kv"><div>Markets</div><div>US shares (AAPL, NVDA) and crypto (BTC/USD, ETH/USD).</div><div>Demo</div><div>Yes: a free paper account. NSKO QUANT uses Alpaca's paper address unless you choose Live account.</div><div>Orders</div><div>Native bracket orders on US shares (whole shares). Crypto uses NSKO's safe fallback: entry, then stop and target, each checked.</div><div>Withdrawals</div><div>Alpaca trading keys cannot move money out, so NSKO QUANT reports withdrawals OFF.</div></div>
+  <ol class="steps">
+    <li><b>Open an account</b> at Alpaca's website. Start with the paper account.</li>
+    <li><b>Create an API key</b> from the dashboard (usually a panel called API Keys). Make sure you are in the paper account when you do this; paper and live keys are different.</li>
+    <li><b>Permissions:</b> the trading key places orders only. Do not connect any banking or transfer tools to NSKO QUANT.</li>
+    <li><b>Paste into NSKO QUANT:</b> Brokers → Alpaca → Connect → <b>Demo account</b>. Paste the <b>Key ID</b> into "API key" and the <b>Secret</b> into "API secret".</li>
+    <li><b>Test:</b> look for "Connected · trading ON".</li>
+    <li><b>Demo first:</b> run on Alpaca paper. Make a new live key only when the live checklist is done.</li>
+  </ol>
+  <p class="tiny">Menu names may differ. Alpaca is a US broker; check it accepts customers where you live.</p>
+</section>
+
+<!-- Kraken -->
+<section class="sec">
+  <div class="broker-head"><h3>Kraken</h3><span class="status ready">READY</span></div>
+  <div class="kv"><div>Markets</div><div>Spot crypto: BTC/USD, ETH/USD. Gold through <b>PAXG/USD</b>, a gold-backed token (labelled as a proxy, not real gold).</div><div>Direction</div><div>Long only (buy first, sell later). No borrowing.</div><div>Orders</div><div>Kraken spot has no bracket orders. The stop is always placed at Kraken. If Kraken refuses a second exit order, the target is watched by the engine instead. That part only works while your computer is on; the stop keeps protecting you either way.</div><div>Demo</div><div>No spot demo account. Practise in NSKO QUANT's paper mode first.</div><div>Withdrawals</div><div>NSKO QUANT <b>cannot check</b> Kraken key permissions without touching funding pages, and it never does. So it is up to you to leave withdrawal unticked.</div></div>
+  <ol class="steps">
+    <li><b>Open and verify</b> your Kraken account on Kraken's website.</li>
+    <li><b>Create an API key</b> (usually Settings → API, or Security → API).</li>
+    <li><b>Permissions:</b> tick <b>Query</b> permissions (funds, open orders and trades) and <b>Trade</b> permissions (create and modify orders, cancel orders). Leave <b>Withdraw Funds</b> and any deposit or transfer permissions <b>unticked</b>.</li>
+    <li><b>Paste into NSKO QUANT:</b> Brokers → Kraken → Connect. Paste the API key and the private key (secret).</li>
+    <li><b>Test:</b> trading should show ON. Withdrawals will show "not confirmed OFF", because Kraken does not report it. Double-check the key on Kraken's site.</li>
+    <li><b>Demo first:</b> trade on paper first. When you go live, start small.</li>
+  </ol>
+  <div class="note red"><span class="lbl">Check twice</span><p>On Kraken, the only thing keeping withdrawals off is the box you leave unticked. Look at the key's permissions again after you create it.</p></div>
+  <p class="tiny">Menu names may differ.</p>
+</section>
+
+<!-- Coinbase -->
+<section class="sec">
+  <div class="broker-head"><h3>Coinbase Advanced</h3><span class="status beta">BUILT · NOT YET TESTED WITH A REAL ACCOUNT</span></div>
+  <div class="note grey"><span class="lbl">Please read</span><p>The Coinbase connection was built from Coinbase's official software kit, but it has not yet been tested against a real account. Use it on paper first and with small amounts. It also needs an optional add-on (Coinbase's official kit). If the Brokers page says it is missing, contact NSKO support.</p></div>
+  <div class="kv"><div>Markets</div><div>Spot crypto: BTC/USD, ETH/USD. Long only.</div><div>Orders</div><div>Buys at market, then attaches one exit order holding both stop and target (one cancels the other), and checks it.</div><div>Withdrawals</div><div>Coinbase reports key permissions. <b>NSKO QUANT refuses a key that can transfer funds.</b></div></div>
+  <ol class="steps">
+    <li><b>Open your Coinbase account</b> and switch on Advanced trading.</li>
+    <li><b>Create an API key</b> (Coinbase calls these developer or CDP API keys; look under Settings → API or the developer platform).</li>
+    <li><b>Permissions:</b> <b>View</b> and <b>Trade</b> only. <b>Transfer</b> must be OFF.</li>
+    <li><b>Paste into NSKO QUANT:</b> Brokers → Coinbase Advanced → Connect. Paste the key name/ID into "API key" and the private key into "API secret".</li>
+    <li><b>Test:</b> if the key can transfer, you will see "This Coinbase key can transfer funds. Make a new key with View + Trade only."</li>
+    <li><b>Demo first:</b> Coinbase has no spot demo. Practise on paper first.</li>
+  </ol>
+  <p class="tiny">Menu names may differ.</p>
+
+</section>
+<section class="sec">
+  <div class="broker-head"><h3>Interactive Brokers</h3><span class="status beta">BUILT · NOT YET TESTED WITH A REAL ACCOUNT</span></div>
+  <div class="note grey"><span class="lbl">Please read</span><p>The IBKR connection was built from the open-source <b>ib_async</b> library but has not yet been tested with a real IB Gateway. It needs an optional add-on; contact NSKO support to enable it.</p></div>
+  <div class="kv"><div>Markets</div><div>AAPL, NVDA, gold (XAU/USD), EUR/USD.</div><div>How it connects</div><div>Through IB's own program, <b>IB Gateway</b> (or Trader Workstation), running on the same computer. There is no key to paste.</div><div>Orders</div><div>Native bracket orders.</div><div>Withdrawals</div><div>IB's trading connection cannot withdraw money, so they are reported OFF.</div></div>
+  <ol class="steps">
+    <li><b>Open an IBKR account</b>, and a <b>paper trading account</b> (IBKR offers one).</li>
+    <li><b>Install IB Gateway</b> and log in with your <b>paper</b> username.</li>
+    <li><b>Turn on the API</b> in IB Gateway's settings (usually Configure → Settings → API). Allow connections from this computer only (127.0.0.1). The paper socket port is normally <b>4002</b>.</li>
+    <li><b>In NSKO QUANT:</b> Brokers → Interactive Brokers → Connect.</li>
+    <li><b>Test:</b> trading shows ON while IB Gateway is running and logged in.</li>
+    <li><b>Keep IB Gateway running</b> 24/7 alongside NSKO QUANT. IB Gateway logs out daily or weekly by IBKR's rules; check it each day.</li>
+  </ol>
+  <p class="tiny">Menu names may differ.</p>
+</section>
+
+<!-- coming soon + CMC -->
+<section class="sec">
+  <div class="lbl">06 · Connect your broker</div>
+  <h3 style="margin-top:2mm"><span class="n">6.7</span>Coming soon: Capital.com, IG, OANDA, MetaTrader 5</h3>
+  <p>These appear on the Brokers page but cannot be connected yet. NSKO only ships a broker connection after checking it against the broker's official documentation. For these four, that check is not finished:</p>
+  <ul>
+    <li><b>Capital.com, IG, OANDA:</b> their API documentation could not be checked when this version was built, so the connections are switched off until they are.</li>
+    <li><b>MetaTrader 5:</b> needs Windows and the MT5 terminal running; not built yet.</li>
+  </ul>
+  <figure><div class="shot"><img src="img/brokers-engine.jpg"><i class="pin" style="left:23%;top:39%">1</i><i class="pin" style="left:39%;top:40%">2</i><i class="pin" style="left:46%;top:60%">3</i><i class="pin" style="left:26%;top:89%">4</i></div>
+    <figcaption><span class="tagi">ENGINE TEST RUN</span>The Brokers page reading the engine's real list. (1) Paper: connected, trading ON, withdrawals OFF. (2) Connect a ready broker. (3) Coming soon, with the reason. (4) The CMC note.</figcaption></figure>
+  <h3><span class="n">6.8</span>CMC Markets is not supported. Here's why.</h3>
+  <div class="note red"><span class="lbl">Not supported</span><p>CMC Markets does not offer a bot or trading API for retail accounts. Without one, no software can place trades for you safely and legally. NSKO QUANT will not try to work around this (for example by clicking buttons on a website). If you use CMC today, open an account with a supported broker for NSKO QUANT.</p></div>
+  <h3><span class="n">6.9</span>Gold: which broker?</h3>
+  <p>In this release: <b>Interactive Brokers</b> offers XAU/USD (built, untested). <b>Kraken</b> offers PAXG/USD, a token backed by gold, as a stand-in. Capital.com and IG are coming soon. You can always trade gold on <b>paper</b>.</p>
+</section>
+
+<!-- ================= 07 ================= -->
+<section class="sec">
+  <div class="lbl">07 · Set your risk limits</div>
+  <h2>Your limits, one line each</h2>
+  <p class="lead">Find these in <b>Settings → Risk limits</b>. Every trade must pass all of them. In live mode the gate cannot be switched off.</p>
+  <table>
+    <tr><th>Setting</th><th style="width:28mm">Default</th><th>What it means</th></tr>
+    <tr><td><b>Risk per trade</b></td><td class="v">1%</td><td>The most one trade can lose if its stop is hit: 1% of your equity. On £10,000 that is £100.</td></tr>
+    <tr><td><b>Daily loss limit</b></td><td class="v">3%</td><td>Lose 3% in a day and trading <b>stops for the rest of the day</b> (UTC).</td></tr>
+    <tr><td><b>Weekly loss limit</b></td><td class="v">6%</td><td>Lose 6% in a week (from Monday) and no new trades that week.</td></tr>
+    <tr><td><b>Max trades per day</b></td><td class="v">5</td><td>No more than 5 new trades in one day.</td></tr>
+    <tr><td><b>Max open positions</b></td><td class="v">2</td><td>No more than 2 trades open at once.</td></tr>
+    <tr><td><b>Max on one market</b></td><td class="v">2%</td><td>Total open risk on one market stays under 2% of equity.</td></tr>
+    <tr><td><b>News blackout</b></td><td class="v">±15 min</td><td>No new trades 15 minutes either side of a high-impact event.</td></tr>
+    <tr><td><b>Max spread</b></td><td class="v">15 bps</td><td>If the gap between buy and sell prices is too wide (0.15% of price), no trade.</td></tr>
+    <tr><td><b>Fresh data</b></td><td class="v">120 s</td><td>If the last price is older than 2 minutes, no trade.</td></tr>
+    <tr><td><b>Manual approval wait</b></td><td class="v">60 s</td><td>In Manual mode, if you do not press Approve within 60 s, the trade is skipped.</td></tr>
+    <tr><td><b>Paper period before live</b></td><td class="v">21 days + 30</td><td>21 days <b>and</b> 30 trades on paper.</td></tr>
+    <tr><td><b>Live start size</b></td><td class="v">50% · 2 wks</td><td>The first 14 days of live trade at half size.</td></tr>
+    <tr><td><b>The bar (Lab)</b></td><td class="v">1.40</td><td>A strategy must score Sharpe 1.40 or more on unseen data, after costs.</td></tr>
+  </table>
+  <div class="cols">
+    <div class="note"><span class="lbl">Hard caps in live</span><p>Whatever you type, live trading can never go looser than: <b>2%</b> per trade, <b>5%</b> daily, <b>10%</b> weekly, <b>10</b> trades a day, <b>4</b> open, <b>4%</b> on one market.</p></div>
+    <div class="note grey"><span class="lbl">Every trade also needs</span><p>A stop and a target, a size above zero, a broker that is online, and the kill switch off.</p></div>
+  </div>
+</section>
+
+<!-- ================= 08 ================= -->
+<section class="sec">
+  <div class="lbl">08 · Paper trading first</div>
+  <h2>Paper first. Always.</h2>
+  <p class="lead">Every desk starts on paper. Live trading stays locked until every box on the checklist is ticked.</p>
+  <div class="diagram">
+  <svg viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="50" width="300" height="34" rx="4" fill="#F6F6F8" stroke="#B8BAC2"/><text x="14" y="72" font-size="11" font-weight="700">PAPER</text><text x="66" y="72" font-size="10" fill="#4A4D57">at least 21 days AND 30 trades</text>
+    <rect x="310" y="50" width="96" height="34" rx="4" fill="#0B0B12"/><text x="358" y="65" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff">Checklist +</text><text x="358" y="78" text-anchor="middle" font-size="9.5" fill="#E8541A" font-weight="700">typed phrase</text>
+    <rect x="412" y="50" width="150" height="34" rx="4" fill="#FBF4F0" stroke="#E8541A"/><text x="422" y="72" font-size="11" font-weight="700" fill="#E8541A">LIVE · 50% size</text>
+    <rect x="568" y="50" width="108" height="34" rx="4" fill="#fff" stroke="#0B0B12"/><text x="578" y="72" font-size="11" font-weight="700">LIVE · full</text>
+    <g font-size="9" fill="#80838E" class="mono"><text x="4" y="104">day 0</text><text x="276" y="104">day 21+</text><text x="412" y="104">unlock day</text><text x="530" y="104">+14 days</text></g>
+    <text x="4" y="36" font-size="9.5" fill="#4A4D57">You can go back to paper at any time. The risk gate stays on in live and cannot be switched off.</text>
+    <text x="4" y="132" font-size="9" fill="#80838E">ILLUSTRATIVE timeline. The paper period can take longer if fewer than 30 trades happen in 21 days.</text>
+  </svg></div>
+  <h3><span class="n">8.1</span>The live unlock checklist</h3>
+  <p>The engine checks all of these. Every one must be true:</p>
+  <table>
+    <tr><th style="width:8mm"></th><th>Check</th><th>How to tick it</th></tr>
+    <tr><td class="v">1</td><td><b>21 days of paper trading</b></td><td>Counted from your first paper trade.</td></tr>
+    <tr><td class="v">2</td><td><b>30 paper trades</b></td><td>Both 1 and 2 are needed, not either.</td></tr>
+    <tr><td class="v">3</td><td><b>Valid licence</b></td><td>Not expired.</td></tr>
+    <tr><td class="v">4</td><td><b>A real broker is connected</b></td><td>Not the paper broker (section 6).</td></tr>
+    <tr><td class="v">5</td><td><b>Broker key can trade</b></td><td>The connect test shows trading ON.</td></tr>
+    <tr><td class="v">6</td><td><b>Broker key cannot withdraw</b></td><td>Withdrawals OFF on the key.</td></tr>
+    <tr><td class="v">7</td><td><b>Risk gate is on</b></td><td>Always true: it cannot be switched off in live.</td></tr>
+    <tr><td class="v">8</td><td><b>You type the phrase exactly</b></td><td><code>I understand I can lose money</code></td></tr>
+  </table>
+  <div class="note"><span class="lbl">Paper is not a promise</span><p>A good paper record does not mean live will be profitable. Live fills, costs, slippage and your broker's rules can all be worse than the paper simulation. That is why live starts at half size.</p></div>
+</section>
+
+<!-- ================= 09 TOUR ================= -->
+<section class="sec">
+  <div class="lbl">09 · A tour of every screen</div>
+  <h2>The screens, one by one</h2>
+  <p class="lead">Every screen shares the same top bar and left menu. All pictures are in demo mode.</p>
+  <figure><div class="shot"><img src="img/overview.jpg"><i class="pin" style="left:3%;top:4%">1</i><i class="pin" style="left:43.4%;top:4%">2</i><i class="pin" style="left:78%;top:4%">3</i><i class="pin" style="left:86.8%;top:4%">4</i><i class="pin" style="left:24%;top:6.5%">5</i><i class="pin" style="left:5%;top:30%">6</i><i class="pin" style="left:54%;top:13%">7</i><i class="pin" style="left:54%;top:42%">8</i><i class="pin" style="left:36%;top:82%">9</i><i class="pin" style="left:84%;top:82%">10</i></div>
+    <figcaption><span class="tagd">DEMO DATA</span>Overview.</figcaption></figure>
+  <div class="legend">
+    <div><i>1</i><b>Wordmark</b> and the JARVIS / SCOUT status pills.</div>
+    <div><i>2</i><b>DEMO DATA</b> chip: the numbers are simulated. With the real engine you see an ENGINE chip instead.</div>
+    <div><i>3</i><b>Mode:</b> PAPER or LIVE. The lock shows live is locked.</div>
+    <div><i>4</i><b>Kill switch:</b> hold 1.5 s to stop everything (section 10).</div>
+    <div><i>5</i><b>Activity ticker:</b> what the engine is doing right now.</div>
+    <div><i>6</i><b>Left menu:</b> Brain, Money and System screens.</div>
+    <div><i>7</i><b>Key numbers:</b> ideas found, tested, passed, on paper, live.</div>
+    <div><i>8</i><b>Brain core:</b> sources flow in, tested versions flow out.</div>
+    <div><i>9</i><b>Pipeline:</b> how far ideas get, from read to live.</div>
+    <div><i>10</i><b>Your decisions:</b> things waiting for your yes or no.</div>
+  </div>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Lab</h3>
+  <figure><div class="shot"><img src="img/lab.jpg"><i class="pin" style="left:31%;top:24%">1</i><i class="pin" style="left:77%;top:24%">2</i><i class="pin" style="left:52%;top:57%">3</i><i class="pin" style="left:50%;top:80%">4</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) How many versions were tested and how many passed. (2) Why they fail. (3) Every tested version as a line: left of the split is old data, right is unseen data; the dashed line is the pass mark. (4) Summary scores and the latest versions.</figcaption></figure>
+  <h3>Research</h3>
+  <figure><div class="shot"><img src="img/research.jpg"><i class="pin" style="left:36%;top:42%">1</i><i class="pin" style="left:81%;top:24%">2</i><i class="pin" style="left:81%;top:58%">3</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) Ideas grouped by type (trend, mean reversion, breakout and more); each dot is a source. (2) What the research agent is reading now, with trading terms highlighted. (3) Its thoughts as it works.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Strategy Book</h3>
+  <figure><div class="shot"><img src="img/strategies.jpg"><i class="pin" style="left:15%;top:25%">1</i><i class="pin" style="left:35%;top:25%">2</i><i class="pin" style="left:78%;top:20%">3</i><i class="pin" style="left:60%;top:55%">4</i><i class="pin" style="left:30%;top:86%">5</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) Every strategy, even the failures, with filter tabs. (2) The selected strategy. (3) <b>To paper</b>, <b>Edit rules</b> and <b>Version history</b>. (4) Its tested equity curve with drawdowns in red underneath. (5) Month-by-month and session results.</figcaption></figure>
+  <h3>Knowledge Base</h3>
+  <figure><div class="shot"><img src="img/knowledge.jpg"><i class="pin" style="left:33%;top:41%">1</i><i class="pin" style="left:59%;top:53%">2</i><i class="pin" style="left:16%;top:82%">3</i><i class="pin" style="left:92%;top:75%">4</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) A trading term drawn on candles. (2) Is the rule right? Press Correct or Not correct. (3) The library of terms. (4) How far each term is: found, explained, coded, measured, tested, your verdict.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Agent Room</h3>
+  <figure><div class="shot"><img src="img/agents.jpg"><i class="pin" style="left:54%;top:52%">1</i><i class="pin" style="left:88%;top:23%">2</i><i class="pin" style="left:30%;top:18%">3</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) The research team at work in 3D. Click an agent to see what it is doing. (2) Camera views and "Show as table". (3) Tasks, handoffs, sources read and cost so far.</figcaption></figure>
+  <h3>God's Eye</h3>
+  <figure><div class="shot"><img src="img/godseye.jpg"><i class="pin" style="left:13%;top:26%">1</i><i class="pin" style="left:52%;top:50%">2</i><i class="pin" style="left:88%;top:34%">3</i><i class="pin" style="left:30%;top:92%">4</i></div><figcaption><span class="tagd">DEMO POSITIONS</span>(1) Layers (flights, ships, satellites, quakes, fires, weather) and sensor modes (normal, night vision, thermal). (2) The globe with free satellite imagery. (3) MARKET IMPACT cards: context only. God's Eye never opens a trade. (4) 24-hour timeline.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Live Desk</h3>
+  <figure><div class="shot"><img src="img/desk.jpg"><i class="pin" style="left:8%;top:5%">1</i><i class="pin" style="left:30%;top:28%">2</i><i class="pin" style="left:72%;top:13%">3</i><i class="pin" style="left:78%;top:40%">4</i><i class="pin" style="left:93%;top:14%">5</i><i class="pin" style="left:30%;top:72%">6</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) Market switcher. (2) Candles with entry, stop and target lines, key levels and order-flow bubbles. (3) Forecast fan of possible paths. (4) Volume profile on the right edge (for gold: a tick-volume profile). (5) Account, open positions and orders at the broker. (6) Trade history with CSV export, and the risk warning.</figcaption></figure>
+  <h3>Trade Card</h3>
+  <figure><div class="shot"><img src="img/tradecard.jpg"><i class="pin" style="left:29%;top:13%">1</i><i class="pin" style="left:54%;top:44%">2</i><i class="pin" style="left:84%;top:42%">3</i><i class="pin" style="left:24%;top:67%">4</i><i class="pin" style="left:54%;top:67%">5</i><i class="pin" style="left:84%;top:63%">6</i><i class="pin" style="left:34%;top:87%">7</i><i class="pin" style="left:94%;top:6%">8</i></div><figcaption><span class="tagd">ILLUSTRATIVE</span>One trade, live, step by step. (1) Step tracker. (2) Time Machine odds. (3) Size. (4) Risk gate ticks. (5) Order ticket: SENT in Auto, waits for Approve in Manual. (6) Exit result: a simulated number. (7) The team debate. (8) Auto / Manual.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Decisions</h3>
+  <figure><div class="shot"><img src="img/decisions.jpg"><i class="pin" style="left:27%;top:19%">1</i><i class="pin" style="left:22%;top:34%">2</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) Everything waiting for you: strategies going to paper or live, suggestions from the research team, and trades waiting in Manual mode. (2) <b>Approve</b> or <b>Back</b>.</figcaption></figure>
+  <h3>Paper &amp; Live</h3>
+  <figure><div class="shot"><img src="img/paperlive.jpg"><i class="pin" style="left:31%;top:23%">1</i><i class="pin" style="left:28%;top:41%">2</i><i class="pin" style="left:30%;top:51%">3</i></div>
+    <figcaption><span class="tagd">DEMO DATA</span>Paper &amp; Live. (1) Paper results so far: these are demo numbers, not real results. (2) The checklist. (3) Type the phrase, then <b>Go live</b>.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Withdraw</h3>
+  <figure><div class="shot"><img src="img/withdraw.jpg"><i class="pin" style="left:55%;top:21%">1</i><i class="pin" style="left:14%;top:33%">2</i><i class="pin" style="left:86%;top:33%">3</i><i class="pin" style="left:17%;top:51%">4</i><i class="pin" style="left:74%;top:51%">5</i></div><figcaption><span class="tagd">DEMO DATA</span>(1) Equity, margin in use, open positions and what is free to withdraw. (2)–(5) The four steps: pause, close (optional), withdraw at your broker, rescale and resume. See section 12.</figcaption></figure>
+  <h3>Engine</h3>
+  <figure><div class="shot"><img src="img/engine.jpg"><i class="pin" style="left:13%;top:20%">1</i><i class="pin" style="left:41%;top:20%">2</i><i class="pin" style="left:62%;top:20%">3</i><i class="pin" style="left:12%;top:27%">4</i><i class="pin" style="left:24%;top:30%">5</i></div><figcaption><span class="tagd">DEMO</span>(1) Status. (2) Keep-awake. (3) CPU, memory and last heartbeat. (4) Check now and Check for updates. (5) Logs: keys and tokens are always hidden.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Costs</h3>
+  <figure><div class="shot"><img src="img/costs.jpg"><i class="pin" style="left:24%;top:21%">1</i><i class="pin" style="left:50%;top:21%">2</i><i class="pin" style="left:78%;top:21%">3</i></div><figcaption><span class="tagd">DEMO</span>(1) The "think budget": compute and time on your own computer, not money, unless you bring your own paid AI key. (2) The local AI model. (3) Data: your broker and free public feeds.</figcaption></figure>
+  <h3>Help</h3>
+  <figure><div class="shot"><img src="img/help.jpg"><i class="pin" style="left:31%;top:28%">1</i></div><figcaption><span class="tagd">DEMO</span>(1) Quick answers and the risk warning. JARVIS, the assistant, opens with Ctrl+J (⌘+J on Mac); in demo mode its answers are scripted.</figcaption></figure>
+</section>
+
+<section class="pb">
+  <h3 style="margin-top:0">Settings</h3>
+  <figure><div class="shot"><img src="img/settings.jpg"><i class="pin" style="left:32%;top:20%">1</i><i class="pin" style="left:13%;top:42%">2</i><i class="pin" style="left:58%;top:32%">3</i><i class="pin" style="left:57%;top:44%">4</i><i class="pin" style="left:57%;top:59%">5</i><i class="pin" style="left:57%;top:71%">6</i><i class="pin" style="left:57%;top:88%">7</i></div><figcaption><span class="tagd">DEMO</span>(1) Data source: demo data or the live engine. (2) Risk limits (section 7). (3) Auto or Manual. (4) Strategy updates (section 11). (5) Alerts. (6) Start on boot and updates. (7) Export / Restore my desk, protected by your passphrase. Broker keys are never included.</figcaption></figure>
+</section>
+
+<!-- ================= 10 ================= -->
+<section class="sec">
+  <div class="lbl">10 · Auto vs Manual · Kill switch · Phone alerts</div>
+  <h2>Stay in control</h2>
+  <h3><span class="n">10.1</span>Auto or Manual</h3>
+  <div class="cols">
+    <div class="card"><span class="lbl">Auto</span><p>Every step runs by itself. If all checks pass, the order is sent. You get an alert.</p></div>
+    <div class="card"><span class="lbl">Manual</span><p>Every check still runs. At the Execute step the engine waits for you. Press <b>Approve</b> on the Trade Card or in Decisions within <b>60 seconds</b>. If you do nothing, the trade is <b>skipped</b>.</p></div>
+  </div>
+  <p>Switch in <b>Settings → Trading</b>, or with the Auto / Manual buttons on the Trade Card.</p>
+  <h3><span class="n">10.2</span>The kill switch: three ways</h3>
+  <p>The kill switch <b>cancels every open order, closes every open position and locks trading</b> until you turn it back on.</p>
+  <div class="cols3">
+    <div class="card"><span class="lbl">In the app</span><p>Press and <b>hold KILL SWITCH for 1.5 seconds</b> (top right). Holding stops accidental clicks.</p></div>
+    <div class="card"><span class="lbl">In the tray</span><p>Tray icon → <b>Kill switch…</b> → confirm. Works with the window closed.</p></div>
+    <div class="card"><span class="lbl">From your phone</span><p>Send <b>/kill</b> to your NSKO QUANT Telegram bot. Only your paired chat is obeyed; others are refused and logged.</p></div>
+  </div>
+  <figure style="margin-bottom:2mm"><div class="shot"><img src="img/kill-hold.jpg"></div><figcaption><span class="tagd">DEMO</span>Holding the kill switch: the button fills as you hold.</figcaption></figure>
+  <figure><div class="shot"><img src="img/kill-on.jpg"></div><figcaption><span class="tagd">DEMO</span>After: <b>TRADING LOCKED · re-enable</b>. Press it, confirm, and trading can start again.</figcaption></figure>
+  <div class="note red"><span class="lbl">If the kill switch reports a problem</span><p>If the broker refuses a cancel or close (for example because it is offline), the app shows a red alert that stays on screen. Then log in at your broker's website and close the positions there yourself.</p></div>
+</section>
+
+<section>
+  <h3 style="margin-top:0"><span class="n">10.3</span>Phone alerts</h3>
+  <p>NSKO QUANT sends an alert for <b>every trade, every error, the kill switch and a daily summary</b>. Trades and errors go out as <b>high priority</b>; the kill switch goes out as <b>urgent</b>.</p>
+  <div class="cols">
+    <div class="card"><span class="lbl">ntfy (free)</span>
+      <ol class="small"><li>Install the <b>ntfy</b> app on your phone.</li><li>Subscribe to a topic name that is long and hard to guess, like <code>nsq-desk-7f3k9q2</code>. Anyone who knows the name can read it.</li><li>Give the same topic name to NSKO QUANT (the ntfy topic setting). The server is <code>ntfy.sh</code> unless you run your own.</li><li>Allow ntfy to make sound for high priority messages.</li></ol></div>
+    <div class="card"><span class="lbl">Telegram (free)</span>
+      <ol class="small"><li>In Telegram, create a bot with <b>@BotFather</b>. It gives you a bot token.</li><li>Give NSKO QUANT the bot token (stored in your keychain vault) and your chat ID (the paired chat).</li><li>Send <b>/status</b> to the bot to test. <b>/kill</b> stops everything.</li></ol></div>
+  </div>
+  <p>Turn each channel on or off in <b>Settings → Alerts</b> (phone: ntfy, Telegram bot, desktop notifications).</p>
+  <div class="note grey"><span class="lbl">If you cannot see a box for your topic or token</span><p>In this version the on/off switches are in Settings, and the ntfy topic and Telegram details are stored by the engine. If your Settings screen has no box to type them in, NSKO support will pair them with you. Never paste a bot token into a chat or email.</p></div>
+  <div class="cols">
+    <div class="diagram"><svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg"><rect x="70" y="4" width="180" height="162" rx="20" fill="#14141C"/><rect x="82" y="26" width="156" height="58" rx="8" fill="#26262F"/><text x="92" y="44" font-size="9" fill="#E8541A" font-weight="700" class="mono">NTFY · HIGH</text><text x="92" y="60" font-size="10" fill="#fff" font-weight="700">PAPER BUY XAU/USD</text><text x="92" y="74" font-size="8.5" fill="#C9CAD2">size 0.25 @ 2644.8 · stop 2639.8</text><rect x="82" y="92" width="156" height="58" rx="8" fill="#26262F"/><text x="92" y="110" font-size="9" fill="#FF5A4E" font-weight="700" class="mono">NTFY · URGENT</text><text x="92" y="126" font-size="10" fill="#fff" font-weight="700">KILL SWITCH ON</text><text x="92" y="140" font-size="8.5" fill="#C9CAD2">Cancelled 2 orders, closed 1</text></svg><div class="tiny">ILLUSTRATIVE alerts. Text follows the engine's alert format; numbers are made up.</div></div>
+    <div class="card" style="align-self:start"><span class="lbl">Test it</span><p>After pairing, place a paper trade or send <b>/status</b> on Telegram. If nothing arrives within a minute, check the topic name, the token and your phone's notification settings.</p></div>
+  </div>
+</section>
+
+<!-- ================= 11 ================= -->
+<section class="sec">
+  <div class="lbl">11 · Updating your strategy</div>
+  <h2>Three ways to update</h2>
+  <p class="lead">Every change makes a new version. Every change is recorded. You can always go back one version with one click.</p>
+  <div class="cols3">
+    <div class="card"><span class="lbl">Manual</span><p>Edit the rules in the Strategy Book (<b>Edit rules</b>), re-run the Lab, then promote it yourself.</p></div>
+    <div class="card"><span class="lbl">Automatic</span><p>If the Lab finds a version that beats the current one on unseen data (Sharpe at least <b>0.2</b> higher), it goes to <b>paper</b>. Moving it to live is set to <b>ask you</b> by default.</p></div>
+    <div class="card"><span class="lbl">NSKO strategy packs</span><p>Strategy packs signed by NSKO. The app checks the signature. Packs install into the <b>Lab only</b>, never straight to live.</p></div>
+  </div>
+  <div class="diagram"><svg viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#E8541A"/></marker></defs>
+    <g font-size="10.5">
+    <rect x="4" y="40" width="130" height="50" rx="6" fill="#F6F6F8" stroke="#B8BAC2"/><text x="14" y="60" font-weight="700">Manual edit</text><text x="14" y="76" font-size="9" fill="#4A4D57">Signed pack · Auto</text>
+    <rect x="180" y="40" width="110" height="50" rx="6" fill="#0B0B12"/><text x="192" y="60" font-weight="700" fill="#fff">Lab</text><text x="192" y="76" font-size="9" fill="#E8541A">must pass the bar</text>
+    <rect x="336" y="40" width="110" height="50" rx="6" fill="#fff" stroke="#0B0B12"/><text x="348" y="60" font-weight="700">Paper</text><text x="348" y="76" font-size="9" fill="#4A4D57">new version runs</text>
+    <rect x="492" y="40" width="184" height="50" rx="6" fill="#FBF4F0" stroke="#E8541A"/><text x="504" y="60" font-weight="700" fill="#E8541A">Live</text><text x="504" y="76" font-size="9" fill="#4A4D57">only when you say yes</text>
+    <g stroke="#E8541A" stroke-width="1.8" marker-end="url(#ar5)"><path d="M134,65 L178,65"/><path d="M290,65 L334,65"/><path d="M446,65 L490,65"/></g>
+    <path d="M584,92 C584,130 420,130 400,94" stroke="#4A4D57" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ar5)"/>
+    <text x="440" y="140" font-size="9.5" fill="#4A4D57">Roll back to the previous version: one click</text>
+    <text x="4" y="22" font-size="9.5" fill="#4A4D57">Live never changes in the middle of a trade: a change waits until the strategy has no open position.</text></g>
+  </svg></div>
+  <p>Choose how updates work in <b>Settings → Strategy updates</b>: <b>Manual</b>, <b>Automatic → paper, then ask me</b>, or <b>Ask me</b>.</p>
+  <figure><div class="shot"><img src="img/versions.jpg"></div><figcaption><span class="tagd">DEMO DATA</span>Strategy Book → Version history. Each row is a version with its scores and a "Roll back" button.</figcaption></figure>
+</section>
+
+<!-- ================= 12 ================= -->
+<section class="sec">
+  <div class="lbl">12 · How to withdraw your money</div>
+  <h2>You withdraw. At your broker.</h2>
+  <p class="lead">NSKO QUANT cannot move money. The Withdraw helper only works out how much is free and opens your broker's own withdrawal page. You log in there with your own password and 2FA.</p>
+  <ol class="steps">
+    <li><b>Pause new trades.</b> Open trades keep their stops and targets at the broker. Nothing new opens.</li>
+    <li><b>Close positions (optional).</b> Only if you want to take out the money that open trades are using as margin. Tick "Yes, close all open positions", then Close positions. They close at market price.</li>
+    <li><b>Withdraw at your broker.</b> The helper shows <b>Free to withdraw</b> (equity minus margin in use). Press the button to open your broker's withdrawal page in your browser. Withdraw to your own bank there.</li>
+    <li><b>Rescale and resume.</b> Press <b>I have withdrawn · rescale and resume</b>. The engine re-reads your balance. New trades are sized from the new, smaller equity (1% of the new amount).</li>
+  </ol>
+  <figure><div class="shot"><img src="img/withdraw-crop.jpg"></div><figcaption><span class="tagd">DEMO DATA</span>The Withdraw helper. In demo mode nothing is sent to a broker. On paper there is nothing to withdraw: it is pretend money.</figcaption></figure>
+  <div class="note"><span class="lbl">Good to know</span><ul><li>Your broker may take a few days to pay out, and may charge a fee. That is between you and your broker.</li><li>If you take out a lot, your 1% per trade gets smaller in £. That is on purpose.</li><li>Never give anyone your broker password. NSKO will never ask for it.</li></ul></div>
+</section>
+
+<!-- ================= 13 ================= -->
+<section class="sec">
+  <div class="lbl">13 · Troubleshooting &amp; FAQ</div>
+  <h2>If something looks wrong</h2>
+  <table>
+    <tr><th style="width:52mm">What you see</th><th>What to do</th></tr>
+    <tr><td><b>"Engine not answering"</b>, screens on demo data, tray dot red</td><td>The engine is not running. Use the tray menu or restart the computer. If you installed the service, it restarts by itself. The app retries every few seconds.</td></tr>
+    <tr><td><b>No trades for days</b></td><td>Normal: most checks say no most of the time. Look at the activity ticker and Trade Card for reasons (news blackout, forecast, Time Machine, risk). Also check: a strategy is on paper, the market is open, trading is not paused or locked.</td></tr>
+    <tr><td><b>"Daily loss limit reached"</b></td><td>The 3% daily limit was hit. Trading starts again the next day (UTC). This is the gate doing its job.</td></tr>
+    <tr><td><b>TRADING LOCKED</b></td><td>The kill switch is on. Press <b>re-enable</b> and confirm.</td></tr>
+    <tr><td><b>Broker: "Not connected"</b></td><td>Check the key and secret were pasted in full with no spaces, the right account type (demo/live) was chosen, and the key has trading permission.</td></tr>
+    <tr><td><b>Kraken: withdrawals "not confirmed OFF"</b></td><td>Expected: Kraken does not report it. Check on Kraken's site that "Withdraw Funds" is unticked.</td></tr>
+    <tr><td><b>Coinbase: "key can transfer funds"</b></td><td>Make a new key with View + Trade only.</td></tr>
+    <tr><td><b>Interactive Brokers: not connected</b></td><td>IB Gateway must be running, logged in, with the API turned on (paper port 4002).</td></tr>
+    <tr><td><b>"Update feed not set up yet"</b></td><td>Automatic app updates are not switched on in this early version. NSKO will send you new installers.</td></tr>
+    <tr><td><b>Forgot password</b></td><td>Use your recovery code to set a new password with the engine's reset tool (after 3 wrong tries the lock screen points you to it; NSKO support can guide you). Your data is kept.</td></tr>
+    <tr><td><b>PIN locked</b></td><td>5 wrong tries lock the PIN for 5 minutes. Wait, or use your password.</td></tr>
+    <tr><td><b>Computer slept</b></td><td>Check power settings (section 5.3). Open stops at the broker kept protecting you.</td></tr>
+    <tr><td><b>Windows / Mac warning on install</b></td><td>See section 4.1.</td></tr>
+  </table>
+</section>
+<section>
+  <h3 style="margin-top:0">FAQ</h3>
+  <div class="cols">
+    <div>
+      <div class="faq"><b>Does NSKO hold my money?</b>No. It stays in your own broker account, in your name. NSKO QUANT holds a trade-only key and has no withdrawal code at all.</div>
+      <div class="faq"><b>Can NSKO see my trades or keys?</b>No. Everything lives on your computer. Your account is encrypted there. There is no NSKO login server.</div>
+      <div class="faq"><b>Does it trade with the window closed?</b>Yes. The engine runs in the background as long as the computer is on and online.</div>
+      <div class="faq"><b>Will I make money?</b>Nobody can promise that. Most retail accounts trading CFDs lose money. Past and simulated results, including paper, do not guarantee future results.</div>
+      <div class="faq"><b>Can I stop everything at once?</b>Yes: hold the kill switch for 1.5 s, use the tray, or send /kill on Telegram.</div>
+    </div>
+    <div>
+      <div class="faq"><b>Is the data on screen real?</b>In demo mode, no: it comes from a simulator, and every screen says DEMO DATA. Switch to the live engine in Settings → Data source.</div>
+      <div class="faq"><b>Can I loosen the limits in live?</b>Only up to the hard caps: 2% per trade, 5% daily, 10% weekly, 10 trades, 4 open, 4% per market. The gate cannot be switched off in live.</div>
+      <div class="faq"><b>Can I go back to paper?</b>Yes, any time.</div>
+      <div class="faq"><b>Does it need the AI model?</b>No. Without a local AI model, research and the trade debate use built-in rules.</div>
+      <div class="faq"><b>How do I move to a new computer?</b>Settings → Desk → <b>Export my desk</b> with a passphrase, then <b>Restore</b> on the new computer. Broker keys are not in the backup: connect them again.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 14 ================= -->
+<section class="sec">
+  <div class="lbl">14 · Risk warning &amp; legal</div>
+  <h2>Please read this</h2>
+  <div class="riskbox"><span class="lbl">Risk warning</span><p>Trading leveraged products like CFDs and spread bets carries a high risk of losing money rapidly. Most retail investor accounts lose money. Only trade with money you can afford to lose. NSKO QUANT is software, not financial advice. Past and simulated results do not guarantee future results.</p></div>
+  <h3>What this means in practice</h3>
+  <ul>
+    <li><b>You are in charge.</b> You choose the broker, the money, the limits, and whether to go live. You can stop at any time.</li>
+    <li><b>Software can fail.</b> Computers crash, internet drops, brokers change their systems, and prices can jump past a stop (a "gap"). A stop does not guarantee the exit price.</li>
+    <li><b>Tests are not the future.</b> The Lab, the forecast, the Time Machine and paper trading all use past or simulated data. Markets change.</li>
+    <li><b>No numbers in this guide are results.</b> Every figure shown is DEMO or ILLUSTRATIVE.</li>
+    <li><b>Your broker's terms apply</b>, including its rules on automated trading, fees and leverage.</li>
+    <li><b>Tax</b> on any gains is your responsibility.</li>
+  </ul>
+  <h3>Your data and privacy</h3>
+  <p>Your account, settings, journal and keys stay on your computer. Broker keys sit in your system keychain. Logs hide keys and tokens. Data feeds (prices, news, weather and so on) are fetched by your computer directly from their providers.</p>
+  <h3>Third-party names</h3>
+  <p>Broker and service names are used only to say which services NSKO QUANT can connect to. They belong to their owners. NSKO Solutions is not affiliated with, or endorsed by, any of them.</p>
+  <h3>Software and data credits</h3>
+  <p>NSKO QUANT is built with open-source software and free data sources. Full credits and licences are listed in <i>How NSKO QUANT Works</i>, section 10.</p>
+  <div class="card" style="margin-top:8mm"><span class="lbl">NSKO QUANT · by NSKO Solutions</span><p>nskosolutions.co.uk</p><p class="tiny">This guide describes the software as built at the time of writing. Screens may change between versions.</p></div>
+</section>
+
+</body>
+</html>

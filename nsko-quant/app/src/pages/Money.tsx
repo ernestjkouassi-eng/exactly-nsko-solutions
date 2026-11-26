@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useS, notify } from '../store'
-import { approveTrade, checklist, goLive, withdrawHelper, withdrawAction, openExternal, type Checklist, type Withdraw as W } from '../api'
+import { approveTrade, checklist, goLive, withdrawHelper, withdrawAction, openExternal, saveSettings, type Checklist, type Withdraw as W } from '../api'
+import type { Trade } from '../store'
 import { Canvas } from '../viz/canvas'
 import { Head, fmt } from '../shell/Shell'
 import { DecisionCards } from './Overview'
@@ -9,8 +10,76 @@ const RISK_WARN = 'Trading leveraged products like CFDs and spread bets carries 
 export const RiskWarning = () => <div className="lo" style={{ fontSize: 10, lineHeight: 1.5, padding: '10px 0' }}>{RISK_WARN}</div>
 
 const STEPS = ['Scanner', 'News', 'Forecast', 'Entry', 'Time Machine', 'Size', 'Risk', 'Execute', 'Exit']
+const n5 = (v: any) => typeof v === 'number' ? fmt(v, Math.abs(v) >= 1000 ? 1 : Math.abs(v) >= 10 ? 2 : 4) : '—'
+const STEP_KEY: Record<string, number> = { scanner: 0, news: 1, forecast: 2, entry: 3, timemachine: 4, size: 5, risk: 6, debate: 6, execute: 7, exit: 8 }
+
+/** Auto / Manual switch. On the engine it is saved straight away (setting trade_mode). */
+function ModeSwitch() {
+  const auto = useS(s => s.auto), set = useS(s => s.set), source = useS(s => s.source), fallback = useS(s => s.fallback)
+  const pick = async (a: boolean) => { set({ auto: a }); if (source === 'engine' && !fallback) { const r = await saveSettings({ trading_mode: a ? 'auto' : 'manual' }); if (r.ok && !r.demo) notify(`Trading mode: ${a ? 'Auto' : 'Manual'} (saved to the engine)`, 'good'); else if (!r.ok) notify(`Not saved: ${r.error}`, 'bad') } }
+  return <div className="row" style={{ marginLeft: 'auto' }}><span className="lbl">MODE</span>{['Auto', 'Manual'].map(m => <button key={m} data-testid={`mode-${m.toLowerCase()}`} onClick={() => pick(m === 'Auto')} style={{ borderColor: (m === 'Auto') === auto ? 'var(--orange)' : undefined }}>{m}</button>)}</div>
+}
+
+// Engine mode: the card is drawn from the real trade-flow events of the latest plan (store.trade). Nothing is animated or invented.
+function EngineTradeCard() {
+  const t = useS(s => s.trade), trades = useS(s => s.trades); const [busy, setBusy] = useState(''); const [, tick] = useState(0)
+  useEffect(() => { const i = setInterval(() => tick(x => x + 1), 1000); return () => clearInterval(i) }, [])
+  const step = t ? (t.skipped ? STEP_KEY[t.skipped.step] ?? t.step : t.exit ? 9 : t.step) : -1
+  const decide = async (yes: boolean) => { if (!t) return; setBusy(yes ? 'approve' : 'skip'); const r = await approveTrade(t.planId, yes ? 'approve' : 'skip'); setBusy('')
+    if (r.ok) { notify(yes ? 'Approved · the order goes to the broker now' : 'Skipped', yes ? 'good' : 'info'); useS.getState().set({ decisions: useS.getState().decisions.filter(d => d.planId !== t.planId) }) } else notify(`Not sent: ${r.error}`, 'bad') }
+  const fanDraw = (c: CanvasRenderingContext2D, w: number, h: number) => { c.clearRect(0, 0, w, h); const f = t?.forecast?.fan; if (!f?.p50?.length) return
+    const all = [...f.p10, ...f.p90, t!.forecast.entry], lo = Math.min(...all), hi = Math.max(...all), X = (i: number) => 8 + i / (f.p50.length - 1) * (w - 16), Y = (v: number) => h - 10 - (v - lo) / (hi - lo || 1) * (h - 24)
+    c.fillStyle = 'rgba(232,84,26,.16)'; c.beginPath(); f.p90.forEach((v: number, i: number) => i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v))); for (let i = f.p10.length - 1; i >= 0; i--) c.lineTo(X(i), Y(f.p10[i])); c.fill()
+    c.strokeStyle = '#E8541A'; c.lineWidth = 1.5; c.beginPath(); f.p50.forEach((v: number, i: number) => i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v))); c.stroke(); c.lineWidth = 1
+    c.strokeStyle = '#5A5F6E'; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(0, Y(t!.forecast.entry)); c.lineTo(w, Y(t!.forecast.entry)); c.stroke(); c.setLineDash([])
+    c.fillStyle = '#E8541A'; c.font = '10px JetBrains Mono'; c.fillText(`${fmt(t!.forecast.paths)} PATHS · P10–P90 · ${t!.forecast.agree_pct}% AGREE`, 8, 12) }
+  const Card = ({ i, title, children }: any) => <div className="panel" data-testid={`tc-${i}`} style={{ padding: 14, opacity: step >= i ? 1 : .35, borderColor: t?.skipped && STEP_KEY[t.skipped.step] === i ? 'var(--red)' : step === i ? 'var(--orange)' : undefined, transition: 'opacity .4s var(--ease), border-color .4s' }}>
+    <div className="lbl" style={{ marginBottom: 8 }}>{step > i && !(t?.skipped && STEP_KEY[t.skipped.step] === i) ? <span className="g">✓ </span> : null}{title}</div>{children}</div>
+  const kv = (rows: [string, any, string?][]) => rows.map(([l, v, c]) => <div key={l} className="row" style={{ justifyContent: 'space-between', padding: '3px 0', fontSize: 12 }}><span className="lo">{l}</span><span className={`num ${c || ''}`}>{v}</span></div>)
+  const left = t?.approval ? Math.max(0, Math.round((t.approval.timeout_s ?? 60) - (Date.now() - t.approval.since) / 1000)) : 0
+  const pnl = t?.exit?.pnl, cur = t?.size?.currency || 'GBP'
+  return <div className="page">
+    <div className="row" style={{ alignItems: 'flex-start' }}><div><div className="ptitle">Trade Card{t ? ` · ${t.market} ${t.side === 'sell' ? 'short' : 'long'}` : ''}</div>
+      <div className="psub">Every trade walks the same nine steps. Live from the engine{t?.synthetic ? ' · this plan ran on SYNTHETIC candles (flagged by the engine)' : ''}.</div></div><ModeSwitch /></div>
+    <div className="row" style={{ gap: 0, marginBottom: 14, flexWrap: 'wrap' }}>{STEPS.map((s, i) => <div key={s} className="row" style={{ gap: 0 }}><span className="pill" style={{ background: i === step ? 'var(--orange)' : 'transparent', borderColor: i <= step ? 'var(--orange)' : 'var(--line)', color: i === step ? '#fff' : i < step ? 'var(--hi)' : 'var(--lo)' }}>{i < step ? '✓ ' : ''}{s}</span>{i < STEPS.length - 1 && <i style={{ width: 14, height: 1, background: i < step ? 'var(--orange)' : 'var(--line)' }} />}</div>)}
+      {t && <span className="lo mono" style={{ marginLeft: 12, fontSize: 10 }}>plan {t.planId}</span>}</div>
+    {!t && <div className="empty" style={{ marginBottom: 12 }}>Waiting for the scanner. A card appears here the moment an approved strategy has a setup on a closed bar.</div>}
+    {t?.skipped && <div className="panel" data-testid="tc-skipped" style={{ padding: 12, marginBottom: 12, borderLeft: '2px solid var(--red)' }}><span className="lbl r">SKIPPED AT {t.skipped.step.toUpperCase()}</span> <span style={{ fontSize: 12.5 }}>{t.skipped.why}</span></div>}
+    <div className="grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
+      <Card i={0} title="SCANNER">{t?.scan ? <>{kv([['Strategy', t.scan.strategy], ['Market', `${t.scan.market} · ${t.scan.tf}`], ['Signal', String(t.scan.side).toUpperCase(), t.scan.side === 'buy' ? 'g' : 'r'], ['Closed bar', new Date(t.scan.bar).toLocaleString('en-GB', { hour12: false })]])}
+        <div className="lo" style={{ fontSize: 11, marginTop: 6 }}>{t.scan.reason}</div>{t.synthetic && <span className="chip a" style={{ borderColor: '#5A4020', marginTop: 6 }}>SYNTHETIC CANDLES</span>}</> : <div className="lo">—</div>}</Card>
+      <Card i={1} title="NEWS / EVENTS">{t?.news ? <>{t.news.blackout ? <div className="r">Blackout: {t.news.events?.[0]?.title}</div> : <div className="g">✓ No high-impact event within ±{Math.round(t.news.window_min)} min</div>}
+        {(t.news.events || []).slice(0, 3).map((e: any, k: number) => <div key={k} className="lo mono" style={{ fontSize: 10.5, marginTop: 4 }}>{e.time} · {e.title}</div>)}</> : <div className="lo">—</div>}</Card>
+      <Card i={2} title={`FORECAST · ${t?.forecast?.engine?.toUpperCase?.() || 'KRONOS'}`}><div style={{ height: 110 }}>{t?.forecast && <Canvas draw={fanDraw} />}</div>
+        {t?.forecast && <div className="row mono" style={{ fontSize: 10.5, justifyContent: 'space-between' }}><span>{t.forecast.agree_pct}% agree · need {t.forecast.need_pct}%</span><span className={t.forecast.passed ? 'g' : 'r'}>{t.forecast.passed ? 'PASSED' : 'FAILED'}</span></div>}</Card>
+      <Card i={3} title="ENTRY TRIGGER">{t?.entry ? <><div className="mono" style={{ fontSize: 14 }}>{t.entry.state === 'triggered' ? <span className="g">✓ Triggered at the live quote</span> : <span className="a">◉ Waiting</span>}</div>
+        {kv([['Entry', n5(t.entry.entry)], ['Stop', n5(t.entry.stop), 'r'], ['Target', n5(t.entry.target), 'g']])}</> : <div className="lo">—</div>}</Card>
+      <Card i={4} title="TIME MACHINE"><div className="num" style={{ fontSize: 24 }}>{fmt(t?.tmProgress?.done || 0)}<span className="lo" style={{ fontSize: 12 }}> / {fmt(t?.tmProgress?.of || 0)}</span></div><div className="lo">replays of the rest of the session</div>
+        {t?.tm && <><div style={{ display: 'flex', height: 10, marginTop: 8 }}><i style={{ flex: t.tm.p_target, background: '#78D880' }} /><i style={{ flex: t.tm.p_stop, background: '#E04858' }} /><i style={{ flex: t.tm.p_open, background: '#5A8CFF' }} /></div>
+          <div className="row mono" style={{ fontSize: 10, justifyContent: 'space-between' }}><span className="g">{t.tm.p_target}% target</span><span className="r">{t.tm.p_stop}% stop</span><span style={{ color: '#5A8CFF' }}>{t.tm.p_open}% open</span></div>
+          <div className="mono" style={{ fontSize: 10.5, marginTop: 4 }}>EV after costs {n5(t.tm.ev_pts)} pts · <span className={t.tm.passed ? 'g' : 'r'}>{t.tm.passed ? 'EDGE' : 'NO EDGE'}</span></div></>}</Card>
+      <Card i={5} title="SIZE">{t?.size ? kv([['Equity', `${fmt(t.size.equity, 2)} ${cur}`], ['Max loss per trade', `${fmt(t.size.max_loss, 2)} ${cur}`], ['Stop distance', n5(t.size.stop_dist)], ['Position size', `${t.size.qty} (rounded down)`], ['Risk at the stop', `${fmt(t.size.risk_at_stop ?? 0, 2)} ${cur}`]]) : <div className="lo">—</div>}</Card>
+      <Card i={6} title="RISK GATE">{t?.risk ? (t.risk.checks || []).map((c: any) => <div key={c.rule} className="row" style={{ justifyContent: 'space-between', padding: '2px 0', fontSize: 11.5 }} title={c.reason}><span>{String(c.rule).replace(/_/g, ' ')}</span><span className={c.passed ? 'g' : 'r'}>{c.passed ? '✓' : '✗'}</span></div>) : <div className="lo">—</div>}</Card>
+      <Card i={7} title="ORDER TICKET">{t?.approval && !t.order && !t.skipped ? <div><div style={{ fontSize: 14, marginBottom: 8 }}>Manual mode: waiting for you · {left}s, then skip</div>
+          <div className="row"><button className="primary" data-testid="tc-approve" disabled={!!busy} onClick={() => decide(true)}>{busy === 'approve' ? 'Sending…' : 'Approve'}</button><button disabled={!!busy} onClick={() => decide(false)}>Skip</button></div></div>
+        : t?.order ? <>{kv([['Order', `${String(t.order.side).toUpperCase()} ${t.order.qty} ${t.order.market}`], ['Bracket', t.order.bracket === 'native' ? 'native (stop + target at the broker)' : 'verified fallback'], ['Broker', t.order.broker], ['Filled', t.fill ? n5(t.fill.price) : 'waiting…', t.fill ? 'g' : 'a']])}</>
+        : <div className="lo">{useS.getState().auto ? 'Auto: sends itself after the risk gate' : 'Manual: waits for your Approve (60 s, then skip)'}</div>}</Card>
+      <Card i={8} title="MANAGE · EXIT">{t?.exit ? <><div className={`big ${pnl >= 0 ? 'g' : 'r'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl, 2)} {cur}</div><div className="mono" style={{ fontSize: 11 }}>{t.exit.r >= 0 ? '+' : ''}{t.exit.r}R · {t.exit.reason} · journal written · alert sent</div></>
+        : <div className="lo">{t?.fill ? 'Open: the stop and target are at the broker.' : '—'}</div>}
+        {(t?.updates || []).map((u, k) => <div key={k} className="mono" style={{ fontSize: 10.5, marginTop: 4 }}>{u.event === 'scale_out' ? `✓ ${u.closed_qty} closed at ${u.r}R · stop to breakeven ${n5(u.stop)}` : `${u.event} · stop ${n5(u.stop)}`}</div>)}</Card>
+    </div>
+    {trades.length > 0 && <div className="panel" style={{ marginTop: 12 }}><Head t="EARLIER PLANS" s="this session" /><table><tbody>{trades.map((x: Trade) => <tr key={x.planId}><td className="lo mono">{x.planId}</td><td>{x.market} {String(x.side || '').toUpperCase()}</td>
+      <td>{x.exit ? <span className={x.exit.pnl >= 0 ? 'g' : 'r'}>{x.exit.r}R · {x.exit.reason}</span> : x.skipped ? <span className="lo">skipped at {x.skipped.step}</span> : x.fill ? 'open' : STEPS[x.step]}</td></tr>)}</tbody></table></div>}
+    <RiskWarning />
+  </div>
+}
+
 export function TradeCard() {
-  const [step, setStep] = useState(0); const [t, setT] = useState(0); const auto = useS(s => s.auto); const set = useS(s => s.set); const [approved, setApproved] = useState(false); const [busy, setBusy] = useState(false)
+  const source = useS(s => s.source), fallback = useS(s => s.fallback)
+  return source === 'engine' && !fallback ? <EngineTradeCard /> : <DemoTradeCard />
+}
+function DemoTradeCard() {
+  const [step, setStep] = useState(0); const [t, setT] = useState(0); const auto = useS(s => s.auto); const [approved, setApproved] = useState(false); const [busy, setBusy] = useState(false)
   const planId = useS(s => s.decisions.find(d => d.planId)?.planId) || 'demo-xau-long'
   const approve = async () => { setBusy(true); const r = await approveTrade(planId); setBusy(false)
     if (r.ok) { setApproved(true); if (!r.demo) notify(`Approved · order ${r.data.order_id || 'sent'}`, 'good') } else notify(`Not approved: ${r.error}`, 'bad') }
@@ -29,7 +98,7 @@ export function TradeCard() {
   const Card = ({ i, title, children }: any) => <div className="panel" style={{ padding: 14, opacity: step >= i ? 1 : .35, borderColor: step === i ? 'var(--orange)' : undefined, transition: 'opacity .4s var(--ease), border-color .4s' }}><div className="lbl" style={{ marginBottom: 8 }}>{step > i ? <span className="g">✓ </span> : null}{title}</div>{children}</div>
   return <div className="page">
     <div className="row" style={{ alignItems: 'flex-start' }}><div><div className="ptitle">Trade Card · XAU/USD long</div><div className="psub">Every trade walks the same nine steps. DEMO / ILLUSTRATIVE: the numbers here come from the simulator.</div></div>
-      <div className="row" style={{ marginLeft: 'auto' }}><span className="lbl">MODE</span>{['Auto', 'Manual'].map(m => <button key={m} onClick={() => set({ auto: m === 'Auto' })} style={{ borderColor: (m === 'Auto') === auto ? 'var(--orange)' : undefined }}>{m}</button>)}</div></div>
+      <ModeSwitch /></div>
     <div className="row" style={{ gap: 0, marginBottom: 14, flexWrap: 'wrap' }}>{STEPS.map((s, i) => <div key={s} className="row" style={{ gap: 0 }}><span onClick={() => setStep(i)} className="pill" style={{ cursor: 'pointer', background: i === step ? 'var(--orange)' : 'transparent', borderColor: i <= step ? 'var(--orange)' : 'var(--line)', color: i === step ? '#fff' : i < step ? 'var(--hi)' : 'var(--lo)' }}>{i < step ? '✓ ' : ''}{s}</span>{i < STEPS.length - 1 && <i style={{ width: 14, height: 1, background: i < step ? 'var(--orange)' : 'var(--line)' }} />}</div>)}</div>
     <div className="grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
       <Card i={0} title="SCANNER"><div className="num" style={{ fontSize: 26 }}>{fmt(step > 0 ? 5900 : scanned)}</div><div className="lo">markets scanned for setups</div>
@@ -99,6 +168,7 @@ export function Withdraw() {
   return <div className="page">
     <div className="row" style={{ alignItems: 'flex-start' }}><div><div className="ptitle">Withdraw</div><div className="psub">Your money is in your own broker account, and only you can withdraw it: NSKO QUANT's key has no withdrawal permission. This helper makes it safe: it pauses new trades, frees the cash, opens your broker's page, then rescales position sizes to the new balance.</div></div>
       {demo && <span className="chip a" style={{ borderColor: '#5A4020', marginLeft: 'auto' }}>DEMO · nothing is sent to a broker</span>}</div>
+    {w.note && !demo && <div className="lo" data-testid="withdraw-note" style={{ fontSize: 12, marginBottom: 10 }}>{w.note}</div>}
     <div className="panel" style={{ display: 'flex', marginBottom: 12 }}>{[['BROKER', w.broker, ''], ['EQUITY', money(w.equity, w.currency), ''], ['MARGIN IN USE', money(w.margin_used, w.currency), w.margin_used ? 'a' : ''], ['OPEN POSITIONS', String(w.open_positions.length), ''], ['FREE TO WITHDRAW', money(w.free, w.currency), 'g']].map(([l, v, c]) =>
       <div key={l} style={{ flex: 1, padding: 14, borderRight: '1px solid var(--line)' }}><div className="lbl">{l}</div><div className={`big ${c}`} style={{ fontSize: l === 'BROKER' ? 15 : 22, marginTop: 4 }}>{v}</div></div>)}</div>
     <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -110,7 +180,8 @@ export function Withdraw() {
         <button disabled={!closeAll || closed || !paused || !!busy} onClick={() => act('close_positions')}>{busy === 'close_positions' ? 'Closing…' : closed ? 'No open positions' : 'Close positions'}</button></Step>
       <Step n={3} t="Withdraw at your broker" ok={!!done.opened}><div style={{ fontSize: 12, marginBottom: 6 }}>Free to withdraw now: <span className="num g" style={{ fontSize: 16 }}>{money(w.free, w.currency)}</span></div>
         <div className="lo" style={{ fontSize: 12, marginBottom: 10 }}>Log in at {w.broker} in your browser and withdraw to your own bank. NSKO QUANT never sees your bank details.</div>
-        <button className="primary" disabled={!paused} onClick={() => { openExternal(w.withdraw_url); setDone(d => ({ ...d, opened: true })) }}>Open {w.broker.replace(/ \(demo\)$/, '')} withdrawal page ↗</button></Step>
+        {w.withdraw_url ? <button className="primary" disabled={!paused} onClick={() => { openExternal(w.withdraw_url); setDone(d => ({ ...d, opened: true })) }}>Open {w.broker.replace(/ \(demo\)$/, '')} withdrawal page ↗</button>
+          : <button disabled={!paused} onClick={() => setDone(d => ({ ...d, opened: true }))}>{w.paper ? 'Paper money: nothing to withdraw · continue' : 'This broker has no withdrawal link · continue'}</button>}</Step>
       <Step n={4} t="Rescale and resume" ok={!!done.rescale}><div className="lo" style={{ fontSize: 12, marginBottom: 10 }}>After the money has left, the engine re-reads your balance and sizes every new trade from it (1% of the new equity), then resumes.</div>
         <div className="row"><button className="primary" disabled={!done.opened || !!busy} onClick={async () => { await act('rescale'); await act('resume') }}>{busy === 'rescale' || busy === 'resume' ? 'Rescaling…' : 'I have withdrawn · rescale and resume'}</button></div>
         {rescaled && <div className="mono g" style={{ fontSize: 11, marginTop: 8 }}>✓ {rescaled}</div>}</Step>

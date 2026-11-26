@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { create } from 'zustand'
 import { useS, notify, dismiss } from '../store'
 import { VERB_COL, reducedMotion } from '../tokens'
-import { kill, releaseKill } from '../api'
+import { kill, releaseKill, jarvisChat } from '../api'
 
 export const Wordmark = ({ size = 13 }: { size?: number }) => (
   <span className="mono" style={{ fontSize: size, letterSpacing: '.14em', fontWeight: 600 }}><span className="o">NSKO</span> <span className="lo">//</span> QUANT</span>
 )
-export const Demo = () => useS(s => s.demo) ? <span className="chip" style={{ color: 'var(--amber)', borderColor: '#5A4020' }}>DEMO DATA</span> : null
+export const Demo = () => { const demo = useS(s => s.demo), engineDemo = useS(s => s.engineDemo), fallback = useS(s => s.fallback)
+  return demo ? <span className="chip" title={engineDemo && !fallback ? 'The engine is running its own demo source (nothing real is connected yet)' : undefined} style={{ color: 'var(--amber)', borderColor: '#5A4020' }}>{engineDemo && !fallback ? 'ENGINE DEMO FEED' : 'DEMO DATA'}</span> : null }
 const CONN: Record<string, [string, string, string]> = {
   probing: ['CHECKING', 'var(--amber)', '#5A4020'], connecting: ['CONNECTING', 'var(--amber)', '#5A4020'], online: ['ONLINE', 'var(--green)', '#2A5A30'],
   reconnecting: ['RECONNECTING', 'var(--amber)', '#5A4020'], offline: ['OFFLINE', 'var(--red)', '#5A2028'], off: ['OFF', 'var(--lo)', '#2A2D3A'],
@@ -44,13 +45,14 @@ function KillSwitch() {
     useS.getState().set({ killed: true })
     const r = await kill()
     if (!r.ok) notify(`The engine refused the kill switch: ${r.error}. Close positions at your broker directly.`, 'bad', undefined, 0)
-    else if (!r.demo) notify('Kill switch: orders cancelled, positions closed, trading locked.', 'bad')
+    else if (!r.demo && r.data.errors?.length) notify(`Kill switch is on, but ${r.data.errors.length} step(s) failed: ${r.data.errors.join('; ')}. Check your broker directly.`, 'bad', undefined, 0)
+    else if (!r.demo) notify(`Kill switch: ${r.data.cancelled ?? 0} orders cancelled, ${r.data.closed ?? 0} positions closed, trading locked.`, 'bad')
   }
   const start = () => { const t0 = performance.now(); const f = () => { const v = Math.min(1, (performance.now() - t0) / 1500); setP(v); if (v >= 1) { setP(0); fire(); return } raf.current = requestAnimationFrame(f) }; raf.current = requestAnimationFrame(f) }
   const stop = () => { cancelAnimationFrame(raf.current); setP(0) }
-  const release = async () => { if (!await ask('Re-enable trading?', 'The risk gate and all your limits stay on. New trades can be opened again.', 'Re-enable')) return; const r = await releaseKill(); if (r.ok) useS.getState().set({ killed: false }); else notify(r.error || 'Could not re-enable', 'bad') }
-  if (killed) return <button onClick={release} style={{ borderColor: 'var(--red)', color: 'var(--red)' }} className="mono">TRADING LOCKED · re-enable</button>
-  return <button onMouseDown={start} onMouseUp={stop} onMouseLeave={stop} title="Hold for 1.5 s: cancels all orders, closes all positions, locks trading"
+  const release = async () => { if (!await ask('Re-enable trading?', 'The risk gate and all your limits stay on. New trades can be opened again.', 'Re-enable')) return; const r = await releaseKill(); if (r.ok) { useS.getState().set({ killed: false }); if (!r.demo) notify('Trading re-enabled. The risk gate stays on.', 'good') } else notify(r.error || 'Could not re-enable', 'bad') }
+  if (killed) return <button data-testid="kill-release" onClick={release} style={{ borderColor: 'var(--red)', color: 'var(--red)' }} className="mono">TRADING LOCKED · re-enable</button>
+  return <button data-testid="kill-switch" onMouseDown={start} onMouseUp={stop} onMouseLeave={stop} title="Hold for 1.5 s: cancels all orders, closes all positions, locks trading"
     style={{ borderColor: 'var(--red)', color: 'var(--red)', position: 'relative', overflow: 'hidden', fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.12em' }}>
     <i style={{ position: 'absolute', inset: 0, width: `${p * 100}%`, background: 'rgba(224,72,88,.25)' }} /><span style={{ position: 'relative' }}>KILL SWITCH · HOLD</span></button>
 }
@@ -124,16 +126,26 @@ const SCRIPT: [RegExp, string][] = [
   [/plan|trade/i, 'Draft plan (demo): long XAU/USD at a sweep of 2,641 that closes back inside value. Stop 2,637.8, target POC 2,646 then VAH 2,652. Risk 1% → size from your equity. I will run the Time Machine before anything is sent.'],
   [/risk/i, 'Your limits: 1% per trade, 3% daily stop, 6% weekly, max 5 trades a day, 2 open positions. The risk gate cannot be switched off in live.'],
 ]
+const scripted = (q: string) => SCRIPT.find(([r]) => r.test(q))?.[1] || 'Noted. In demo mode I answer from a script; with the engine connected I will research it with SCOUT and come back with sources.'
 export function Jarvis({ open, close }: { open: boolean; close: () => void }) {
-  const [msgs, setMsgs] = useState<{ me: boolean; t: string }[]>([{ me: false, t: 'Good evening. I am JARVIS. Ask me about an idea, the live market, the news, or plan a trade together. (Demo mode: scripted answers.)' }])
-  const [v, setV] = useState('')
-  const send = () => { if (!v.trim()) return; const a = SCRIPT.find(([r]) => r.test(v))?.[1] || 'Noted. In demo mode I answer from a script; with the engine connected I will research it with SCOUT and come back with sources.'; setMsgs(m => [...m, { me: true, t: v }, { me: false, t: a }]); setV('') }
+  const source = useS(s => s.source), fallback = useS(s => s.fallback); const engine = source === 'engine' && !fallback
+  const hello = engine ? 'Good evening. I am JARVIS, running on this computer. Ask me about your desk, the market or an idea.' : 'Good evening. I am JARVIS. Ask me about an idea, the live market, the news, or plan a trade together. (Demo mode: scripted answers.)'
+  const [msgs, setMsgs] = useState<{ me: boolean; t: string; note?: string }[]>([{ me: false, t: hello }])
+  useEffect(() => { setMsgs(m => m.length === 1 && !m[0].me ? [{ me: false, t: hello }] : m) }, [engine])
+  const [v, setV] = useState(''); const [busy, setBusy] = useState(false)
+  const send = async () => {
+    const q = v.trim(); if (!q || busy) return
+    const hist = msgs.slice(1); setMsgs(m => [...m, { me: true, t: q }]); setV(''); setBusy(true)
+    const r = await jarvisChat(q, hist, () => scripted(q)); setBusy(false)
+    setMsgs(m => [...m, r.ok ? { me: false, t: r.data.reply, note: r.demo ? 'demo script' : r.data.local_model ? 'local model' : 'no local model' } : { me: false, t: `I could not answer: ${r.error}`, note: 'error' }])
+  }
   return <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 380, background: '#0A0B12', borderLeft: '1px solid var(--line)', zIndex: 50, transform: `translateX(${open ? 0 : 400}px)`, transition: 'transform .35s var(--ease)', display: 'flex', flexDirection: 'column' }}>
     <div className="ph"><span className="dot pulse" style={{ background: 'var(--orange)' }} /><span className="t">JARVIS</span><span className="s">director · Ctrl+J</span><span className="rt"><button onClick={close}>×</button></span></div>
     <div style={{ flex: 1, overflow: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {msgs.map((m, i) => <div key={i} style={{ alignSelf: m.me ? 'flex-end' : 'flex-start', maxWidth: '88%', background: m.me ? '#1A1410' : 'var(--panel)', border: `1px solid ${m.me ? '#3A2414' : 'var(--line)'}`, padding: '8px 11px', borderRadius: 3, lineHeight: 1.5 }}>{m.t}</div>)}
+      {msgs.map((m, i) => <div key={i} data-testid={m.me ? undefined : 'jarvis-reply'} style={{ alignSelf: m.me ? 'flex-end' : 'flex-start', maxWidth: '88%', background: m.me ? '#1A1410' : 'var(--panel)', border: `1px solid ${m.me ? '#3A2414' : 'var(--line)'}`, padding: '8px 11px', borderRadius: 3, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.t}{m.note && <div className="lo mono" style={{ fontSize: 9.5, marginTop: 4 }}>{m.note.toUpperCase()}</div>}</div>)}
+      {busy && <div className="lo mono" style={{ fontSize: 10.5 }}><span className="dot pulse" /> JARVIS is thinking…</div>}
     </div>
-    <div className="row" style={{ padding: 12, borderTop: '1px solid var(--line)' }}><input style={{ flex: 1 }} value={v} onChange={e => setV(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder="Ask JARVIS…" /><button className="primary" onClick={send}>Send</button></div>
+    <div className="row" style={{ padding: 12, borderTop: '1px solid var(--line)' }}><input data-testid="jarvis-input" style={{ flex: 1 }} value={v} onChange={e => setV(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder="Ask JARVIS…" /><button className="primary" disabled={busy} onClick={send}>Send</button></div>
   </div>
 }
 

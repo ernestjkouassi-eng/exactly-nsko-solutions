@@ -41,9 +41,12 @@ class Engine:
             reconcile(active())
         except Exception as e:
             _log.error(f"reconcile on start failed: {e}")
-        if get("demo") and active().name == "paper" and not get("data.connected", False):
+        # The scripted demo source only runs when the engine has nothing real to show: paper broker, no data
+        # connected and no data feeds configured. With feeds on, the desk shows real (or synthetic-flagged) data.
+        if get("demo") and active().name == "paper" and not get("data.connected", False) and not get("data.feeds"):
             from .demo import source
             source.start()
+        self.start_feeds()
         if scheduler:
             s = BackgroundScheduler(timezone="UTC", job_defaults={"coalesce": True, "max_instances": 1, "misfire_grace_time": 5})
             s.add_job(health.beat, "interval", seconds=1, id="health")
@@ -54,6 +57,30 @@ class Engine:
             s.add_job(self.manage_prices, "interval", seconds=5, id="manage")
             s.start()
             self.sched = s
+
+    def start_feeds(self) -> None:
+        """Market data while the engine runs: a `candle` event for each closed 1m bar of every market in
+        `data.feeds` (synthetic and flagged when no real source exists), and the Kraken public trade stream for
+        crypto order flow (`orderflow_bubble`, `profile_update`). Failures only log; trading never depends on them."""
+        self._feed_stop = threading.Event()
+        markets = list(get("data.feeds") or [])
+        if not markets:
+            return
+        try:
+            from .data import candles
+            threading.Thread(target=candles.refresh_loop, args=(markets, "1m", 20, self._feed_stop), daemon=True,
+                             name="candle-feed").start()
+        except Exception as e:
+            _log.warning(f"candle feed not started: {type(e).__name__}")
+        if get("data.live_stream"):
+            try:
+                from .data import orderflow
+                from .data.markets import info
+                crypto = [m for m in markets if info(m).get("kraken_ws")]
+                if crypto:
+                    _, self._stream_stop, _ = orderflow.start_stream_thread(crypto)
+            except Exception as e:
+                _log.warning(f"trade stream not started: {type(e).__name__}")
 
     def scan(self) -> list:
         if not self._scan_lock.acquire(blocking=False):
@@ -89,6 +116,9 @@ class Engine:
     def stop(self) -> None:
         if self.sched:
             self.sched.shutdown(wait=False)
+        for ev in (getattr(self, "_feed_stop", None), getattr(self, "_stream_stop", None)):
+            if ev:
+                ev.set()
         from .demo import source
         source.stop()
         health.keep_awake(False)

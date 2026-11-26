@@ -277,10 +277,16 @@ def test_health_and_websocket():
     from fastapi.testclient import TestClient
     from nsq import health
     from nsq.app import create_app
+    from nsq import account
+    from starlette.websockets import WebSocketDisconnect
     c = TestClient(create_app(start_engine=False))
     h = c.get("/health").json()
-    assert {"uptime", "heartbeat", "cpu", "ram"} <= set(h)
-    with c.websocket_connect("/ws") as ws:
+    assert {"uptime", "heartbeat", "cpu", "ram", "paused", "killed", "account_exists"} <= set(h)
+    with pytest.raises(WebSocketDisconnect):          # not signed in: refused
+        with c.websocket_connect("/ws") as ws:
+            ws.receive_json()
+    tok = account.create("ws@example.com", "a-long-password")["token"]
+    with c.websocket_connect(f"/ws?token={tok}") as ws:
         first = ws.receive_json()
         assert first["type"] == "engine_health"
         health.beat()

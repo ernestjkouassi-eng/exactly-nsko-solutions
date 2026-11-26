@@ -68,13 +68,39 @@ fn health() -> Option<serde_json::Value> {
         .ok()
 }
 
+// The engine's data folder (same rules as nsq/db.py: $NSQ_DATA, else the OS app-data folder "NSKO QUANT").
+fn data_dir() -> Option<std::path::PathBuf> {
+    if let Ok(d) = std::env::var("NSQ_DATA") {
+        if !d.is_empty() {
+            return Some(d.into());
+        }
+    }
+    #[cfg(target_os = "windows")]
+    let base = std::env::var_os("APPDATA").map(std::path::PathBuf::from);
+    #[cfg(target_os = "macos")]
+    let base = std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("Library").join("Application Support"));
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let base = std::env::var_os("XDG_DATA_HOME")
+        .filter(|v| !v.is_empty())
+        .map(std::path::PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".local").join("share")));
+    base.map(|b| b.join("NSKO QUANT"))
+}
+
+// The local shared secret the engine writes at start (owner-only file). The tray sends it as X-NSQ-Shell so it can
+// pause / resume and quit without a user session. The kill switch never needs it.
+fn shell_token() -> Option<String> {
+    let t = std::fs::read_to_string(data_dir()?.join("shell.token")).ok()?;
+    let t = t.trim().to_string();
+    if t.is_empty() { None } else { Some(t) }
+}
+
 fn post(path: &str, body: serde_json::Value) -> Result<(), String> {
-    agent()
-        .post(&format!("{ENGINE}{path}"))
-        .set("X-NSQ-Client", "desktop-shell")
-        .send_json(body)
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+    let mut req = agent().post(&format!("{ENGINE}{path}")).set("X-NSQ-Client", "desktop-shell");
+    if let Some(tok) = shell_token() {
+        req = req.set("X-NSQ-Shell", &tok);
+    }
+    req.send_json(body).map(|_| ()).map_err(|e| e.to_string())
 }
 
 fn read_status(sidecar: bool) -> EngineStatus {
@@ -209,7 +235,7 @@ fn on_menu(app: &AppHandle, id: &str) {
             let paused = app.state::<Shell>().status.lock().unwrap().paused;
             let h = app.clone();
             thread::spawn(move || {
-                if let Err(e) = post("/settings", serde_json::json!({ "trading_paused": !paused })) {
+                if let Err(e) = post("/trading/pause", serde_json::json!({ "paused": !paused })) {
                     eprintln!("[shell] pause failed: {e}");
                 }
                 refresh(&h);
@@ -222,7 +248,7 @@ fn on_menu(app: &AppHandle, id: &str) {
             "Kill everything",
             |h| {
                 thread::spawn(move || {
-                    let r = post("/kill", serde_json::json!({ "confirm": true, "source": "tray" }));
+                    let r = post("/kill", serde_json::json!({ "reason": "kill switch (tray)", "source": "tray" }));
                     let _ = h.emit("tray-kill", r.is_ok());
                     if let Err(e) = r {
                         let _ = h

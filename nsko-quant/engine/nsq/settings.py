@@ -51,15 +51,26 @@ DEFAULTS: dict[str, Any] = {
     "live.paper_trades_required": 30,
     "live.half_size_days": 14,
     "live.unlocked_at": None,
+    "live.start_size_pct": 50,                 # size during the first live weeks (clamped 10..100)
     # strategy updates (9.8)
     "updates.auto_margin_sharpe": 0.2,
     "updates.promote_live": "ask",             # auto | ask
+    "updates.mode": "auto_paper",              # manual (no automatic versions) | auto_paper (to paper, then ask) | ask (ask before paper)
     # notifications
     "notify.ntfy_url": "https://ntfy.sh",
     "notify.ntfy_topic": "",
     "notify.telegram_chat_id": "",
-    # trading lock
+    "notify.ntfy_enabled": True,
+    "notify.telegram_enabled": True,
+    "ui.alerts_desktop": True,
+    # trading lock / pause
     "trading.locked": False,
+    "trading.paused": False,                   # pause NEW trades; open trades keep being managed
+    # data feeds the engine runs while it is up (candle events, order flow)
+    "data.feeds": ["XAU/USD", "BTC/USD"],
+    "data.live_stream": True,                  # Kraken public trade stream for crypto order flow
+    # JARVIS chat
+    "jarvis.ollama_model": None,               # falls back to research / debate model
 }
 
 

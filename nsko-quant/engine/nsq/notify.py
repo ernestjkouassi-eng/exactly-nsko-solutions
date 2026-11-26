@@ -62,6 +62,9 @@ def notify(kind: str, title: str, body: str, level: str = "trade", sync: bool = 
     def _go() -> None:
         res = {}
         for name, fn in (("ntfy", lambda: _ntfy(title, body, level)), ("telegram", lambda: _telegram(title, body))):
+            if not get(f"notify.{name}_enabled", True):
+                res[name] = "off in settings"
+                continue
             try:
                 res[name] = fn()
             except Exception as e:  # network down etc.

@@ -19,9 +19,12 @@ PHRASE = "I understand I can lose money"
 
 
 def paper_stats() -> dict:
-    r = conn().execute("SELECT COUNT(*) n, MIN(ts) first FROM journal WHERE mode='paper'").fetchone()
+    r = conn().execute("SELECT COUNT(*) n, MIN(ts) first, SUM(r_multiple) r, SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) wins"
+                       " FROM journal WHERE mode='paper'").fetchone()
     days = (time.time() - r["first"]) / 86400 if r["first"] else 0.0
-    return {"trades": int(r["n"]), "days": round(days, 1)}
+    n = int(r["n"])
+    return {"trades": n, "days": round(days, 1), "r": round(float(r["r"] or 0), 2),
+            "win": round(100 * int(r["wins"] or 0) / n, 1) if n else 0.0}
 
 
 def checklist(phrase: str | None = None, broker=None, licence_status: str | None = None) -> dict:
@@ -48,7 +51,8 @@ def checklist(phrase: str | None = None, broker=None, licence_status: str | None
         {"id": "phrase", "ok": (phrase or "").strip() == PHRASE, "label": f'Type "{PHRASE}"', "value": bool(phrase)},
     ]
     return {"ok": all(i["ok"] for i in items), "items": items, "half_size_days": int(get("live.half_size_days")),
-            "unlocked": is_unlocked()}
+            "start_size_pct": float(get("live.start_size_pct", 50) or 50), "unlocked": is_unlocked(), "phrase": PHRASE,
+            "paper": st, "mode": get("mode")}
 
 
 def unlock(phrase: str, broker=None, licence_status: str | None = None, actor: str = "user") -> dict:
@@ -73,7 +77,8 @@ def size_factor(mode: str, now: float | None = None) -> float:
     if at is None:
         return 0.0
     days = ((now or time.time()) - float(at)) / 86400
-    return 0.5 if days < float(get("live.half_size_days")) else 1.0
+    start = min(100.0, max(10.0, float(get("live.start_size_pct", 50) or 50))) / 100
+    return start if days < float(get("live.half_size_days")) else 1.0
 
 
 def back_to_paper(actor: str = "user") -> None:

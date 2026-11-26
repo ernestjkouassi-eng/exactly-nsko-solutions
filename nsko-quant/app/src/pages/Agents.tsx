@@ -62,39 +62,47 @@ function Cam({ mode, focus }: { mode: string; focus: number | null }) {
   return null
 }
 
+const STATE: Record<string, (typeof A)[0]['state']> = { working: 'work', busy: 'work', idle: 'idle', paused: 'stuck', error: 'stuck', stuck: 'stuck', queued: 'queue', waiting: 'queue' }
 export default function Agents() {
   const [mode, setMode] = useState('overview'); const [focus, setFocus] = useState<number | null>(null); const [table, setTable] = useState(false)
-  const handoffs = useS(s => s.handoffs); const sources = useS(s => s.sources)
+  const handoffs = useS(s => s.handoffs); const sources = useS(s => s.sources); const agents = useS(s => s.agents); const budget = useS(s => s.budget)
+  const source = useS(s => s.source), fallback = useS(s => s.fallback); const engine = source === 'engine' && !fallback
+  // engine: each figure's state is the last agent_status the engine sent for it (idle until it has sent one)
+  const AA = useMemo(() => engine ? A.map(x => ({ ...x, state: STATE[agents[x.n]?.status] || 'idle' as const })) : A, [engine, agents])
   const grid = useMemo(() => new THREE.GridHelper(18, 18, '#1A1C26', '#12131B'), [])
-  const a = focus !== null ? A[focus] : null
+  const a = focus !== null ? AA[focus] : null
   return <div className="page">
-    <div className="ptitle">Agent Room</div><div className="psub">The JARVIS team at work. Every movement is a real task: packets fly between desks when work is handed over.</div>
-    <div className="panel" style={{ display: 'flex', marginBottom: 12 }}>{[['TASKS', 273 + handoffs.length], ['HANDOFFS', 135 + handoffs.length], ['SOURCES READ', 100 + sources.length], ['SUMMARISED', 94 + Math.floor(sources.length * .9)], ['COST', '£0.20 · local model']].map(([l, v]) =>
+    <div className="ptitle">Agent Room</div><div className="psub">The JARVIS team at work. Every movement is a real task: packets fly between desks when work is handed over.{engine ? ' Live from the engine: counts start when this window connected.' : ''}</div>
+    <div className="panel" style={{ display: 'flex', marginBottom: 12 }}>{(engine ? [['BUSY NOW', Object.values(agents).filter(x => STATE[x.status] === 'work').length], ['HANDOFFS', handoffs.length], ['SOURCES READ', sources.length], ['STATUS UPDATES', Object.keys(agents).length], ['THINK BUDGET', `${budget.used.toFixed(1)} of ${budget.of} units`]]
+      : [['TASKS', 273 + handoffs.length], ['HANDOFFS', 135 + handoffs.length], ['SOURCES READ', 100 + sources.length], ['SUMMARISED', 94 + Math.floor(sources.length * .9)], ['COST', '£0.20 · local model']]).map(([l, v]) =>
       <div key={l as string} style={{ flex: 1, padding: 14, borderRight: '1px solid var(--line)' }}><div className="lbl">{l}</div><div className="big" style={{ fontSize: 20 }}>{v}</div></div>)}</div>
     <div className="panel"><Head t="THE WORKFLOOR" s="every movement is a real task">
       {[['overview', 'Overview'], ['top', 'Top down'], ['floor', 'Floor'], ['follow', '◎ Follow the work']].map(([k, n]) => <button key={k} onClick={() => { setMode(k); setFocus(null) }} style={{ padding: '3px 8px', fontSize: 10, borderColor: mode === k && focus === null ? 'var(--orange)' : undefined }}>{n}</button>)}
       <button onClick={() => setTable(!table)} style={{ padding: '3px 8px', fontSize: 10 }}>{table ? 'SHOW AS ROOM' : 'SHOW AS TABLE'}</button></Head>
-      {table ? <table><thead><tr><th>Agent</th><th>Role</th><th>State</th></tr></thead><tbody>{A.map(x => <tr key={x.n}><td style={{ color: x.col }}>{x.n}</td><td>{x.role}</td><td>{x.state}</td></tr>)}</tbody></table> :
+      {table ? <table><thead><tr><th>Agent</th><th>Role</th><th>State</th>{engine && <th>Last item</th>}</tr></thead><tbody>{AA.map(x => <tr key={x.n}><td style={{ color: x.col }}>{x.n}</td><td>{x.role}</td><td>{x.state}</td>{engine && <td className="lo">{agents[x.n]?.item || '—'}</td>}</tr>)}</tbody></table> :
         <div style={{ height: 560, position: 'relative' }}>
           <R3F camera={{ position: [11, 10, 11], fov: 35 }} dpr={[1, 2]} onPointerMissed={() => setFocus(null)}>
             <color attach="background" args={['#06070C']} /><fog attach="fog" args={['#06070C', 18, 36]} />
             <ambientLight intensity={.35} /><directionalLight position={[5, 10, 4]} intensity={1.1} /><pointLight position={[0, 3, 0]} color="#E8541A" intensity={6} distance={6} />
             <primitive object={grid} />
             <lineSegments><edgesGeometry args={[new THREE.BoxGeometry(17, .01, 11)]} /><lineBasicMaterial color="#5A5F6E" /></lineSegments>
-            {A.map((x, i) => <Figure key={x.n} a={x} i={i} onPick={setFocus} />)}
+            {AA.map((x, i) => <Figure key={x.n + x.state} a={x} i={i} onPick={setFocus} />)}
             <Packets /><Cam mode={mode} focus={focus} />
           </R3F>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{/* labels are drawn in the legend + panel to keep the 3D clean */}</div>
           {a && <div className="panel" style={{ position: 'absolute', right: 12, top: 12, bottom: 12, width: 320, padding: 14, background: 'rgba(12,13,20,.94)' }}>
             <div className="row"><span className="dot" style={{ background: a.col }} /><span className="mono" style={{ letterSpacing: '.1em' }}>{a.n}</span><span className="chip" style={{ marginLeft: 'auto', color: a.state === 'stuck' ? 'var(--red)' : 'var(--green)', borderColor: 'var(--line)' }}>{a.state === 'stuck' ? 'STUCK' : a.state === 'work' ? 'BUSY' : a.state.toUpperCase()}</span></div>
             <div className="lo" style={{ margin: '4px 0 12px' }}>{a.role}</div>
-            {[['NOW', a.n === 'WATCHER' ? 'Watching "Time-series momentum on index futures", minute 4 of 39' : a.state === 'stuck' ? 'Waiting for 2009 gold history: data request timed out, retrying' : 'Working on "' + (sources[sources.length - 1]?.title || 'Order blocks explained') + '"'],
-              ['BEFORE', 'Finished "Seasonality in precious metals" (12 min)'], ['HEARD', '"the order block is the last down candle before the move"'], ['NEXT STEP', 'Hand the summary to RECIPE-MAKER']].map(([k, v]) =>
+            {(engine ? [['NOW', agents[a.n] ? `${agents[a.n].status}${agents[a.n].item ? ` · "${agents[a.n].item}"` : ''}` : 'No status from the engine yet'], ['LAST UPDATE', agents[a.n] ? new Date(agents[a.n].ts).toLocaleTimeString('en-GB', { hour12: false }) : '—'],
+              ['HANDED TO', handoffs.filter(h => h.from === a.n).slice(-1)[0]?.to || '—'], ['RECEIVED FROM', handoffs.filter(h => h.to === a.n).slice(-1)[0]?.from || '—']] : [['NOW', a.n === 'WATCHER' ? 'Watching "Time-series momentum on index futures", minute 4 of 39' : a.state === 'stuck' ? 'Waiting for 2009 gold history: data request timed out, retrying' : 'Working on "' + (sources[sources.length - 1]?.title || 'Order blocks explained') + '"'],
+              ['BEFORE', 'Finished "Seasonality in precious metals" (12 min)'], ['HEARD', '"the order block is the last down candle before the move"'], ['NEXT STEP', 'Hand the summary to RECIPE-MAKER']]).map(([k, v]) =>
               <div key={k} style={{ marginBottom: 10 }}><div className="lbl">{k}</div><div style={{ fontSize: 12.5, marginTop: 3, lineHeight: 1.5, ...(k === 'HEARD' ? { border: '1px solid #5A4020', background: 'rgba(232,168,80,.06)', padding: 6 } : {}) }}>{v}</div></div>)}
             <button onClick={() => setFocus(null)} style={{ marginTop: 6, pointerEvents: 'auto' }}>‹ Back to the room ›</button></div>}
         </div>}
       <div className="row mono lo" style={{ padding: '8px 14px', borderTop: '1px solid var(--line)', fontSize: 10, flexWrap: 'wrap', gap: 14 }}>{A.map(x => <span key={x.n}><span className="dot" style={{ background: x.col }} /> {x.n}</span>)}
         <span style={{ marginLeft: 'auto' }}>desk light: working · coffee: resting · red lamp: stuck · packet: work between desks · stack: work waiting · click an agent</span></div>
     </div>
+    {engine && <div className="panel" style={{ marginTop: 12 }} data-testid="handoffs"><Head t="HANDOFFS" s="agent_handoff events from the engine" /><table><tbody>{handoffs.length ? handoffs.slice(-10).reverse().map((h, i) => <tr key={h.ts + i}><td className="lo mono">{new Date(h.ts).toLocaleTimeString('en-GB', { hour12: false })}</td><td>{h.from}</td><td className="lo">→</td><td>{h.to}</td></tr>)
+      : <tr><td className="lo">No handoffs yet. They arrive when a research round, a Lab run or a trade debate runs.</td></tr>}</tbody></table></div>}
   </div>
 }

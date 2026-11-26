@@ -20,9 +20,21 @@ _proc = psutil.Process(os.getpid())
 _proc.cpu_percent(None)
 
 
+def trading_state() -> dict:
+    """Kill switch and pause, for /health, the engine_health event and the tray colour."""
+    try:
+        from .settings import get
+        from .trading.killswitch import is_locked
+        locked, why = is_locked()
+        return {"killed": bool(get("trading.locked", False)), "locked": locked, "lock_reason": why,
+                "paused": bool(get("trading.paused", False))}
+    except Exception:   # the database is not ready yet: report nothing rather than guess
+        return {}
+
+
 def snapshot() -> dict:
     mem = _proc.memory_info().rss / 1e9
-    return {"status": "running", "uptime": round(time.time() - STARTED, 1), "round": _state["round"],
+    return {"status": "running", **trading_state(), "uptime": round(time.time() - STARTED, 1), "round": _state["round"],
             "heartbeat": _state["heartbeat"], "cpu": psutil.cpu_percent(None), "cpu_engine": _proc.cpu_percent(None),
             "ram": round(psutil.virtual_memory().used / 1e9, 2), "ram_engine": round(mem, 3),
             "ram_total": round(psutil.virtual_memory().total / 1e9, 2), "keepAwake": _state["keep_awake"],

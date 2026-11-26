@@ -5,10 +5,10 @@ import { RiskWarning } from './Money'
 import { selectDemo, selectEngine, afterLogin } from '../source'
 import {
   brokers as getBrokers, connectBroker, keychainSet, isTauri, DEMO_BROKERS, getSettings, saveSettings, exportDesk, restoreDesk, health as getHealth,
-  createAccount, licenceCheck, totpBegin, totpConfirm, type Broker, type Settings as SettingsT, type Created, type Licence,
+  createAccount, licenceCheck, totpBegin, totpConfirm, pauseTrading, type Broker, type Settings as SettingsT, type Created, type Licence,
 } from '../api'
 
-const STATUS: Record<Broker['status'], [string, string]> = { connected: ['CONNECTED', 'g'], demo: ['DEMO', 'a'], not_connected: ['NOT CONNECTED', 'lo'], error: ['ERROR', 'r'] }
+const STATUS: Record<Broker['status'], [string, string]> = { connected: ['CONNECTED', 'g'], demo: ['DEMO', 'a'], not_connected: ['NOT CONNECTED', 'lo'], error: ['ERROR', 'r'], coming_soon: ['COMING SOON', 'lo'], unsupported: ['NOT SUPPORTED', 'r'] }
 
 // ---------------- Brokers
 export function Brokers() {
@@ -17,11 +17,12 @@ export function Brokers() {
   useEffect(() => { load() }, [])
   return <div className="page"><div className="row" style={{ alignItems: 'flex-start' }}><div><div className="ptitle">Brokers</div><div className="psub">Your money stays in your own broker account. NSKO QUANT only holds a key that can trade: switch withdrawals OFF on the key wherever the broker allows it. Keys are kept in this computer's keychain, never in a file.</div></div>
     {demo && <span className="chip a" style={{ borderColor: '#5A4020', marginLeft: 'auto' }}>DEMO LIST</span>}</div>
-    <div className="grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>{list.map(b => { const [t, c] = STATUS[b.status] || STATUS.not_connected; return <div key={b.id} className="panel" style={{ padding: 14 }}>
+    <div className="grid" data-testid="brokers" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>{list.filter(b => b.id !== 'cmc').map(b => { const [t, c] = STATUS[b.status] || STATUS.not_connected; return <div key={b.id} className="panel" style={{ padding: 14 }}>
       <div className="row" style={{ justifyContent: 'space-between' }}><span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span><span className={`chip ${c}`} style={{ borderColor: 'var(--line)' }}>{t}</span></div>
       <div className="lo" style={{ fontSize: 11.5, margin: '6px 0 10px', minHeight: 30 }}>{b.markets}</div>
       {b.status === 'demo' || b.status === 'connected' ? <div className="mono" style={{ fontSize: 10.5, lineHeight: 1.7 }}><span className="g">Trading ✓</span> · <span className={b.withdrawals_off ? 'g' : 'a'}>{b.withdrawals_off ? 'Withdrawals OFF ✓' : 'Withdrawals: check the key'}</span><br /><span className="lo">{b.latency_ms ? `latency ${b.latency_ms} ms · ` : ''}<span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setOpen(b)}>replace key</span></span></div>
-        : <button onClick={() => setOpen(b)}>Connect</button>}</div> })}</div>
+        : b.status === 'coming_soon' || b.status === 'unsupported' ? <div className="lo" style={{ fontSize: 10.5, lineHeight: 1.5 }} title={b.reason}>{(b.reason || '').slice(0, 120)}{(b.reason || '').length > 120 ? '…' : ''}</div>
+        : <button onClick={() => setOpen(b)}>Connect{b.key_stored ? ' · key saved' : ''}</button>}</div> })}</div>
     <div className="panel" style={{ marginTop: 12, padding: 14 }}><span className="r mono">CMC Markets is not supported</span><span className="lo"> · it offers no API access for automated trading.</span></div>
     {open && <ConnectModal b={open} close={() => setOpen(null)} done={load} />}</div>
 }
@@ -99,6 +100,8 @@ export function Settings() {
   const save = async () => { if (!cfg) return; setSaving(true); const r = await saveSettings(cfg); setSaving(false); if (r.ok) { setDirty(false); notify(r.demo ? 'Saved for this demo session only' : 'Settings saved to the engine', r.demo ? 'info' : 'good') } else notify(`Not saved: ${r.error}`, 'bad') }
   const toEngine = () => selectEngine(), toDemo = async () => { if (source === 'engine' && !fallback && !await ask('Switch to demo data?', 'The engine keeps trading in the background. The desk will show the seeded simulator until you switch back.', 'Show demo data')) return; selectDemo() }
   const mode = (m: 'Auto' | 'Manual') => { set({ auto: m === 'Auto' }); upd('trading_mode', m.toLowerCase()) }
+  const paused = useS(s => s.paused)
+  const togglePause = async () => { const r = await pauseTrading(!paused); if (r.ok) { set({ paused: r.data.trading_paused }); notify(r.data.trading_paused ? 'New trades paused' : 'New trades resumed', 'good') } else notify(`Not changed: ${r.error}`, 'bad') }
   return <div className="page"><div className="row" style={{ alignItems: 'flex-start' }}><div className="ptitle">Settings</div>
     <div className="row" style={{ marginLeft: 'auto' }}>{demo && <span className="chip a" style={{ borderColor: '#5A4020' }}>DEMO SETTINGS</span>}<button className="primary" disabled={!dirty || saving} style={{ opacity: dirty ? 1 : .4 }} onClick={save}>{saving ? 'Saving…' : 'Save settings'}</button></div></div>
     <div className="panel" style={{ marginBottom: 12, marginTop: 10 }}><Head t="DATA SOURCE" s="what the desk shows" />
@@ -117,7 +120,8 @@ export function Settings() {
       <div className="panel"><Head t="RISK LIMITS" s="hard limits: the gate cannot be switched off in live" /><div className="pb">{RISK.map(([k, l, u]) => <div key={k} className="row" style={{ justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #12131B' }}><span>{l}</span>
         <span className="row" style={{ gap: 6 }}><input type="number" step="any" value={cfg?.[k] ?? ''} onChange={e => upd(k, e.target.value === '' ? '' : +e.target.value)} style={{ width: 110, textAlign: 'right' }} /><span className="lo mono" style={{ fontSize: 10, width: 44 }}>{u}</span></span></div>)}</div></div>
       <div className="grid" style={{ alignContent: 'start' }}>
-        <div className="panel"><Head t="TRADING" /><div className="pb row">{(['Auto', 'Manual'] as const).map(m => <button key={m} onClick={() => mode(m)} style={{ borderColor: (m === 'Auto') === auto ? 'var(--orange)' : undefined }}>{m}</button>)}<span className="lo" style={{ fontSize: 11 }}>Manual waits for Approve at the order ticket</span></div></div>
+        <div className="panel"><Head t="TRADING" /><div className="pb row">{(['Auto', 'Manual'] as const).map(m => <button key={m} onClick={() => mode(m)} style={{ borderColor: (m === 'Auto') === auto ? 'var(--orange)' : undefined }}>{m}</button>)}<span className="lo" style={{ fontSize: 11 }}>Manual waits for Approve at the order ticket</span></div>
+          <div className="pb row" style={{ paddingTop: 0 }}><button data-testid="pause-toggle" onClick={togglePause}>{paused ? 'Resume new trades' : 'Pause new trades'}</button><span className="lo" style={{ fontSize: 11 }}>{paused ? 'PAUSED: open trades keep their stops and targets; nothing new opens.' : 'Pausing stops new trades only. The kill switch closes everything.'}</span></div></div>
         <div className="panel"><Head t="STRATEGY UPDATES" /><div className="pb">{([['manual', 'Manual'], ['auto_paper', 'Automatic → paper, then ask me'], ['ask', 'Ask me']] as const).map(([k, m]) => <label key={k} className="row" style={{ padding: '4px 0', cursor: 'pointer' }}><input type="radio" checked={(cfg?.strategy_updates ?? 'ask') === k} onChange={() => upd('strategy_updates', k)} />{m}</label>)}<div className="lo" style={{ fontSize: 11, marginTop: 6 }}>NSKO strategy packs always go to the Lab first, never straight to live. Every change can be rolled back in one click.</div></div></div>
         <div className="panel"><Head t="ALERTS" /><div className="pb">{([['alerts_ntfy', 'Phone: ntfy (high priority alarm)'], ['alerts_telegram', 'Telegram bot · /kill from your paired account'], ['alerts_desktop', 'Desktop notifications']] as const).map(([k, a]) => <label key={k} className="row" style={{ padding: '4px 0' }}><input type="checkbox" checked={cfg?.[k] ?? true} onChange={e => upd(k, e.target.checked)} />{a}</label>)}</div></div>
         <DesktopPanel />
@@ -183,8 +187,8 @@ export function Onboarding({ done }: { done: () => void }) {
       {token === 'demo' && <div className="a mono" style={{ fontSize: 10.5, marginTop: 8 }}>DEMO: this account was not saved anywhere.</div>}</div>
     : <div className="grid" style={{ gap: 9 }}>
       <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 9 }}>{F('name', 'Name')}{F('email', 'Email')}{F('pw', 'Password (10+ characters)', 'password')}{F('pw2', 'Password again', 'password')}</div>
-      <div className="row" style={{ gap: 8 }}><input placeholder="Licence key · NSQ-XXXX-XXXX-XXXX" value={acct.lic} onChange={e => { setAcct({ ...acct, lic: e.target.value.toUpperCase() }); setLic(null) }} style={{ flex: 1 }} /><button onClick={checkLic} disabled={!acct.lic.trim()}>Check</button></div>
-      {lic && <div className={`mono ${lic.valid ? 'g' : 'r'}`} style={{ fontSize: 11 }}>{lic.valid ? `✓ Licence valid · ${lic.plan || ''}${lic.expires ? ` · until ${lic.expires}` : ''}` : `✗ ${lic.message || 'Licence not valid'}`}</div>}
+      <div className="row" style={{ gap: 8 }}><input data-testid="licence" placeholder="Licence key · NSQ1.… (demo: NSQ-XXXX-XXXX-XXXX)" value={acct.lic} onChange={e => { setAcct({ ...acct, lic: e.target.value.trim() }); setLic(null) }} style={{ flex: 1 }} /><button onClick={checkLic} disabled={!acct.lic.trim()}>Check</button></div>
+      {lic && <div className={`mono ${lic.valid ? 'g' : 'r'}`} style={{ fontSize: 11 }}>{lic.valid ? `✓ Licence valid · ${lic.plan || ''}${lic.expires ? ` · until ${lic.expires}` : ''}` : `✗ ${lic.status === 'expired' ? 'Expired: ' : ''}${lic.message || 'Licence not valid'}`}</div>}
       <div className="row" style={{ gap: 18 }}><label className="row" style={{ gap: 8 }}><input type="checkbox" checked={usePin} onChange={e => setUsePin(e.target.checked)} />Add a 6-digit PIN</label>{usePin && <input type="password" inputMode="numeric" maxLength={6} placeholder="PIN" value={acct.pin} onChange={e => setAcct({ ...acct, pin: e.target.value.replace(/\D/g, '') })} style={{ width: 110, letterSpacing: '.3em' }} />}
         <label className="row" style={{ gap: 8 }}><input type="checkbox" checked={use2fa} onChange={e => setUse2fa(e.target.checked)} />Authenticator app (2FA)</label></div>
       {err && <div className="r mono" style={{ fontSize: 11 }}>{err}</div>}
