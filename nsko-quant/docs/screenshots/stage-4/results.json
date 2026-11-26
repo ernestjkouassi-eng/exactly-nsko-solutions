@@ -1,6 +1,6 @@
 {
- "when": "2026-11-26T05:11:09.418Z",
- "data_dir": "/tmp/nsq-e2e-EGgozq",
+ "when": "2026-11-26T05:25:55.677Z",
+ "data_dir": "/tmp/nsq-e2e-5731Am",
  "results": [
   {
    "name": "engine starts and answers /health",
@@ -15,7 +15,7 @@
   {
    "name": "engine wrote the tray shared secret (owner-only file)",
    "ok": true,
-   "detail": "/tmp/nsq-e2e-EGgozq/shell.token"
+   "detail": "/tmp/nsq-e2e-5731Am/shell.token"
   },
   {
    "name": "first run on a new engine shows onboarding",
@@ -78,7 +78,27 @@
    "detail": "engine value 0.8"
   },
   {
+   "name": "ntfy topic saved to the engine",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Telegram bot token stored in the vault, never readable back",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Telegram pairing code shown",
+   "ok": true,
+   "detail": ""
+  },
+  {
    "name": "brokers list from the engine (paper connected, OANDA coming soon)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "demo Brokers matches the engine (Paper connected, Capital.com coming soon)",
    "ok": true,
    "detail": ""
   },

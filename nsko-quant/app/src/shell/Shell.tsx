@@ -80,7 +80,7 @@ export function TopBar({ openJarvis }: { openJarvis: () => void }) {
       <Wordmark size={14} />
       <span className="pill"><span className="dot pulse" /> JARVIS running</span>
       <span className="pill"><span className="dot pulse" /> SCOUT reading</span>
-      <span className="pill">THINK BUDGET £{budget.used.toFixed(0)} of £{budget.of} · {budget.days} days
+      <span className="pill">THINK BUDGET {useS.getState().source === 'engine' && !useS.getState().fallback ? `${budget.used.toFixed(1)} of ${budget.of} units today` : `£${budget.used.toFixed(0)} of £${budget.of} · ${budget.days} days`}
         <span className="bar" style={{ width: 60, display: 'inline-block' }}><i style={{ width: `${budget.used / budget.of * 100}%` }} /></span></span>
       <SourceChips />
       <div style={{ marginLeft: 'auto' }} className="row">

@@ -15,3 +15,34 @@ Package: `engine/nsq` (Python 3.11+). Run: `python -m nsq` → FastAPI on 127.0.
   Each dict is `{"time","side":"buy|sell","entry","stop","target","reason"}`. It uses **closed bars only**, so a signal at bar t uses data up to and including bar t, never t+1.
 - **Candles:** `nsq.data.candles.get(market, timeframe, start, end) -> DataFrame`. Sources are the connected broker, public exchange history or cached CSV. If nothing is available, it falls back to a seeded synthetic series that is clearly flagged `synthetic=True` in `df.attrs`.
 - **Settings:** `nsq.settings.get(key, default)` / `set(key, value)`, stored in the settings table.
+
+## HTTP contract with the desk (Stage 4 integration, 26 Nov 2026)
+
+The desk's `app/src/api.ts` maps every engine answer into its own shapes in one place. Security rules: localhost only;
+every POST carries `X-NSQ-Client`; sensitive calls carry `Authorization: Bearer <session token>`; `/ws?token=<session token>`.
+
+| Desk action | Engine endpoint | Auth |
+|---|---|---|
+| health, tray colour | `GET /health` → also `paused`, `killed`, `account_exists`, `trade_mode` | none |
+| create account | `POST /account/create {email, password, name, pin?, licence_key?}` (an invalid / expired licence is refused) | none |
+| login | `POST /account/login {email?, password, totp?}` (email optional: one account per desk) | none |
+| licence check | `GET /licence/check?key=` (checks, never saves) | none |
+| 2FA | `POST /account/totp/begin` → `{secret, otpauth_uri}`, `/account/totp/confirm {code}` | session |
+| kill switch | `POST /kill {reason, source}` | **none, always works** |
+| re-enable | `POST /trading/enable` | session |
+| pause / resume new trades | `POST /trading/pause {paused}` | session **or** tray secret `X-NSQ-Shell` |
+| quit engine (tray) | `POST /engine/shutdown` | session or tray secret |
+| approve / skip (Manual) | `POST /trade/approve {plan_id, decision}` | session |
+| settings | `GET /settings`; `POST /settings {key, value}` or `{values: {...}}` (all-or-nothing) | session |
+| desk backup | `POST /backup/export {passphrase, format: "json"}` → `{filename, data_b64}`; `/backup/restore` | session |
+| brokers | `GET /brokers`; `POST /brokers/{name}/connect {environment, keychain_service, keychain_account \| api_key, api_secret}` | session |
+| withdraw helper | `GET /withdraw/helper`; `POST /withdraw/helper {action: pause\|close_positions\|rescale\|resume}` | session |
+| paper & live | `GET /live/checklist` (+ `phrase`, `paper`); `POST /live/unlock {phrase}` | session |
+| strategy book | `GET /strategies?include=versions`; `POST /strategies/{id}/promote {to}`; `/rollback {version?}`; `POST /strategies/{id}/versions {rules, note}` | session |
+| alerts set-up | `POST /vault/telegram.bot_token {value}`; `POST /telegram/pair/begin` → code for `/pair <code>`; `POST /notify/test` | session |
+| JARVIS | `POST /jarvis/chat {message, history}` (Ollama if running, else an honest "not installed" + facts) | session |
+| Lab / research / data / God's Eye | the stage-3 routers: GET open on localhost, **every POST needs a session** | session for POST |
+| dev only (`NSQ_DEV=1`) | `POST /dev/run-demo-trade`, `GET /dev/demo-trade` | session |
+
+The tray's shared secret is `<data_dir>/shell.token`, written fresh at every engine start with owner-only permissions.
+Trade-flow skips now also send `ticker_log {verb: REJECT, plan_id, step, why}`; `decision_needed` for a trade carries `plan_id`.

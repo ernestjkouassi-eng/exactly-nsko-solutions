@@ -67,3 +67,25 @@ One line per decision: what, and why.
 - Stage 3 · MARKET IMPACT never trades. Risk actions are suggestions unless `godseye.risk_actions = "apply"`; applied ones are written to `godseye_risk_flags`, which can only reduce risk, for the risk gate to read. Synthetic layers never raise alerts.
 - Stage 3 · Crop Watch V1 uses cloud-adjusted Sentinel-2 `s2:vegetation_percentage` from Planetary Computer STAC as an NDVI stand-in. Pixel NDVI with rasterio is left for later. Car Counts is a locked premium placeholder.
 - Stage 3 · The Knowledge Base, with its detectors and 6-step lifecycle, lives in `nsq/lab` next to the code that uses it. Research's TERM-CHECKER feeds it at step "found".
+
+## Stage 4 · integration of the engine and the desk (26 Nov 2026)
+
+- One place maps engine shapes to desk shapes: `app/src/api.ts`. The engine keeps its own clean shapes; where the desk's assumption was cleaner or a real need (batch settings, JSON backup, withdraw steps, pause, rollback to a chosen version), the engine grew the endpoint. Full table in `engine/CONTRACT.md`.
+- Re-enabling after the kill switch is `POST /trading/enable` (needs the login), not `/kill {action:"release"}`: stopping must be easy, starting again must be deliberate.
+- The tray authenticates with a local shared secret (`<data_dir>/shell.token`, random per engine start, owner-only), not with "anything from localhost": any local web page can reach localhost, but cannot read that file. The kill switch needs no secret and no login.
+- New "pause new trades" (`trading.paused`): a softer stop than the kill switch. Open trades keep their broker-side stops and are still managed. Used by the tray, Settings and the withdraw helper.
+- The WebSocket needs the session token (`/ws?token=`): it carries account and trade data.
+- Every state-changing POST of the data / research / Lab / God's Eye routers needs a signed-in session; reading stays open on localhost.
+- The engine refuses to listen on a non-local address unless `NSQ_ALLOW_NON_LOCAL=1` (set only inside the Docker image, which publishes on the host's 127.0.0.1).
+- CI and the Tauri sidecar use a ONE-FILE PyInstaller build (`engine/nsko-quant-engine.spec`), because Tauri's `externalBin` needs a single executable; the one-folder spec in `deploy/pyinstaller/` stays for the OS services.
+- The CI workflow runs from the repo root (`/.github/workflows/nsko-quant-build.yml`); the copy in `nsko-quant/.github/` is a reference kept identical. Engine tests now run before the build; `--version` is a hard smoke test.
+- In engine mode the engine's scripted demo source runs only when no data feeds are configured. With feeds on (the default: XAU/USD and BTC/USD 1-minute candles, Kraken trade stream), the desk shows real or clearly synthetic-flagged data, never a scripted cycle under the ENGINE chip. If the engine does send demo-flagged events, the desk shows "ENGINE DEMO FEED".
+- Engine-mode pages draw only what the engine sends; when there is nothing yet they say so ("Waiting for the scanner", "No Lab results yet") instead of drawing demo lines. Demo mode is unchanged.
+- The Lab fan in engine mode shows each variant's stored equity curve as % return over the whole test window (the real split date varies per run, so the demo's fixed IS/OOS halves are not drawn).
+- JARVIS chat goes through the engine (`POST /jarvis/chat`): the local model through Ollama when it runs; otherwise a plain "the local model is not installed" with install steps and only facts the engine knows. It never invents an answer and cannot place trades.
+- A development-only trade trigger (`POST /dev/run-demo-trade`) exists only when the engine starts with `NSQ_DEV=1`, still needs a login, and runs the real flow on seeded synthetic candles with a test signal, flagged synthetic everywhere. It must never be set in a shipped build.
+- Telegram pairing is a one-time 6-digit code the user sends to their own bot as `/pair 123456` (10 minutes, 5 tries, only a hash is stored); the bot token goes into the vault / OS keychain and can never be read back through the API.
+- God's Eye risk flags reach the risk gate only when the user chose "Apply": `pause_new` blocks a new entry on that market, `cut_size` multiplies the size by `godseye.cut_size_factor` (default 0.5). They can only reduce risk, and God's Eye still never opens a trade.
+- The demo broker list matches the engine's catalogue (Paper connected; Capital.com, IG, OANDA and MT5 "coming soon" with the reason), so a sales demo never promises a broker the engine cannot use.
+- Live start size is a setting (`live.start_size_pct`, default 50 %, clamped 10–100 %) instead of a fixed 50 %.
+- Strategy updates mode is a setting (`updates.mode`: manual / auto_paper (default) / ask), matching the desk's three choices.

@@ -1,0 +1,165 @@
+# NSKO QUANT desktop builds: Windows (.msi + .exe), macOS (universal .dmg: Apple Silicon + Intel), Linux (.AppImage + .deb).
+# Free GitHub-hosted runners only. Builds are UNSIGNED for now (see docs/DECISIONS.md for the signing steps).
+#
+# This is the copy GitHub runs: /.github/workflows/nsko-quant-build.yml at the nsko-solutions repo root (GitHub only runs
+# root workflows). The original stays at nsko-quant/.github/workflows/build.yml; keep the two in step.
+# All paths below are relative to the repo root (nsko-quant/...). Not run yet.
+name: NSKO QUANT · desktop build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [nsko-quant]
+    tags: ['quant-v*']
+    paths: ['nsko-quant/**', '.github/workflows/nsko-quant-build.yml']
+  pull_request:
+    paths: ['nsko-quant/**', '.github/workflows/nsko-quant-build.yml']
+
+concurrency:
+  group: nsko-quant-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_DIR: nsko-quant/app
+  ENGINE_DIR: nsko-quant/engine
+
+jobs:
+  # 1 · The engine sidecar: PyInstaller on each OS from nsko-quant/engine (spec: engine/nsko-quant-engine.spec, onefile).
+  engine:
+    name: engine · ${{ matrix.triple }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04,   triple: x86_64-unknown-linux-gnu, ext: '' }
+          - { os: windows-latest, triple: x86_64-pc-windows-msvc,   ext: '.exe' }
+          - { os: macos-15,       triple: aarch64-apple-darwin,     ext: '' }
+          - { os: macos-15-intel, triple: x86_64-apple-darwin,      ext: '' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11', cache: pip }
+      - name: Install engine dependencies + PyInstaller
+        shell: bash
+        working-directory: ${{ env.ENGINE_DIR }}
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; elif [ -f pyproject.toml ]; then pip install .; fi
+          pip install pyinstaller==6.11.1
+      - name: Engine tests
+        shell: bash
+        working-directory: ${{ env.ENGINE_DIR }}
+        run: python -m pytest -q
+
+      - name: Build the engine with PyInstaller (one-file spec in nsko-quant/engine)
+        shell: bash
+        working-directory: ${{ env.ENGINE_DIR }}
+        run: |
+          pyinstaller --noconfirm --clean --distpath dist nsko-quant-engine.spec
+          ls -la dist
+          test -f "dist/nsko-quant-engine${{ matrix.ext }}"
+      - name: Smoke test (the binary starts and prints its version)
+        shell: bash
+        working-directory: ${{ env.ENGINE_DIR }}
+        run: ./dist/nsko-quant-engine${{ matrix.ext }} --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: engine-${{ matrix.triple }}
+          path: ${{ env.ENGINE_DIR }}/dist/nsko-quant-engine${{ matrix.ext }}
+          if-no-files-found: error
+
+  # 2 · The Tauri desktop app, with the engine placed as app/src-tauri/binaries/nsko-quant-engine-<target-triple>.
+  desktop:
+    name: desktop · ${{ matrix.name }}
+    needs: engine
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux,   os: ubuntu-22.04,   triple: x86_64-unknown-linux-gnu, args: '--bundles appimage,deb' }
+          - { name: windows, os: windows-latest, triple: x86_64-pc-windows-msvc,   args: '--bundles msi,nsis' }
+          - { name: macos,   os: macos-15,       triple: universal-apple-darwin,   args: '--target universal-apple-darwin --bundles dmg,app' }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux build dependencies
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential libssl-dev libdbus-1-dev libxdo-dev file
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: swatinem/rust-cache@v2
+        with: { workspaces: 'nsko-quant/app/src-tauri -> target' }
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: nsko-quant/app/package-lock.json }
+      - name: Install front-end dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: npm ci
+
+      - name: Fetch engine sidecars
+        uses: actions/download-artifact@v4
+        with: { pattern: engine-*, path: engine-bin }
+
+      - name: Place the sidecar (Linux / Windows)
+        if: matrix.name != 'macos'
+        shell: bash
+        run: |
+          ext=""; [ "${{ matrix.name }}" = windows ] && ext=".exe"
+          mkdir -p $APP_DIR/src-tauri/binaries
+          cp "engine-bin/engine-${{ matrix.triple }}/nsko-quant-engine$ext" "$APP_DIR/src-tauri/binaries/nsko-quant-engine-${{ matrix.triple }}$ext"
+          chmod +x $APP_DIR/src-tauri/binaries/* || true
+          ls -la $APP_DIR/src-tauri/binaries
+
+      # PyInstaller cannot make one universal2 binary with numpy/pandas wheels, so the universal .app ships both
+      # engines as resources and a tiny launcher picks the right one for this Mac's CPU.
+      - name: Place the sidecar (macOS universal)
+        if: matrix.name == 'macos'
+        shell: bash
+        run: |
+          B=$APP_DIR/src-tauri; mkdir -p $B/binaries $B/engine-mac/arm64 $B/engine-mac/x86_64
+          cp engine-bin/engine-aarch64-apple-darwin/nsko-quant-engine $B/engine-mac/arm64/
+          cp engine-bin/engine-x86_64-apple-darwin/nsko-quant-engine  $B/engine-mac/x86_64/
+          chmod +x $B/engine-mac/*/nsko-quant-engine
+          cat > $B/binaries/nsko-quant-engine-universal-apple-darwin <<'SH'
+          #!/bin/sh
+          # NSKO QUANT engine launcher (universal .app): runs the engine built for this Mac's CPU.
+          DIR="$(cd "$(dirname "$0")" && pwd)"
+          ARCH="$(uname -m)"; [ "$ARCH" = "arm64" ] || ARCH="x86_64"
+          exec "$DIR/../Resources/engine/$ARCH/nsko-quant-engine" "$@"
+          SH
+          chmod +x $B/binaries/nsko-quant-engine-universal-apple-darwin
+          # Tauri merges tauri.macos.conf.json automatically on macOS: ship both engines as resources.
+          echo '{ "bundle": { "resources": { "engine-mac/": "engine/" } } }' > $B/tauri.macos.conf.json
+
+      - name: Build the desktop app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signing (later): APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID,
+          # TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD. Unset = unsigned build.
+        with:
+          projectPath: ${{ env.APP_DIR }}
+          tauriScript: npx tauri
+          args: ${{ matrix.args }}
+          # Draft a GitHub release only for version tags (quant-v0.2.0); branch pushes just upload artifacts.
+          tagName: ${{ startsWith(github.ref, 'refs/tags/quant-v') && github.ref_name || '' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/quant-v') && 'NSKO QUANT __VERSION__' || '' }}
+          releaseDraft: true
+          prerelease: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nsko-quant-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            ${{ env.APP_DIR }}/src-tauri/target/**/release/bundle/appimage/*.AppImage
+            ${{ env.APP_DIR }}/src-tauri/target/**/release/bundle/deb/*.deb
+            ${{ env.APP_DIR }}/src-tauri/target/**/release/bundle/msi/*.msi
+            ${{ env.APP_DIR }}/src-tauri/target/**/release/bundle/nsis/*.exe
+            ${{ env.APP_DIR }}/src-tauri/target/**/release/bundle/dmg/*.dmg

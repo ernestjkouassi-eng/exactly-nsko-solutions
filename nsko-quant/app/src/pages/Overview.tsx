@@ -15,7 +15,10 @@ function Kpi({ l, v, cap, dashed, children, dot }: any) {
 
 // BRAIN CORE: a 3,000-point sphere on a lat/long wireframe, sources flowing in on the left, output flowing out on the right.
 // Each tested variant sprays a particle burst from the sphere along the line into "Variants tested".
+const useEngine = () => { const source = useS(s => s.source), fallback = useS(s => s.fallback); return source === 'engine' && !fallback }
 function BrainCore() {
+  const engine = useEngine(), sources = useS(s => s.sources), clear = useS(s => s.clear), labRunning = useS(s => s.labRunning), reading = useS(s => s.reading)
+  const byKind = (k: string) => sources.filter(x => String(x.kind).toLowerCase() === k.toLowerCase()).length
   const tested = useS(s => s.tested); const last = useRef(tested); const bursts = useRef<{ t0: number }[]>([])
   if (tested !== last.current) { last.current = tested; bursts.current.push({ t0: performance.now() / 1000 }) }
   const pts = useMemo(() => Array.from({ length: 3000 }, (_, i) => { const y = 1 - (i / 2999) * 2, r = Math.sqrt(1 - y * y), th = i * 2.39996; return [Math.cos(th) * r, y, Math.sin(th) * r] }), [])
@@ -49,31 +52,33 @@ function BrainCore() {
     <div style={{ position: 'absolute', inset: '40px 0 0 0' }}>
       <Corners />
       <Canvas draw={draw} />
-      <div className="mono" style={{ position: 'absolute', top: 10, left: 0, right: 0, textAlign: 'center', fontSize: 11 }}><span className="lo">NOW</span> the lab is testing <span className="o">Range-XAU 16 · 4h</span></div>
+      <div className="mono" style={{ position: 'absolute', top: 10, left: 0, right: 0, textAlign: 'center', fontSize: 11 }}><span className="lo">NOW</span> {engine ? (labRunning ? <>the lab is testing <span className="o">{labRunning}</span></> : 'the lab is idle') : <>the lab is testing <span className="o">Range-XAU 16 · 4h</span></>}</div>
       <div style={{ position: 'absolute', left: 14, top: 26, width: 180 }}>
-        <div className="lbl" style={{ marginBottom: 6 }}>SOURCES IN TODAY ↓100</div>
-        {[['YOUTUBE', 45, 1], ['GITHUB', 23, 2], ['ARXIV', 12, 3], ['WEB', 20, 4]].map(([k, v, s]) =>
+        <div className="lbl" style={{ marginBottom: 6 }}>{engine ? `SOURCES THIS SESSION ↓${sources.length}` : 'SOURCES IN TODAY ↓100'}</div>
+        {(engine ? [['YOUTUBE', byKind('YouTube'), 1], ['GITHUB', byKind('GitHub'), 2], ['ARXIV', byKind('arXiv'), 3], ['WEB', sources.length - byKind('YouTube') - byKind('GitHub') - byKind('arXiv'), 4]] : [['YOUTUBE', 45, 1], ['GITHUB', 23, 2], ['ARXIV', 12, 3], ['WEB', 20, 4]]).map(([k, v, s]) =>
           <div key={k as string} className="panel" style={{ padding: '7px 10px', marginBottom: 22, borderLeft: '2px solid var(--cyan)' }}>
             <div className="row" style={{ justifyContent: 'space-between' }}><span className="lbl">{k}</span><span className="num">{v}</span></div><Spark data={walk(s as number, 30)} color="#20E0F0" w={155} h={16} /></div>)}
       </div>
       <div style={{ position: 'absolute', right: 14, top: 40, width: 180 }}>
         <div className="lbl" style={{ marginBottom: 6 }}>OUTPUT TODAY</div>
-        {[['THOUGHT UP', 103], ['VARIANTS TESTED', useS.getState().demo ? 532 + (tested - 1251) : tested], ['APPROVED', 2]].map(([k, v], i) =>
+        {(engine ? [['SOURCES READ', sources.length], ['VARIANTS TESTED', tested], ['CLEAR THE BAR', clear]] : [['THOUGHT UP', 103], ['VARIANTS TESTED', useS.getState().demo ? 532 + (tested - 1251) : tested], ['APPROVED', 2]]).map(([k, v], i) =>
           <div key={k as string} className="panel" style={{ padding: '9px 10px', marginBottom: 52, borderLeft: `2px solid ${i === 2 ? 'var(--green)' : 'var(--hi)'}`, ...(i === 1 ? { animation: 'none' } : {}) }}>
             <div className="lbl">{k}</div><div key={i === 1 ? String(v) : k as string} className="big" style={{ fontSize: 20, ...(i === 1 ? { animation: 'flash .6s var(--ease)' } : {}) }}>{fmt(v as number)}</div></div>)}
       </div>
-      <div className="mono" style={{ position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', fontSize: 11 }}><span className="lo">READING</span> Time-series momentum on index futures · <span className="lo">min 21 of 39</span></div>
+      <div className="mono" style={{ position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', fontSize: 11 }}>{engine ? <><span className="lo">LAST READ</span> {reading?.title || 'nothing yet'}</> : <><span className="lo">READING</span> Time-series momentum on index futures · <span className="lo">min 21 of 39</span></>}</div>
       <style>{`@keyframes flash{0%{color:#fff;text-shadow:0 0 12px #fff}100%{text-shadow:none}}`}</style>
     </div>
   </div>
 }
 
 function Pipeline() {
-  const tested = useS(s => s.tested), sieve = useS(s => s.sieve), clear = useS(s => s.clear), log = useS(s => s.log)
-  const nodes = [['READ', 407], ['SUMMARISED', 401], ['THOUGHT UP', 1308], ['TESTED', tested], ['THROUGH THE SIEVE', sieve], ['APPROVED', clear], ['ON PAPER', 3], ['LIVE', 0]]
+  const tested = useS(s => s.tested), sieve = useS(s => s.sieve), clear = useS(s => s.clear), log = useS(s => s.log), engine = useEngine(), sources = useS(s => s.sources)
+  const nodes = engine ? [['READ', sources.length], ['SUMMARISED', sources.length], ['THOUGHT UP', 0], ['TESTED', tested], ['THROUGH THE SIEVE', sieve], ['APPROVED', clear], ['ON PAPER', 0], ['LIVE', 0]]
+    : [['READ', 407], ['SUMMARISED', 401], ['THOUGHT UP', 1308], ['TESTED', tested], ['THROUGH THE SIEVE', sieve], ['APPROVED', clear], ['ON PAPER', 3], ['LIVE', 0]]
   const draw = (c: CanvasRenderingContext2D, w: number, h: number, t: number) => {
     c.clearRect(0, 0, w, h); const x0 = 110, step = (w - x0 - 40) / (nodes.length - 1), y = 60
-    const srcs = [['YouTube', 185], ['GitHub', 90], ['arXiv', 55], ['Web', 77]]
+    const k = (n: string) => sources.filter(x => String(x.kind).toLowerCase() === n.toLowerCase()).length
+    const srcs = engine ? [['YouTube', k('YouTube')], ['GitHub', k('GitHub')], ['arXiv', k('arXiv')], ['Web', sources.length - k('YouTube') - k('GitHub') - k('arXiv')]] : [['YouTube', 185], ['GitHub', 90], ['arXiv', 55], ['Web', 77]]
     c.font = '10px JetBrains Mono'; c.strokeStyle = '#2A2D3A'
     srcs.forEach(([n, v], i) => { const sy = 18 + i * 28; c.beginPath(); c.moveTo(30, sy); c.bezierCurveTo(70, sy, 70, y, x0, y); c.stroke(); c.beginPath(); c.arc(24, sy, 4, 0, 7); c.stroke(); c.fillStyle = '#5A5F6E'; c.fillText(`${n} ${v}`, 0, sy + 16 > h ? sy : sy - 8) })
     c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + step * (nodes.length - 1), y); c.stroke()
@@ -82,7 +87,7 @@ function Pipeline() {
       if (i === 3) { c.fillStyle = 'rgba(232,232,236,.12)'; c.beginPath(); c.arc(x, y, 14, 0, 7); c.fill() }
       c.strokeStyle = col; c.fillStyle = '#0C0D14'; c.beginPath(); c.arc(x, y, 6, 0, 7); c.fill(); c.stroke()
       c.fillStyle = '#5A5F6E'; c.textAlign = 'center'; c.fillText(n as string, x, y + 24); c.fillStyle = col; c.font = '12px JetBrains Mono'; c.fillText(fmt(v as number), x, y + 40); c.font = '10px JetBrains Mono'
-      if (i >= 2 && i <= 4) { c.strokeStyle = '#2A2D3A'; c.beginPath(); c.moveTo(x, y + 46); c.lineTo(x + step / 2, y + 70); c.stroke(); c.fillStyle = '#E04858'; c.fillText(['REJECTED 287', 'FAILED 908', 'FAILED 299'][i - 2], x + step / 2, y + 84) }
+      if (i >= 2 && i <= 4) { c.strokeStyle = '#2A2D3A'; c.beginPath(); c.moveTo(x, y + 46); c.lineTo(x + step / 2, y + 70); c.stroke(); c.fillStyle = '#E04858'; c.fillText(engine ? ['', `FAILED ${tested - sieve}`, `SIEVE ${sieve - clear}`][i - 2] : ['REJECTED 287', 'FAILED 908', 'FAILED 299'][i - 2], x + step / 2, y + 84) }
       c.textAlign = 'left'
     })
     // comet pulse
@@ -115,17 +120,18 @@ export function DecisionCards() {
 }
 
 export default function Overview() {
+  const engine = useEngine(), sources = useS(s => s.sources)
   const tested = useS(s => s.tested), sieve = useS(s => s.sieve), clear = useS(s => s.clear), budget = useS(s => s.budget), variants = useS(s => s.variants)
   return <div className="page">
     <div className="panel" style={{ display: 'flex', marginBottom: 12 }}>
-      <Kpi l="THOUGHT UP" v="1,308" cap="ideas from sources" />
-      <Kpi l="TESTED" v={fmt(tested)} cap={`${Math.round(tested / 1308 * 100)}% of thought up`} />
+      {engine ? <Kpi l="SOURCES READ" v={fmt(sources.length)} cap="since this window connected" /> : <Kpi l="THOUGHT UP" v="1,308" cap="ideas from sources" />}
+      <Kpi l="TESTED" v={fmt(tested)} cap={engine ? 'variants in the Lab' : `${Math.round(tested / 1308 * 100)}% of thought up`} />
       <Kpi l="THROUGH THE SIEVE" v={fmt(sieve)} cap={`${tested ? Math.round(sieve / tested * 100) : 0}%`} dot="var(--amber)" />
       <Kpi l="APPROVED" v={fmt(clear)} cap={`${tested ? (clear / tested * 100).toFixed(1) : '0.0'}%`} dot="var(--green)" />
-      <Kpi l="ON PAPER" v="3" cap="day 9 of 21"><div className="bar" style={{ marginTop: 6 }}><i style={{ width: '43%' }} /></div></Kpi>
+      {engine ? <Kpi l="ON PAPER" dashed cap="see Strategies" /> : <Kpi l="ON PAPER" v="3" cap="day 9 of 21"><div className="bar" style={{ marginTop: 6 }}><i style={{ width: '43%' }} /></div></Kpi>}
       <Kpi l="LIVE" dashed cap="waiting for you" />
       <Kpi l="PROFIT LIVE" dashed cap="not started" />
-      <Kpi l="THINK BUDGET" v={`£${budget.used.toFixed(0)}/£${budget.of}`} cap={`${budget.days} days left`}><div className="bar" style={{ marginTop: 6 }}><i style={{ width: `${budget.used / budget.of * 100}%` }} /></div></Kpi>
+      <Kpi l="THINK BUDGET" v={engine ? `${budget.used.toFixed(1)}/${budget.of}` : `£${budget.used.toFixed(0)}/£${budget.of}`} cap={`${budget.days} days left`}><div className="bar" style={{ marginTop: 6 }}><i style={{ width: `${budget.used / budget.of * 100}%` }} /></div></Kpi>
     </div>
     <BrainCore />
     <div className="panel" style={{ margin: '12px 0' }}><Head t="DAILY BRIEFING" s="SCOUT's read of the night"><span className="chip lo" style={{ borderColor: 'var(--line)' }}>not measured yet</span></Head>

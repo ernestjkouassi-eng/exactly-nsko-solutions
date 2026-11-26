@@ -5,7 +5,7 @@ const { chromium } = require('playwright'); const fs = require('fs'), path = req
   const [mode, card, w, h, a5, a6] = process.argv.slice(2);
   const b = await chromium.launch({ args: ['--disable-gpu'] });
   const pg = await (await b.newContext({ viewport: { width: +w, height: +h } })).newPage();
-  const url = 'file://' + path.resolve(__dirname, 'cards.html') + `?card=${card}` + (mode === 'png' && a6 ? '&' + a6 : '');
+  const url = 'file://' + path.resolve(__dirname, 'cards.html') + `?card=${card}` + (mode === 'png' && a6 ? '&' + a6 : '') + (process.env.Q ? '&' + process.env.Q : '');
   await pg.goto(url); await pg.evaluate(() => document.fonts.ready); await pg.waitForTimeout(300);
   if (mode === 'png') { await pg.evaluate(() => window.render(0)); await pg.screenshot({ path: a5, omitBackground: true }); await b.close(); return }
   const N = Math.round(+a5 * 30), dir = `/tmp/claude-0/-home-user/d33af76a-f98e-5d59-8081-b5bd0277881c/scratchpad/fr_${card}_${w}x${h}`;

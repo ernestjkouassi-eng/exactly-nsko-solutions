@@ -1,8 +1,9 @@
 # NSKO QUANT desktop builds: Windows (.msi + .exe), macOS (universal .dmg: Apple Silicon + Intel), Linux (.AppImage + .deb).
 # Free GitHub-hosted runners only. Builds are UNSIGNED for now (see docs/DECISIONS.md for the signing steps).
 #
-# NOTE: GitHub only runs workflows from the repository root. While NSKO QUANT lives inside the nsko-solutions repo,
-# copy this file to /.github/workflows/nsko-quant-build.yml at the repo root (paths below already assume the repo root).
+# Reference copy. GitHub runs /.github/workflows/nsko-quant-build.yml at the nsko-solutions repo root (GitHub only runs
+# root workflows). Keep this file and that one identical apart from this header.
+# All paths below are relative to the repo root (nsko-quant/...). Not run yet.
 name: NSKO QUANT · desktop build
 
 on:
@@ -10,6 +11,8 @@ on:
   push:
     branches: [nsko-quant]
     tags: ['quant-v*']
+    paths: ['nsko-quant/**', '.github/workflows/nsko-quant-build.yml']
+  pull_request:
     paths: ['nsko-quant/**', '.github/workflows/nsko-quant-build.yml']
 
 concurrency:
@@ -43,8 +46,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; elif [ -f pyproject.toml ]; then pip install .; fi
-          pip install pyinstaller
-      - name: Build the engine with PyInstaller
+          pip install pyinstaller==6.11.1
+      - name: Engine tests
+        shell: bash
+        working-directory: ${{ env.ENGINE_DIR }}
+        run: python -m pytest -q
+
+      - name: Build the engine with PyInstaller (one-file spec in nsko-quant/engine)
         shell: bash
         working-directory: ${{ env.ENGINE_DIR }}
         run: |
@@ -54,7 +62,7 @@ jobs:
       - name: Smoke test (the binary starts and prints its version)
         shell: bash
         working-directory: ${{ env.ENGINE_DIR }}
-        run: ./dist/nsko-quant-engine${{ matrix.ext }} --version || echo "::warning::engine --version not supported yet"
+        run: ./dist/nsko-quant-engine${{ matrix.ext }} --version
       - uses: actions/upload-artifact@v4
         with:
           name: engine-${{ matrix.triple }}

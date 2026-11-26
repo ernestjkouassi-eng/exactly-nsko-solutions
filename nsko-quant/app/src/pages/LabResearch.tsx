@@ -15,7 +15,7 @@ const useEngine = () => { const source = useS(s => s.source), fallback = useS(s 
 const fanLoaded = new Set<string>()
 async function loadFan(recipe: string) {
   const r = await labFan(recipe); if (!r.ok || r.demo) return
-  const lines = { ...useS.getState().labLines }; for (const l of r.data.lines) if (l.equity?.length) lines[l.id] = { id: l.id, label: l.label, outcome: l.outcome, equity: l.equity }
+  const lines = { ...useS.getState().labLines }; for (const l of r.data.lines) if (l.equity?.length) lines[l.id] = { id: l.id, label: l.label, outcome: l.outcome, equity: (l.equity as any[]).map(x => Array.isArray(x) ? +x[1] : +x) }   // engine: [[ts_ms, equity], ...]
   useS.setState({ labLines: lines })
 }
 // Engine mode: the variants and their real equity curves come from the Lab (/lab/variants + /lab/fan), then live from
@@ -26,10 +26,10 @@ export function useLabFromEngine() {
     labVariants(300).then(r => { if (!r.ok || r.demo) return
       const rows: Variant[] = r.data.variants.map((v: any) => ({ id: v.id, recipe: v.label || v.recipe_id, market: String(v.market || '').split('/')[0], tf: v.tf, sharpeIS: +(+v.sharpe_is).toFixed(2), sharpeOOS: +(+v.sharpe_oos).toFixed(2),
         trades: v.trades, win: +(+v.win).toFixed(1), rr: +(+v.rr).toFixed(2), dd: +(+v.dd).toFixed(1), outcome: v.outcome, why: v.why, seed: v.seed ?? v.id, recipe_id: v.recipe_id, synthetic: !!v.synthetic } as any)).reverse()
+      for (const id of new Set(rows.map((v: any) => v.recipe_id))) if (id && !fanLoaded.has(id)) { fanLoaded.add(id); loadFan(id) }
       const st = useS.getState(); if (st.variants.length >= rows.length) return
       const fails: Record<string, number> = Object.fromEntries(Object.keys(st.fails).map(k => [k, 0])); rows.forEach(v => { if (v.why) fails[v.why] = (fails[v.why] || 0) + 1 })
       useS.setState({ variants: rows, tested: rows.length, sieve: rows.filter(v => v.outcome !== 'failed').length, clear: rows.filter(v => v.outcome === 'clear').length, fails })
-      for (const id of new Set(rows.map((v: any) => v.recipe_id))) if (id && !fanLoaded.has(id)) { fanLoaded.add(id); loadFan(id) }
     }) }, [engine])
   useEffect(() => { if (engine && last?.recipe) loadFan(last.recipe) }, [engine, last])
 }

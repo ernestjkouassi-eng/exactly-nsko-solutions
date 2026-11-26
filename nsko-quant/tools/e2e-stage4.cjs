@@ -88,11 +88,24 @@ async function waitFor(fn, ms = 20000, every = 250) { const t0 = Date.now(); whi
     check('settings saved to the engine (risk.per_trade_pct = 0.8)', st['risk.per_trade_pct'] === 0.8, `engine value ${st['risk.per_trade_pct']}`)
     await shot('06-settings-saved')
     await perTrade.fill('1'); await p.getByRole('button', { name: 'Save settings' }).click(); await p.waitForTimeout(800)
+    // alerts: ntfy topic saved with the settings; Telegram bot token into the vault; pairing code
+    await p.getByTestId('ntfy-topic').fill('nsko-e2e-topic-7f3k9q'); await p.getByRole('button', { name: 'Save settings' }).click(); await p.waitForTimeout(1000)
+    check('ntfy topic saved to the engine', (await api('GET', '/settings')).json['notify.ntfy_topic'] === 'nsko-e2e-topic-7f3k9q')
+    await p.getByPlaceholder(/Bot token from @BotFather/).fill('123456:TEST-TOKEN-NOT-REAL'); await p.getByRole('button', { name: 'Save token' }).click(); await p.waitForTimeout(1200)
+    const vn = (await api('GET', '/vault')).json
+    check('Telegram bot token stored in the vault, never readable back', vn.names.includes('telegram.bot_token') && !JSON.stringify(vn).includes('TEST-TOKEN') && !JSON.stringify((await api('GET', '/settings')).json).includes('TEST-TOKEN'))
+    await p.getByRole('button', { name: 'Pair my chat' }).click(); await p.waitForTimeout(1000)
+    check('Telegram pairing code shown', /Send \/pair \d{6} to your bot/.test(await p.getByTestId('pair-code').innerText()))
+    await p.getByTestId('alerts-panel').scrollIntoViewIfNeeded(); await shot('06b-settings-alerts')
 
     // ---------------------------------------------------------------- 4 · brokers
     await nav('brokers', 2000)
     check('brokers list from the engine (paper connected, OANDA coming soon)', (await p.getByTestId('brokers').getByText('CONNECTED').count()) >= 1 && await p.getByText('COMING SOON').first().isVisible())
     await shot('07-brokers')
+    const p2 = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+    await p2.goto(`${UI}/?page=brokers&source=demo`); await p2.waitForTimeout(1500)
+    check('demo Brokers matches the engine (Paper connected, Capital.com coming soon)', await p2.getByTestId('brokers').getByText('Paper').first().isVisible() && (await p2.getByText('COMING SOON').count()) === 4)
+    await p2.screenshot({ path: `${OUT}/07b-brokers-demo.png` }); console.log('  shot 07b-brokers-demo'); await p2.close()
 
     // ---------------------------------------------------------------- 5 · a full paper trade (Auto) through the trade flow
     await nav('tradecard', 1200)

@@ -88,6 +88,7 @@ export const DEMO_SETTINGS: Settings = {
   risk_per_trade_pct: 1, daily_loss_limit_pct: 3, weekly_loss_limit_pct: 6, max_trades_per_day: 5, max_open_positions: 2,
   news_blackout_min: 15, paper_days: 21, paper_trades: 30, live_start_size_pct: 50, bar_sharpe_oos: 1.4,
   trading_mode: 'auto', strategy_updates: 'ask', alerts_ntfy: true, alerts_telegram: true, alerts_desktop: true, trading_paused: false,
+  ntfy_url: 'https://ntfy.sh', ntfy_topic: '', telegram_chat_id: '', godseye_risk_actions: 'suggest',
 }
 // desk key -> engine setting key (engine/nsq/settings.py DEFAULTS; the bar lives in the Lab's lab.bar.* settings)
 export const SETTING_KEYS: Record<string, string> = {
@@ -96,11 +97,12 @@ export const SETTING_KEYS: Record<string, string> = {
   paper_days: 'live.paper_days_required', paper_trades: 'live.paper_trades_required', live_start_size_pct: 'live.start_size_pct',
   bar_sharpe_oos: 'lab.bar.oos_sharpe', trading_mode: 'trade_mode', strategy_updates: 'updates.mode',
   alerts_ntfy: 'notify.ntfy_enabled', alerts_telegram: 'notify.telegram_enabled', alerts_desktop: 'ui.alerts_desktop', trading_paused: 'trading.paused',
+  ntfy_url: 'notify.ntfy_url', ntfy_topic: 'notify.ntfy_topic', telegram_chat_id: 'notify.telegram_chat_id', godseye_risk_actions: 'godseye.risk_actions',
 }
 const fromEngineSettings = (j: Record<string, any>): Settings => Object.fromEntries(Object.entries(SETTING_KEYS).map(([k, e]) => [k, j[e] ?? DEMO_SETTINGS[k]]))
 export const getSettings = () => mapped<Settings>('GET', '/settings', undefined, () => ({ ...DEMO_SETTINGS }), fromEngineSettings, { what: 'settings', quiet: true })
 export const saveSettings = (s: Settings) => {
-  const values = Object.fromEntries(Object.entries(s).filter(([k, v]) => SETTING_KEYS[k] && k !== 'trading_paused' && v !== '' && v !== undefined).map(([k, v]) => [SETTING_KEYS[k], v]))
+  const values = Object.fromEntries(Object.entries(s).filter(([k, v]) => SETTING_KEYS[k] && k !== 'trading_paused' && k !== 'telegram_chat_id' && v !== undefined && (v !== '' || k === 'ntfy_topic')).map(([k, v]) => [SETTING_KEYS[k], v]))
   return mapped<Settings>('POST', '/settings', { values }, () => s, () => s, { what: 'saving settings' })
 }
 export const exportDesk = (passphrase: string) => call<{ filename: string; data_b64: string }>('POST', '/backup/export', { passphrase, format: 'json' },
@@ -110,15 +112,18 @@ export const restoreDesk = (data_b64: string, passphrase: string) => mapped<{ ok
 
 // ---------------- brokers
 export type Broker = { id: string; name: string; markets: string; status: 'connected' | 'demo' | 'not_connected' | 'error' | 'coming_soon' | 'unsupported'; latency_ms?: number; withdrawals_off?: boolean; key_stored?: boolean; withdraw_url?: string; reason?: string }
+const SOON = "its official API docs could not be checked from the build machine, so it is not shipped until the endpoints are verified."
+// Same list and statuses as the engine's catalogue (engine/nsq/brokers/__init__.py): paper is the connected default.
 export const DEMO_BROKERS: Broker[] = [
-  { id: 'capital', name: 'Capital.com', markets: 'Gold, indices, FX, crypto CFDs · UK spread betting', status: 'demo', latency_ms: 84, withdrawals_off: true },
-  { id: 'ig', name: 'IG', markets: 'Gold, indices, FX · UK spread betting', status: 'not_connected' },
-  { id: 'oanda', name: 'OANDA', markets: 'FX, gold, indices', status: 'not_connected' },
-  { id: 'ibkr', name: 'Interactive Brokers', markets: 'Stocks, futures (COMEX gold), FX', status: 'not_connected' },
-  { id: 'kraken', name: 'Kraken', markets: 'Crypto · real trade volume', status: 'not_connected' },
-  { id: 'coinbase', name: 'Coinbase Advanced', markets: 'Crypto', status: 'not_connected' },
+  { id: 'paper', name: 'Paper', markets: 'Simulator · every market · GBP account', status: 'connected', withdrawals_off: true, latency_ms: 1 },
   { id: 'alpaca', name: 'Alpaca', markets: 'US stocks, crypto · free paper account', status: 'not_connected' },
-  { id: 'mt5', name: 'MetaTrader 5 bridge', markets: 'Many FX/gold brokers · Windows engine only', status: 'not_connected' },
+  { id: 'kraken', name: 'Kraken', markets: 'Crypto · real trade volume · gold as PAXG', status: 'not_connected' },
+  { id: 'coinbase', name: 'Coinbase Advanced', markets: 'Crypto', status: 'not_connected' },
+  { id: 'ibkr', name: 'Interactive Brokers', markets: 'Stocks, futures (COMEX gold), FX · needs IB Gateway', status: 'not_connected' },
+  { id: 'capital', name: 'Capital.com', markets: 'Gold, indices, FX, crypto CFDs · UK spread betting', status: 'coming_soon', reason: `open-api.capital.com: ${SOON}` },
+  { id: 'ig', name: 'IG', markets: 'Gold, indices, FX · UK spread betting', status: 'coming_soon', reason: `labs.ig.com: ${SOON}` },
+  { id: 'oanda', name: 'OANDA', markets: 'FX, gold, indices', status: 'coming_soon', reason: `developer.oanda.com: ${SOON}` },
+  { id: 'mt5', name: 'MetaTrader 5', markets: 'Many FX/gold brokers · Windows only', status: 'coming_soon', reason: 'The MetaTrader5 Python package is Windows-only (no Linux wheel), so it could not be installed or checked. It also needs the MT5 terminal running on Windows.' },
 ]
 const MARKET_TEXT: Record<string, string> = { paper: 'Simulator · every market · GBP account', alpaca: 'US stocks, crypto · free paper account', kraken: 'Crypto · real trade volume · gold as PAXG',
   coinbase: 'Crypto', ibkr: 'Stocks, futures (COMEX gold), FX · needs IB Gateway', capital: 'Gold, indices, FX, crypto CFDs · UK spread betting', ig: 'Gold, indices, FX · UK spread betting',
@@ -135,6 +140,13 @@ export const connectBroker = (id: string, b: ConnectBody) => mapped<Connected>('
   j => ({ ok: !!j.ok, status: 'connected', trading: j.permissions?.trading === true, withdrawals_off: j.permissions?.withdrawals === false,
     message: `Connected to ${j.broker} · trading ${j.permissions?.trading ? 'ON' : 'not confirmed'} · withdrawals ${j.permissions?.withdrawals === false ? 'OFF ✓' : j.permissions?.withdrawals == null ? 'cannot be checked: make sure the key has no withdraw permission' : 'ON (refused)'}` }),
   { what: 'broker connection', timeout: 20000 })
+
+// ---------------- alerts set-up: ntfy, Telegram (the bot token goes into the engine's vault / OS keychain, never into settings)
+export const vaultNames = () => call<{ backend: string; names: string[] }>('GET', '/vault', undefined, () => ({ backend: 'demo', names: [] }), { quiet: true })
+export const saveSecret = (name: string, value: string) => call<{ ok: boolean; stored_in?: string }>('POST', `/vault/${encodeURIComponent(name)}`, { value }, () => ({ ok: true, stored_in: 'nowhere (demo)' }), { what: 'saving the token' })
+export const telegramPairBegin = () => call<{ code: string; how: string; expires_in_s: number }>('POST', '/telegram/pair/begin', {}, () => ({ code: '482913', how: 'Demo: send /pair 482913 to your bot in Telegram.', expires_in_s: 600 }), { what: 'Telegram pairing' })
+export const notifyTest = () => call<{ delivered: string | null; ntfy_topic_set: boolean; telegram_paired: boolean; telegram_token_set: boolean }>('POST', '/notify/test', {},
+  () => ({ delivered: "{'ntfy': 'demo', 'telegram': 'demo'}", ntfy_topic_set: false, telegram_paired: false, telegram_token_set: false }), { what: 'test alert', timeout: 20000 })
 
 // ---------------- money: withdraw helper (section 9.7)
 export type Withdraw = { broker: string; currency: string; equity: number; margin_used: number; open_positions: { market: string; side: string; qty: number; pnl: number }[]; free: number; withdraw_url: string; trading_paused: boolean; note?: string; paper?: boolean }

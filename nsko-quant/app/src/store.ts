@@ -68,7 +68,8 @@ export function resetForEngine() {
   pend = {}; geoPend = {}
   useS.setState({ log: [], variants: [], tested: 0, sieve: 0, clear: 0, fails: Object.fromEntries(Object.keys(FAILS0).map(k => [k, 0])), lastFail: null,
     prices: {}, series: {}, bubbles: [], sources: [], handoffs: [], decisions: [], geo: {}, geoV: 0, impacts: [], killed: false, demo: false,
-    trade: null, trades: [], candles: {}, profiles: {}, forecasts: {}, terms: [], reading: null, agents: {}, labLines: {}, labRunning: null, lastBacktest: null, engineDemo: false })
+    trade: null, trades: [], candles: {}, profiles: {}, forecasts: {}, terms: [], reading: null, agents: {}, labLines: {}, labRunning: null, lastBacktest: null, engineDemo: false,
+    budget: { used: 0, of: 50, days: 0 } })
 }
 export function resetForDemo() {
   useS.setState({ tested: 1251, sieve: 343, clear: 12, fails: { ...FAILS0 }, decisions: useS.getInitialState().decisions })

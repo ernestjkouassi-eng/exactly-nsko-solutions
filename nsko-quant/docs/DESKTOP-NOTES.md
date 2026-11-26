@@ -69,6 +69,8 @@ Screens 03–07 ran against a throwaway mock of the engine contract (kept outsid
 
 ## 6. Gaps and notes for the engine agents
 
+> **Resolved in the Stage 4 integration (26 Nov 2026).** Every item below was reconciled; see `engine/CONTRACT.md` (HTTP contract table) and `docs/STAGE-4-REPORT.md`. Kept here as the record of what was assumed.
+
 1. **Assumed endpoints / shapes to confirm or add** (also in DECISIONS.md): `POST /withdraw/helper {action}`; `POST /kill {action:"release"}`; `POST /engine/shutdown`; `/health` fields `status, paused, killed, account_exists, uptime, cpu, ram, heartbeat`; login error codes `totp_required` / `pin_required` (FastAPI `detail:{code,msg}` is understood); `POST /account/create` accepts `pin` (2FA set-up uses the engine's existing `totp_begin/confirm` via `/account/totp/begin|confirm`); `GET /licence/check?key=`; `POST /settings {trading_paused}` for pause and `{mode:"live", confirm_phrase}` for go-live; desk export returns `{filename, data_b64}`; `POST /brokers/{id}/connect` takes `{environment, keychain_service, keychain_account, account_id}`; WebSocket accepts `?token=`.
 2. **CORS**: the engine must allow the origins `tauri://localhost`, `http://tauri.localhost` (Windows) and `http://localhost:5173/4173` (dev).
 3. **Tray actions have no session token** (they come from the Rust shell with `X-NSQ-Client: desktop-shell`). The engine should accept `/kill` (safety first) and pause from localhost without a session, or the shell needs a local shared secret file.
