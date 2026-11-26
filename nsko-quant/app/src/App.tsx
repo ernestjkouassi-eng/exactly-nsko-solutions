@@ -9,6 +9,8 @@ import { Strategies, Knowledge } from './pages/BookKnowledge'
 import { TradeCard, Decisions, PaperLive, Withdraw } from './pages/Money'
 import { Brokers, Engine, Costs, Settings, Help, Onboarding } from './pages/System'
 import Lock from './pages/Lock'
+import Gate from './web/Gate'
+import { WEB_DEMO, initAccount, useAcct } from './web/account'
 
 // Heavy pages load on demand: three.js (Agent Room), CesiumJS (God's Eye), lightweight-charts (Live Desk).
 const Agents = lazy(() => import('./pages/Agents'))
@@ -28,6 +30,7 @@ class PageBoundary extends Component<{ children: ReactNode; page: string }, { er
 }
 
 initSource()
+initAccount()   // web demo build only (no-op on desktop)
 const PAGES: Record<string, () => ReactNode> = {
   overview: () => <Overview />, lab: () => <Lab />, research: () => <Research />, strategies: () => <Strategies />, knowledge: () => <Knowledge />, agents: () => <Agents />, godseye: () => smallScreen() ? <GodsEyeLite /> : <GodsEye />,
   desk: () => <LiveDesk />, tradecard: () => <TradeCard />, decisions: () => <Decisions />, paperlive: () => <PaperLive />, withdraw: () => <Withdraw />,
@@ -38,7 +41,7 @@ const Loading = () => <div className="page"><div className="lbl"><span className
 export default function App() {
   const q = new URLSearchParams(location.search)
   const [page, setPage] = useState(q.get('page') || 'overview'); const [jarvis, setJarvis] = useState(false)
-  const [onboard, setOnboard] = useState(() => { try { return q.get('onboard') === '1' || (!q.get('page') && localStorage.getItem('nq_onboarded') !== '1') } catch { return false } })
+  const [onboard, setOnboard] = useState(() => { try { return q.get('onboard') === '1' || (!WEB_DEMO && !q.get('page') && localStorage.getItem('nq_onboarded') !== '1') } catch { return false } })
   const locked = useS(s => s.locked), needAccount = useS(s => s.needAccount)
   useEffect(() => { const k = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); setJarvis(j => !j) } }; addEventListener('keydown', k); return () => removeEventListener('keydown', k) }, [])
   useEffect(() => {   // desktop shell: the tray kill switch reports back here
@@ -47,7 +50,9 @@ export default function App() {
     import('@tauri-apps/api/event').then(({ listen }) => listen<boolean>('tray-kill', e => { if (e.payload) useS.getState().set({ killed: true }) }).then(u => { un = u }))
     return () => un?.()
   }, [])
+  const acct = useAcct(s => s.status)
   const showOnboard = onboard || needAccount
+  if (WEB_DEMO && acct !== 'in') return <Gate />   // web demo: an account first, then the desk on demo data
   return <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
     <TopBar openJarvis={() => setJarvis(true)} />
     <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>

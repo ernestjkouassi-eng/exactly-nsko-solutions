@@ -3,9 +3,10 @@ import { create } from 'zustand'
 import { useS, notify, dismiss } from '../store'
 import { VERB_COL, reducedMotion } from '../tokens'
 import { kill, releaseKill, jarvisChat } from '../api'
+import { WEB_DEMO, PRODUCT_URL, useAcct, logOut } from '../web/account'
 
 export const Wordmark = ({ size = 13 }: { size?: number }) => (
-  <span className="mono" style={{ fontSize: size, letterSpacing: '.14em', fontWeight: 600 }}><span className="o">NSKO</span> <span className="lo">//</span> QUANT</span>
+  <span className="mono" style={{ fontSize: size, letterSpacing: '.14em', fontWeight: 600, whiteSpace: 'nowrap' }}><span className="o">NSKO</span> <span className="lo">//</span> QUANT</span>
 )
 export const Demo = () => { const demo = useS(s => s.demo), engineDemo = useS(s => s.engineDemo), fallback = useS(s => s.fallback)
   return demo ? <span className="chip" title={engineDemo && !fallback ? 'The engine is running its own demo source (nothing real is connected yet)' : undefined} style={{ color: 'var(--amber)', borderColor: '#5A4020' }}>{engineDemo && !fallback ? 'ENGINE DEMO FEED' : 'DEMO DATA'}</span> : null }
@@ -72,6 +73,22 @@ function Ticker() {
   return <div className="tick-wrap" style={{ fontSize: 11 }}><div ref={ref} style={{ display: 'inline-block', willChange: 'transform' }}>{row}{row}</div></div>
 }
 
+/** Web demo only: the signed-in name with a menu (Log out), and the Download the app button. Desktop top bar; phones use SidebarAccount. */
+function AccountTop() {
+  const name = useAcct(s => s.name), email = useAcct(s => s.user?.email); const [open, setOpen] = useState(false); const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (!open) return; const c = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }; const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    addEventListener('mousedown', c); addEventListener('keydown', k); return () => { removeEventListener('mousedown', c); removeEventListener('keydown', k) } }, [open])
+  return <><a className="dl-btn tb-hide" href={PRODUCT_URL} data-testid="download-app">Download the app</a>
+    <div className="acct tb-hide" ref={ref}><button data-testid="account-menu" onClick={() => setOpen(o => !o)} aria-haspopup="menu" aria-expanded={open} style={{ padding: '4px 10px', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name.split(' ')[0] || 'Account'} <span className="lo">▾</span></button>
+      {open && <div className="acct-menu panel" role="menu"><div className="who"><div style={{ fontWeight: 600 }}>{name}</div><div className="lo" style={{ fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div></div>
+        <a role="menuitem" href={PRODUCT_URL}>Download the app</a><button role="menuitem" data-testid="logout" onClick={() => { setOpen(false); logOut() }}>Log out</button></div>}</div></>
+}
+function SidebarAccount() {
+  const name = useAcct(s => s.name), email = useAcct(s => s.user?.email)
+  return <div className="sb-acct" data-testid="sb-account"><div><div className="lbl">SIGNED IN</div><div style={{ marginTop: 3, fontWeight: 600 }}>{name}</div><div className="lo" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div></div>
+    <a className="dl-btn" href={PRODUCT_URL}>Download the app</a><button data-testid="sb-logout" onClick={() => logOut()} style={{ padding: '7px 10px' }}>Log out</button></div>
+}
+
 export function TopBar({ openJarvis }: { openJarvis: () => void }) {
   const round = useS(s => s.round), budget = useS(s => s.budget), decisions = useS(s => s.decisions), mode = useS(s => s.mode), set = useS(s => s.set)
   return <div style={{ borderBottom: '1px solid var(--line)', background: '#07070D' }}>
@@ -79,8 +96,8 @@ export function TopBar({ openJarvis }: { openJarvis: () => void }) {
       <button className="tb-menu" onClick={() => dispatchEvent(new Event('nq-menu'))} aria-label="Open menu" style={{ padding: '2px 9px' }}>☰</button>
       <button className="tb-hide" onClick={openJarvis} style={{ padding: '2px 8px' }} title="JARVIS (Ctrl+J)">+</button>
       <Wordmark size={14} />
-      <span className="pill tb-hide"><span className="dot pulse" /> JARVIS running</span>
-      <span className="pill tb-hide"><span className="dot pulse" /> SCOUT reading</span>
+      <span className={`pill tb-hide${WEB_DEMO ? ' tb-xl' : ''}`}><span className="dot pulse" /> JARVIS running</span>
+      <span className={`pill tb-hide${WEB_DEMO ? ' tb-xl' : ''}`}><span className="dot pulse" /> SCOUT reading</span>
       <span className="pill tb-hide">THINK BUDGET {useS.getState().source === 'engine' && !useS.getState().fallback ? `${budget.used.toFixed(1)} of ${budget.of} units today` : `£${budget.used.toFixed(0)} of £${budget.of} · ${budget.days} days`}
         <span className="bar" style={{ width: 60, display: 'inline-block' }}><i style={{ width: `${budget.used / budget.of * 100}%` }} /></span></span>
       <SourceChips />
@@ -88,6 +105,7 @@ export function TopBar({ openJarvis }: { openJarvis: () => void }) {
         <div className="tb-hide" style={{ textAlign: 'right', lineHeight: 1.3 }}><div className="lbl">ROUND <span className="num" style={{ color: 'var(--hi)' }}>{fmt(round)}</span></div>
           <div className="lbl">DECISIONS <span className="num" style={{ color: decisions.length ? 'var(--amber)' : 'var(--hi)' }}>{decisions.length}</span></div></div>
         <span className="pill tb-hide" style={{ cursor: 'pointer' }} onClick={() => set({ mode: mode === 'PAPER' ? 'PAPER' : 'PAPER' })} title="Live unlocks after the paper checklist">MODE: <b className="o">{mode}</b> <span className="lo">| LIVE 🔒</span></span>
+        {WEB_DEMO && <AccountTop />}
         <KillSwitch />
         <Clock />
       </div>
@@ -111,6 +129,7 @@ export function Sidebar({ page, go }: { page: string; go: (p: string) => void })
   useEffect(() => { const t = () => setOpen(o => !o); addEventListener('nq-menu', t); return () => removeEventListener('nq-menu', t) }, [])
   const goClose = (id: string) => { go(id); setOpen(false) }
   return <><div className={`sb-scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} /><div className={`sidebar${open ? ' open' : ''}`} style={{ width: 168, borderRight: '1px solid var(--line)', padding: '12px 0', display: 'flex', flexDirection: 'column', background: '#07070D' }}>
+    {WEB_DEMO && <SidebarAccount />}
     {NAV.map(([g, items]) => <div key={g} style={{ marginBottom: 14 }}>
       <div className="lbl" style={{ padding: '0 16px 6px' }}>{g}</div>
       {items.map(([id, name, live]) => <div key={id} data-nav={id} onClick={() => goClose(id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px', cursor: 'pointer', fontSize: 12.5,
