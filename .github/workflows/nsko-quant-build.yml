@@ -126,6 +126,10 @@ jobs:
           cp engine-bin/engine-aarch64-apple-darwin/nsko-quant-engine $B/engine-mac/arm64/
           cp engine-bin/engine-x86_64-apple-darwin/nsko-quant-engine  $B/engine-mac/x86_64/
           chmod +x $B/engine-mac/*/nsko-quant-engine
+          # Tauri compiles each architecture first and needs that architecture's sidecar too.
+          cp engine-bin/engine-aarch64-apple-darwin/nsko-quant-engine $B/binaries/nsko-quant-engine-aarch64-apple-darwin
+          cp engine-bin/engine-x86_64-apple-darwin/nsko-quant-engine  $B/binaries/nsko-quant-engine-x86_64-apple-darwin
+          chmod +x $B/binaries/*
           cat > $B/binaries/nsko-quant-engine-universal-apple-darwin <<'SH'
           #!/bin/sh
           # NSKO QUANT engine launcher (universal .app): runs the engine built for this Mac's CPU.
