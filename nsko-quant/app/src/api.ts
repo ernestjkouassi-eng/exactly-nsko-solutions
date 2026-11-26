@@ -134,7 +134,7 @@ const DS: [string, string, Strategy['status'], string, number][] = [
 const NOTES = ['First recipe from SCOUT\'s sources', 'Wider stop: 1.0 → 1.2 ATR', 'London + NY sessions only', 'News blackout ±15 → ±20 min', 'Target 1.6R → 1.8R']
 export const DEMO_STRATEGIES: Strategy[] = DS.map(([name, tf, status, stage, sh], i) => {
   const n = 1 + (i * 3) % 4
-  const versions = Array.from({ length: n }, (_, k) => ({ version: k + 1, created: new Date(Date.UTC(2026, 9, 2 + i * 3 + k * 6, 9 + k, 14)).toISOString(), note: NOTES[(k + i) % NOTES.length],
+  const versions = Array.from({ length: n }, (_, k) => ({ version: k + 1, created: new Date(Date.UTC(2026, 9, 2 + i * 3 + k * 6, 9 + k, 14)).toISOString(), note: k === 0 ? NOTES[0] : NOTES[1 + (k + i) % (NOTES.length - 1)],
     sharpe_oos: +(sh - (n - 1 - k) * .07 + (k % 2 ? .03 : 0)).toFixed(2), by: k === 0 ? 'RECIPE-MAKER' : k % 2 ? 'LAB' : 'You', active: k === n - 1, stage: k === n - 1 ? stage : 'retired' })).reverse()
   return { id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name, tf, status, stage, sharpe_oos: sh, version: n, versions }
 })
