@@ -5,8 +5,9 @@
   "workers_dev": true,
   "routes": [
     { "pattern": "nskosolutions.co.uk", "custom_domain": true },
-    { "pattern": "www.nskosolutions.co.uk", "custom_domain": true }
+    { "pattern": "www.nskosolutions.co.uk", "custom_domain": true },
+    { "pattern": "quant.nskosolutions.co.uk", "custom_domain": true }
   ],
-  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "auto-trailing-slash", "run_worker_first": ["/api/*", "/hq", "/hq/*"] },
+  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "auto-trailing-slash", "run_worker_first": true },
   "kv_namespaces": [{ "binding": "HQ", "id": "57eb467c1dd04022b604a4ecda5060f5" }]
 }

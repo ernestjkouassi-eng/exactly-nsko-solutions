@@ -47,6 +47,12 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const p = url.pathname;
+    // quant.nskosolutions.co.uk serves the NSKO QUANT live demo, which lives in public/quant/
+    if (url.hostname.startsWith('quant.')) {
+      if (p.startsWith('/quant/')) return Response.redirect(url.origin + p.slice(6) + url.search, 301);
+      const u = new URL(req.url); u.pathname = '/quant' + (p === '/' ? '/' : p);
+      return env.ASSETS.fetch(new Request(u, req));
+    }
     if (p === '/api/contact') return contact(req, env);
     if (p === '/api/brief') return intake(req, env, 'brief');
     if (p === '/api/portfolio') return intake(req, env, 'portfolio');
