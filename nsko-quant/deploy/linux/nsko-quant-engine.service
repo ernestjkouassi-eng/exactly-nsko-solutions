@@ -1,0 +1,32 @@
+# NSKO QUANT engine as a systemd service (runs 24/7, restarts on crash, blocks sleep while running).
+#
+# Install (replace YOUR_USER and the paths if you installed somewhere else):
+#   sudo cp nsko-quant-engine.service nsko-quant-watchdog.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now nsko-quant-engine nsko-quant-watchdog
+#   systemctl status nsko-quant-engine        # check it is running
+#   journalctl -u nsko-quant-engine -f        # follow the (redacted) logs
+#
+# Laptops: also set "HandleLidSwitch=ignore" in /etc/systemd/logind.conf if the lid will be closed.
+[Unit]
+Description=NSKO QUANT trading engine (by NSKO Solutions)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/opt/nsko-quant/engine
+Environment=NSQ_INHIBITED=1
+Environment=PYTHONUNBUFFERED=1
+# systemd-inhibit keeps the computer awake (no suspend, no idle sleep) for as long as the engine runs.
+ExecStart=/usr/bin/systemd-inhibit --what=sleep:idle:handle-lid-switch --who="NSKO QUANT" --why="Trading engine running" --mode=block /opt/nsko-quant/engine/.venv/bin/python -m nsq
+Restart=always
+RestartSec=5
+# Safety: localhost only, no new privileges, private /tmp.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

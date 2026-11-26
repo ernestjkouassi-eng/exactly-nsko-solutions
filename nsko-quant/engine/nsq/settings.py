@@ -33,6 +33,7 @@ DEFAULTS: dict[str, Any] = {
     # flow
     "news.blackout_min": 15,
     "news.calendar_file": "",                  # optional JSON file of events
+    "news.use_data_calendar": True,            # also use the shipped calendar in nsq.data
     "news.events": [],                         # [{"time": iso, "impact": "high", "title", "currency"}]
     "forecast.paths": 1000,
     "forecast.horizon_bars": 16,

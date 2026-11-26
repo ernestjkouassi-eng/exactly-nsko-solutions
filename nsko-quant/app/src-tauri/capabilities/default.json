@@ -12,6 +12,7 @@
     "updater:default",
     "opener:allow-open-url",
     "dialog:allow-confirm",
-    "dialog:allow-message"
+    "dialog:allow-message",
+    "process:allow-restart"
   ]
 }

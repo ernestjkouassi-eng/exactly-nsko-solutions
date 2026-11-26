@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Watchdog: restarts the engine if it is alive but stuck. Install like the engine plist. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>uk.co.nsko.quant.watchdog</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Applications/NSKO QUANT.app/Contents/Resources/engine/nsko-quant-engine</string>
+    <string>--watchdog</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+</dict>
+</plist>

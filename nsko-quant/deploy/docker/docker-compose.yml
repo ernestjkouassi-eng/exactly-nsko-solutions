@@ -1,0 +1,33 @@
+# docker compose -f deploy/docker/docker-compose.yml up -d --build   (run from nsko-quant/)
+# The engine is published on 127.0.0.1 only. To reach it from another computer use an SSH tunnel:
+#   ssh -L 8787:127.0.0.1:8787 you@server
+# Broker keys: there is no OS keychain in a container, so the vault uses its encrypted file, keyed by the
+# passphrase in the Docker secret below (create the file yourself, never commit it).
+services:
+  engine:
+    build:
+      context: ../../engine
+      dockerfile: ../deploy/docker/Dockerfile
+    image: nsko-quant-engine:latest
+    restart: always
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - nsq-data:/data
+    environment:
+      NSQ_VAULT_PASSPHRASE_FILE: /run/secrets/nsq_vault_passphrase
+    secrets:
+      - nsq_vault_passphrase
+  watchdog:
+    image: nsko-quant-engine:latest
+    restart: always
+    depends_on: [engine]
+    network_mode: "service:engine"
+    volumes:
+      - nsq-data:/data
+    command: ["python", "-m", "nsq.watchdog", "--stale", "60"]
+volumes:
+  nsq-data:
+secrets:
+  nsq_vault_passphrase:
+    file: ./vault_passphrase.txt

@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, Spark, walk } from '../viz/canvas'
-import { Head } from '../shell/Shell'
-
-const STRATS = [
-  ['Trend-follower XAU', '4h', 'waiting on you', 1.64, 'Approved'], ['OF-1 Sweep XAU', '15m→3m', 'on paper · day 9', 1.52, 'On paper'], ['VWAP-Rev BTC', '5m', 'approved', 2.10, 'Approved'],
-  ['ORB NVDA', '5m', 'in review', 1.12, 'In review'], ['Carry XAU', '1d', 'approved', 1.47, 'Approved'], ['Breakout ETH', '1h', 'failed · coin flip', .21, 'Failed'],
-  ['Range-XAU 16', '4h', 'thought up', 0, 'Thought up'], ['Momentum BTC', '4h', 'on paper · day 4', 1.58, 'On paper'],
-] as const
+import { Head, ask } from '../shell/Shell'
+import { notify } from '../store'
+import { strategies, promote, rollback, DEMO_STRATEGIES, type Strategy, type Version } from '../api'
 
 function eq(seed: number, n = 400, drift = .12) { let a = seed, y = 0, peak = 0; const e: number[] = [], dd: number[] = []; for (let i = 0; i < n; i++) { a = (a * 1103515245 + 12345) & 0x7fffffff; y += (a / 0x7fffffff - .5) * 2.4 + drift; peak = Math.max(peak, y); e.push(y); dd.push(y - peak) } return { e, dd } }
 
@@ -27,34 +23,64 @@ function EquityChart({ seed }: { seed: number }) {
   return <div style={{ height: 300 }}><Canvas draw={draw} /></div>
 }
 
+const TABS: [Strategy['status'] | 'all', string][] = [['Thought up', '1,308'], ['Approved', '12'], ['On paper', '3'], ['In review', '32'], ['Failed', '1,217'], ['all', '']]
 export function Strategies() {
-  const [tab, setTab] = useState('Approved'); const [sel, setSel] = useState(0); const [q, setQ] = useState('')
-  const list = STRATS.map((s, i) => ({ s, i })).filter(({ s }) => (tab === 'all' || s[4] === tab || (tab === 'Thought up')) && s[0].toLowerCase().includes(q.toLowerCase()))
-  const s = STRATS[sel]
+  const [list, setList] = useState<Strategy[]>(DEMO_STRATEGIES); const [demo, setDemo] = useState(true)
+  const [tab, setTab] = useState<string>('all'); const [selId, setSelId] = useState(DEMO_STRATEGIES[0].id); const [q, setQ] = useState('')
+  const [hist, setHist] = useState(() => new URLSearchParams(location.search).get('history') === '1'); const [busy, setBusy] = useState('')
+  const load = () => strategies().then(r => { if (r.ok && Array.isArray(r.data) && r.data.length) { setList(r.data); setDemo(r.demo); if (!r.data.some(x => x.id === selId)) setSelId(r.data[0].id) } })
+  useEffect(() => { load() }, [])
+  const shown = list.map((s, i) => ({ s, i })).filter(({ s }) => (tab === 'all' || s.status === tab) && s.name.toLowerCase().includes(q.toLowerCase()))
+  const si = Math.max(0, list.findIndex(x => x.id === selId)); const s = list[si]
+  const counts = (t: string) => demo ? TABS.find(x => x[0] === t)?.[1] : String(list.filter(x => x.status === t).length)
+  const doPromote = async (to: 'paper' | 'live') => {
+    if (!await ask(to === 'paper' ? 'Send to paper?' : 'Send to live?', to === 'paper' ? `${s.name} v${s.version} starts paper trading: no real money, every trade journaled.` : `${s.name} v${s.version} starts live at 50% size for two weeks. The risk gate stays on.`, to === 'paper' ? 'To paper' : 'To live', to === 'live')) return
+    setBusy('promote'); const r = await promote(s.id, to); setBusy('')
+    if (!r.ok) return notify(`Not promoted: ${r.error}`, 'bad')
+    notify(r.data.message || `${s.name} → ${to}`, 'good'); if (r.demo) setList(l => l.map(x => x.id === s.id ? { ...x, status: to === 'paper' ? 'On paper' : 'Live', stage: to === 'paper' ? 'on paper · day 0' : 'live · 50% size' } : x)); else load()
+  }
+  const doRollback = async (v: Version) => {
+    if (!await ask(`Roll back to v${v.version}?`, `v${v.version} (${v.note}) becomes the active version of ${s.name}. v${s.version} is kept in the history and can be restored the same way.`, `Roll back to v${v.version}`)) return
+    setBusy('v' + v.version); const r = await rollback(s.id, v.version); setBusy('')
+    if (!r.ok) return notify(`Rollback failed: ${r.error}`, 'bad')
+    notify(r.data.message || `v${v.version} is active`, 'good')
+    if (r.demo) setList(l => l.map(x => x.id === s.id ? { ...x, version: v.version, sharpe_oos: v.sharpe_oos, versions: x.versions.map(y => ({ ...y, active: y.version === v.version })) } : x)); else load()
+  }
+  if (!s) return <div className="page"><div className="ptitle">Strategy Book</div><div className="empty">No strategies yet.</div></div>
   return <div className="page">
-    <div className="ptitle">Strategy Book</div><div className="psub">Every test is here, even the failures.</div>
-    <div className="row" style={{ marginBottom: 12 }}>{[['Thought up', '1,308'], ['Approved', '12'], ['On paper', '3'], ['In review', '32'], ['Failed', '1,217']].map(([t, n]) =>
-      <button key={t} onClick={() => setTab(t)} style={{ borderColor: tab === t ? 'var(--orange)' : undefined }}>{t} <span className="lo num">{n}</span></button>)}
+    <div className="row" style={{ alignItems: 'flex-start' }}><div><div className="ptitle">Strategy Book</div><div className="psub">Every test is here, even the failures. Every change is a new version you can roll back in one click.</div></div>{demo && <span className="chip a" style={{ borderColor: '#5A4020', marginLeft: 'auto' }}>DEMO BOOK</span>}</div>
+    <div className="row" style={{ marginBottom: 12 }}>{TABS.map(([t]) =>
+      <button key={t} onClick={() => setTab(t)} style={{ borderColor: tab === t ? 'var(--orange)' : undefined }}>{t === 'all' ? 'All' : t} {t !== 'all' && <span className="lo num">{counts(t)}</span>}</button>)}
       <input placeholder="Search strategies" value={q} onChange={e => setQ(e.target.value)} style={{ marginLeft: 'auto', width: 220 }} /></div>
     <div className="grid" style={{ gridTemplateColumns: '280px 1fr' }}>
-      <div className="panel">{list.map(({ s, i }) => <div key={i} onClick={() => setSel(i)} style={{ padding: '10px 12px', borderBottom: '1px solid var(--line)', cursor: 'pointer', background: sel === i ? '#11121B' : undefined, borderLeft: `2px solid ${sel === i ? 'var(--orange)' : 'transparent'}` }}>
-        <div className="row" style={{ justifyContent: 'space-between' }}><span>{s[0]}</span><span className="num" style={{ color: s[3] >= 1.4 ? 'var(--green)' : 'var(--lo)' }}>{s[3] ? s[3].toFixed(2) : '—'}</span></div>
-        <div className="row" style={{ justifyContent: 'space-between' }}><span className="lo mono" style={{ fontSize: 10 }}>{s[1]} · {s[2]}</span><Spark data={walk(i + 3, 24, s[3] / 30)} w={60} h={16} color={s[3] >= 1.4 ? '#78D880' : '#5A5F6E'} /></div>
-        <div style={{ display: 'flex', gap: 2, marginTop: 5 }}>{[0, 1, 2, 3, 4].map(k => <i key={k} style={{ flex: 1, height: 3, background: k < Math.round(s[3] * 2.4) ? (k === 3 && i % 3 === 0 ? '#E04858' : '#78D880') : '#1A1C26' }} />)}</div></div>)}</div>
+      <div className="panel" style={{ alignSelf: 'start' }}>{shown.length === 0 && <div className="pb lo">Nothing here.</div>}{shown.map(({ s: x, i }) => <div key={x.id} onClick={() => setSelId(x.id)} style={{ padding: '10px 12px', borderBottom: '1px solid var(--line)', cursor: 'pointer', background: selId === x.id ? '#11121B' : undefined, borderLeft: `2px solid ${selId === x.id ? 'var(--orange)' : 'transparent'}` }}>
+        <div className="row" style={{ justifyContent: 'space-between' }}><span>{x.name} <span className="lo mono" style={{ fontSize: 10 }}>v{x.version}</span></span><span className="num" style={{ color: x.sharpe_oos >= 1.4 ? 'var(--green)' : 'var(--lo)' }}>{x.sharpe_oos ? x.sharpe_oos.toFixed(2) : '—'}</span></div>
+        <div className="row" style={{ justifyContent: 'space-between' }}><span className="lo mono" style={{ fontSize: 10 }}>{x.tf} · {x.stage}</span><Spark data={walk(i + 3, 24, x.sharpe_oos / 30)} w={60} h={16} color={x.sharpe_oos >= 1.4 ? '#78D880' : '#5A5F6E'} /></div>
+        <div style={{ display: 'flex', gap: 2, marginTop: 5 }}>{[0, 1, 2, 3, 4].map(k => <i key={k} style={{ flex: 1, height: 3, background: k < Math.round(x.sharpe_oos * 2.4) ? (k === 3 && i % 3 === 0 ? '#E04858' : '#78D880') : '#1A1C26' }} />)}</div></div>)}</div>
       <div className="panel"><div className="pb">
-        <span className="chip" style={{ color: s[4] === 'Failed' ? 'var(--red)' : 'var(--green)', borderColor: '#2A5A30' }}>{s[4].toUpperCase()}</span>
-        <div className="row" style={{ marginTop: 8 }}><div><div style={{ fontSize: 22 }}>{s[0]} · {s[1]} v1</div><div className="lo" style={{ fontSize: 11.5 }}>From SCOUT's reading: 3 sources (YouTube, GitHub, arXiv) · recipe by RECIPE-MAKER · {s[2]}</div></div>
-          <div className="row" style={{ marginLeft: 'auto', gap: 6 }}><button className="primary">To paper</button><button>Back, with a note</button><button>Edit rules</button><button>Version history</button></div></div>
+        <span className="chip" style={{ color: s.status === 'Failed' ? 'var(--red)' : 'var(--green)', borderColor: s.status === 'Failed' ? '#5A2028' : '#2A5A30' }}>{s.status.toUpperCase()}</span>
+        <div className="row" style={{ marginTop: 8 }}><div><div style={{ fontSize: 22 }}>{s.name} · {s.tf} v{s.version}</div><div className="lo" style={{ fontSize: 11.5 }}>From SCOUT's reading: 3 sources (YouTube, GitHub, arXiv) · recipe by RECIPE-MAKER · {s.stage}</div></div>
+          <div className="row" style={{ marginLeft: 'auto', gap: 6 }}>
+            {s.status === 'On paper' ? <button className="primary" disabled={!!busy} onClick={() => doPromote('live')}>To live</button> : <button className="primary" disabled={!!busy || s.status === 'Failed' || s.status === 'Live'} style={{ opacity: s.status === 'Failed' ? .4 : 1 }} onClick={() => doPromote('paper')}>To paper</button>}
+            <button>Back, with a note</button><button>Edit rules</button>
+            <button onClick={() => setHist(h => !h)} style={{ borderColor: hist ? 'var(--orange)' : undefined }}>Version history · {s.versions.length}</button></div></div>
+        {hist && <div className="panel" data-testid="versions" style={{ margin: '12px 0 4px', background: '#0A0B12' }}><Head t="VERSION HISTORY" s={`${s.versions.length} version${s.versions.length === 1 ? '' : 's'} · newest first`} />
+          <table><thead><tr>{['Version', 'Created', 'By', 'Change', 'Sharpe OOS', 'Stage', ''].map(h => <th key={h}>{h}</th>)}</tr></thead>
+            <tbody>{s.versions.map(v => <tr key={v.version} style={{ background: v.active ? 'rgba(232,84,26,.05)' : undefined }}>
+              <td><span className={v.active ? 'o' : ''}>v{v.version}</span>{v.active && <span className="chip o" style={{ borderColor: '#5A2A14', marginLeft: 6 }}>ACTIVE</span>}</td>
+              <td className="lo">{new Date(v.created).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td className="lo">{v.by}</td><td style={{ fontFamily: 'var(--sans)', fontSize: 12 }}>{v.note}</td>
+              <td className={v.sharpe_oos >= 1.4 ? 'g' : ''}>{v.sharpe_oos.toFixed(2)}</td><td className="lo">{v.active ? s.stage : v.stage}</td>
+              <td style={{ textAlign: 'right' }}>{!v.active && <button style={{ padding: '2px 8px', fontSize: 10.5 }} disabled={!!busy} onClick={() => doRollback(v)}>{busy === 'v' + v.version ? 'Rolling back…' : `Roll back to v${v.version}`}</button>}</td></tr>)}</tbody></table></div>}
         <div className="row" style={{ gap: 18, margin: '12px 0', borderBottom: '1px solid var(--line)' }}>{['OVERVIEW', 'TRADES 621 · 442 TO REVIEW', 'RULES'].map((t, i) => <span key={t} className="lbl" style={{ padding: '8px 0', color: i ? undefined : 'var(--hi)', borderBottom: i ? undefined : '1px solid var(--orange)' }}>{t}</span>)}</div>
         <div className="lbl" style={{ marginBottom: 8 }}>KEY FIGURES · DEMO</div>
         <div style={{ display: 'flex', border: '1px solid var(--line)' }}>{[['WIN RATE', '51.9%', 'g'], ['AVG R:R', '1 : 1.82', ''], ['EXPECTANCY', '+0.45R · £45', 'g'], ['TRADES', '621', ''], ['MAX DRAWDOWN', '−13.2R', 'r']].map(([l, v, c]) =>
           <div key={l} style={{ flex: 1, padding: 12, borderRight: '1px solid var(--line)' }}><div className="lbl">{l}</div><div className={`big ${c}`} style={{ fontSize: 20 }}>{v}</div></div>)}</div>
         <div className="lbl" style={{ margin: '14px 0 4px' }}>EQUITY CURVE · DEMO</div>
-        <EquityChart seed={sel * 77 + 5} />
+        <EquityChart seed={si * 77 + 5 + s.version} />
         <div className="grid" style={{ gridTemplateColumns: '1.4fr 1fr', marginTop: 12 }}>
           <div><div className="lbl" style={{ marginBottom: 6 }}>MONTHLY ROBUSTNESS</div>
             {[2020, 2021, 2022, 2023, 2024, 2025, 2026].map((y, yi) => <div key={y} className="row" style={{ gap: 3, marginBottom: 3 }}><span className="lo mono" style={{ fontSize: 10, width: 34 }}>{y}</span>
-              {Array.from({ length: 12 }, (_, m) => { const v = Math.sin((yi * 12 + m) * 1.7 + sel) + .35; return <i key={m} style={{ width: 16, height: 12, background: v > 0 ? `rgba(120,216,128,${.25 + Math.min(.7, v / 2)})` : `rgba(224,72,88,${.25 + Math.min(.7, -v / 2)})` }} /> })}</div>)}</div>
+              {Array.from({ length: 12 }, (_, m) => { const v = Math.sin((yi * 12 + m) * 1.7 + si) + .35; return <i key={m} style={{ width: 16, height: 12, background: v > 0 ? `rgba(120,216,128,${.25 + Math.min(.7, v / 2)})` : `rgba(224,72,88,${.25 + Math.min(.7, -v / 2)})` }} /> })}</div>)}</div>
           <div><div className="lbl" style={{ marginBottom: 6 }}>WHEN DOES IT WORK</div>
             {[['Asia', .12], ['London', .58], ['London–NY overlap', .82], ['New York PM', .31]].map(([n, v]) => <div key={n as string} style={{ marginBottom: 8 }}><div className="row" style={{ justifyContent: 'space-between', fontSize: 11.5 }}><span>{n}</span><span className="num g">+{((v as number) * .9).toFixed(2)}R</span></div><div className="bar"><i style={{ width: `${(v as number) * 100}%` }} /></div></div>)}</div>
         </div>

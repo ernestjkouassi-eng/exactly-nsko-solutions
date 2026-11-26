@@ -1,0 +1,15 @@
+# Watchdog: restarts the engine if it is alive but stuck (no /health and no heartbeat for 60 s).
+[Unit]
+Description=NSKO QUANT engine watchdog
+After=nsko-quant-engine.service
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/opt/nsko-quant/engine
+ExecStart=/opt/nsko-quant/engine/.venv/bin/python -m nsq.watchdog --stale 60
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

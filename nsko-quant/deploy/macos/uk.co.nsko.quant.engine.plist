@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  NSKO QUANT engine as a launchd agent: starts at login, restarts if it stops, keeps the Mac awake.
+  Install:
+    cp uk.co.nsko.quant.engine.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/uk.co.nsko.quant.engine.plist
+  Remove:
+    launchctl bootout gui/$(id -u)/uk.co.nsko.quant.engine
+  `caffeinate -i -s` stops idle sleep and (on mains power) system sleep while the engine runs.
+  Replace /Applications/NSKO QUANT.app/... with the real path if you run from source.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>uk.co.nsko.quant.engine</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/caffeinate</string>
+    <string>-i</string>
+    <string>-s</string>
+    <string>/Applications/NSKO QUANT.app/Contents/Resources/engine/nsko-quant-engine</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>5</integer>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PYTHONUNBUFFERED</key><string>1</string></dict>
+  <key>StandardOutPath</key><string>/tmp/nsko-quant-engine.out.log</string>
+  <key>StandardErrorPath</key><string>/tmp/nsko-quant-engine.err.log</string>
+</dict>
+</plist>

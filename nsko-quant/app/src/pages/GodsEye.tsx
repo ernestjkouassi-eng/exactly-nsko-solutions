@@ -1,65 +1,155 @@
-import { useMemo, useRef, useState } from 'react'
-import { Canvas as R3F, useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Viewer, Ion, EllipsoidTerrainProvider, ImageryLayer, TileMapServiceImageryProvider, UrlTemplateImageryProvider, OpenStreetMapImageryProvider, buildModuleUrl,
+  PointPrimitiveCollection, LabelCollection, Cartesian3, Cartesian2, Color, PostProcessStageLibrary, PostProcessStage, NearFarScalar, ScreenSpaceEventHandler, ScreenSpaceEventType,
+  type PointPrimitive, LabelStyle, VerticalOrigin, Math as CMath,
+} from 'cesium'
+import 'cesium/Build/Cesium/Widgets/widgets.css'
 import { Canvas } from '../viz/canvas'
 import { Head } from '../shell/Shell'
+import { useS, type GeoPt } from '../store'
+import { reducedMotion } from '../tokens'
 
-// God's Eye, Stage 1 shell: a dark 3D globe with demo layers. Stage 3 swaps in CesiumJS and the free live feeds.
-const LAYERS: [string, string][] = [['Flights', '#E8E8A0'], ['Military', '#E8A850'], ['Ships', '#20E0F0'], ['Satellites', '#C8CCD8'], ['Quakes', '#E04858'], ['Fires', '#E8541A'], ['Weather', '#5A8CFF'], ['Launches', '#F8A0C0'], ['Crops', '#78D880']]
-const ll = (lat: number, lon: number, r = 1.002) => { const p = (90 - lat) * Math.PI / 180, t = (lon + 180) * Math.PI / 180; return new THREE.Vector3(-r * Math.sin(p) * Math.cos(t), r * Math.cos(p), r * Math.sin(p) * Math.sin(t)) }
-const SEEDS: Record<string, [number, number][]> = {
-  Flights: Array.from({ length: 260 }, (_, i) => [((i * 37) % 120) - 50 + (i % 3) * 5, ((i * 91) % 300) - 150] as [number, number]).filter(([la, lo]) => !(lo < -30 && lo > -60 && la < 0)),
-  Military: [[26, 56], [35, 33], [49, 32], [36, 129], [24, 121], [52, 20]],
-  Ships: Array.from({ length: 120 }, (_, i) => { const lanes = [[26.5, 56.3, 12, 45], [12, 45, 30, 32.5], [1.3, 103.8, 22, 114], [36, -6, 50, 0], [30, 32.5, 36, -6]]; const l = lanes[i % 5], u = (i * .137) % 1; return [l[0] + (l[2] - l[0]) * u, l[1] + (l[3] - l[1]) * u] as [number, number] }),
-  Quakes: [[-33.4, -70.6], [38.3, 142.4], [36.2, 28.0]], Fires: [[-25, 135], [-28, 145], [-12, -55], [38, -120], [-8, 25]],
-  Weather: [[-19.9, -44], [6.8, -5.3], [40, -95]], Launches: [[28.5, -80.6], [45.9, 63.3], [19.6, 110.9]], Crops: [[-19.9, -44.5], [6.8, -5.3], [7.9, -1.0], [41, -93], [48, 35]],
-}
-function Globe({ on, sensor }: { on: Record<string, boolean>; sensor: string }) {
-  const g = useRef<THREE.Group>(null)
-  const land = useMemo(() => { // procedural continents from a few blobs: a stand-in until the Stage 3 imagery
-    const blobs = [[50, 10, 25], [5, 20, 28], [45, 90, 38], [40, -100, 25], [-15, -60, 22], [-25, 135, 15], [65, -40, 10], [20, 78, 12], [60, 100, 30]]
-    const pts: number[] = []; for (let i = 0; i < 14000; i++) { const y = 1 - (i / 13999) * 2, r = Math.sqrt(1 - y * y), th = i * 2.39996; const lat = Math.asin(y) * 180 / Math.PI, lon = ((th * 180 / Math.PI) % 360) - 180
-      if (blobs.some(([a, b, s]) => (lat - a) ** 2 + ((lon - b) * Math.cos(lat * Math.PI / 180)) ** 2 < s * s)) pts.push(Math.cos(th) * r * 1.001, y * 1.001, Math.sin(th) * r * 1.001) }
-    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); return geo }, [])
-  const layerGeo = useMemo(() => Object.fromEntries(Object.entries(SEEDS).map(([k, v]) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(v.flatMap(([a, b]) => ll(a, b, k === 'Satellites' ? 1.25 : 1.006).toArray()), 3)); return [k, geo] })), [])
-  const sats = useMemo(() => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(Array.from({ length: 160 }, (_, i) => { const a = i * .7, inc = (i % 6) * .5; return [Math.cos(a) * 1.3, Math.sin(a) * Math.sin(inc) * 1.3, Math.sin(a) * Math.cos(inc) * 1.3] }).flat(), 3)); return geo }, [])
-  useFrame((_, dt) => { if (g.current) g.current.rotation.y += dt * .05 })
-  const tint = sensor === 'Night-vision' ? '#2A8A3A' : sensor === 'Thermal' ? '#8A2A6A' : '#1A2A4A'
-  return <group ref={g} rotation={[.35, 0, 0]}>
-    <mesh><sphereGeometry args={[1, 64, 48]} /><meshStandardMaterial color={tint} roughness={.9} emissive={tint} emissiveIntensity={.25} /></mesh>
-    <points geometry={land}><pointsMaterial size={.008} color={sensor === 'Night-vision' ? '#7AFF8A' : sensor === 'Thermal' ? '#FFB060' : '#5A7AA0'} /></points>
-    <mesh scale={1.06}><sphereGeometry args={[1, 32, 24]} /><meshBasicMaterial color="#20E0F0" transparent opacity={.05} side={THREE.BackSide} /></mesh>
-    {LAYERS.map(([k, col]) => on[k] && k !== 'Satellites' && SEEDS[k] && <points key={k} geometry={layerGeo[k]}><pointsMaterial size={k === 'Flights' ? .016 : .04} color={col} /></points>)}
-    {on.Satellites && <points geometry={sats}><pointsMaterial size={.02} color="#E8E8EC" /></points>}
-    {on.Satellites && [0, 1, 2].map(i => <mesh key={i} rotation={[Math.PI / 2 + i * .5, i * .8, 0]}><torusGeometry args={[1.3, .0015, 4, 120]} /><meshBasicMaterial color="#5A5F6E" /></mesh>)}
-  </group>
-}
-const IMPACT = [
-  ['TANKER SLOWDOWN · STRAIT OF HORMUZ', 'Oil ↑ watch · Gold safe-haven watch', 'JARVIS: 14 tankers below 4 kn for 6h (demo). Watching Brent; no trade opened.', 'var(--cyan)'],
-  ['FROST RISK · MINAS GERAIS', 'Arabica coffee watch', 'JARVIS: GFS shows −1 °C at dawn over the coffee belt (demo). Sent to Research.', 'var(--blue, #5A8CFF)'],
-  ['M6.4 QUAKE · NEAR COPPER MINES, CHILE', 'Copper / metals watch', 'JARVIS: risk action → cut size 50% on metals for 24h (demo).', 'var(--red)'],
+// God's Eye (Stage 3): CesiumJS globe with free imagery and NO Cesium ion (no ion token, no ion assets, no Google 3D Tiles).
+// Layers render from gods_eye_event / market_impact events: from the engine, or from the demo simulator in demo mode.
+;(Ion as { defaultAccessToken?: string }).defaultAccessToken = undefined
+
+const LAYERS: [string, string, string][] = [
+  ['Flights', '#E8E8A0', 'adsb.lol (ODbL 1.0)'], ['Military', '#E8A850', 'adsb.lol military feed (ODbL 1.0)'], ['Ships', '#20E0F0', 'AISStream.io'],
+  ['Satellites', '#C8CCD8', 'CelesTrak GP data'], ['Quakes', '#E04858', 'USGS Earthquake Hazards Program'], ['Fires', '#E8541A', 'NASA FIRMS (LANCE)'],
+  ['Weather', '#5A8CFF', 'Open-Meteo (CC BY 4.0)'], ['Launches', '#F8A0C0', 'Launch Library 2 · The Space Devs'], ['Crops', '#78D880', 'Copernicus Sentinel-2 (modified Copernicus data)'],
 ]
+const TRACKS = new Set(['Flights', 'Ships', 'Satellites'])   // moving objects: always shown at their latest position
+const BASEMAPS = {
+  satellite: { name: 'Satellite', credit: 'Imagery: Esri World Imagery · Esri, Maxar, Earthstar Geographics, and the GIS User Community' },
+  map: { name: 'Map', credit: 'Map: © OpenStreetMap contributors (ODbL) · tile.openstreetmap.org' },
+  offline: { name: 'Offline', credit: 'Imagery: Natural Earth II (public domain, bundled with CesiumJS)' },
+} as const
+type Basemap = keyof typeof BASEMAPS
+const TONE: Record<string, string> = { cyan: 'var(--cyan)', blue: '#5A8CFF', red: 'var(--red)', amber: 'var(--amber)', green: 'var(--green)', orange: 'var(--orange)' }
+
+const THERMAL = `uniform sampler2D colorTexture; in vec2 v_textureCoordinates;
+void main() {
+  vec3 c = texture(colorTexture, v_textureCoordinates).rgb; float l = clamp(dot(c, vec3(0.299, 0.587, 0.114)) * 1.25, 0.0, 1.0);
+  vec3 t = l < 0.25 ? mix(vec3(0.02, 0.0, 0.08), vec3(0.35, 0.0, 0.55), l / 0.25)
+         : l < 0.5 ? mix(vec3(0.35, 0.0, 0.55), vec3(0.9, 0.15, 0.1), (l - 0.25) / 0.25)
+         : l < 0.75 ? mix(vec3(0.9, 0.15, 0.1), vec3(1.0, 0.75, 0.0), (l - 0.5) / 0.25)
+         : mix(vec3(1.0, 0.75, 0.0), vec3(1.0, 1.0, 0.92), (l - 0.75) / 0.25);
+  out_FragColor = vec4(t, 1.0);
+}`
+
+function Globe({ on, sensor, basemap, cutoff }: { on: Record<string, boolean>; sensor: string; basemap: Basemap; cutoff: number }) {
+  const box = useRef<HTMLDivElement>(null); const credits = useRef<HTMLDivElement>(null); const viewer = useRef<Viewer | null>(null)
+  const cols = useRef<Record<string, PointPrimitiveCollection>>({}); const prims = useRef<Record<string, Map<string, PointPrimitive>>>({})
+  const labels = useRef<LabelCollection | null>(null); const impactPts = useRef<PointPrimitiveCollection | null>(null)
+  const [err, setErr] = useState('')
+  const geo = useS(s => s.geo), geoV = useS(s => s.geoV), impacts = useS(s => s.impacts)
+
+  useEffect(() => {   // create the viewer once
+    let v: Viewer
+    try {
+      v = new Viewer(box.current!, {
+        baseLayer: false, baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false, navigationHelpButton: false, animation: false, timeline: false,
+        fullscreenButton: false, infoBox: false, selectionIndicator: false, vrButton: false, projectionPicker: false,
+        terrainProvider: new EllipsoidTerrainProvider(), creditContainer: credits.current!, msaaSamples: 1,
+      })
+    } catch (e) { setErr(`3D globe unavailable: ${String(e).slice(0, 140)}`); return }
+    viewer.current = v
+    const sc = v.scene
+    sc.backgroundColor = Color.fromCssColorString('#04050A'); if (sc.skyBox) sc.skyBox.show = false; if (sc.sun) sc.sun.show = false; if (sc.moon) sc.moon.show = false
+    sc.globe.baseColor = Color.fromCssColorString('#0A1222'); sc.globe.showGroundAtmosphere = true
+    if (sc.skyAtmosphere) { sc.skyAtmosphere.hueShift = -0.05; sc.skyAtmosphere.brightnessShift = -0.35 }
+    sc.screenSpaceCameraController.minimumZoomDistance = 250000
+    v.camera.setView({ destination: Cartesian3.fromDegrees(18, 22, 21000000) })
+    for (const [k] of LAYERS) { cols.current[k] = sc.primitives.add(new PointPrimitiveCollection()); prims.current[k] = new Map() }
+    impactPts.current = sc.primitives.add(new PointPrimitiveCollection()); labels.current = sc.primitives.add(new LabelCollection())
+    // gentle idle spin, stopped by the first drag (and never under reduced motion)
+    let spin = !reducedMotion(); const h = new ScreenSpaceEventHandler(sc.canvas); h.setInputAction(() => { spin = false }, ScreenSpaceEventType.LEFT_DOWN); h.setInputAction(() => { spin = false }, ScreenSpaceEventType.WHEEL)
+    const rm = sc.preUpdate.addEventListener(() => { if (spin) v.camera.rotate(Cartesian3.UNIT_Z, -CMath.toRadians(0.02)) })
+    return () => { rm(); h.destroy(); v.destroy(); viewer.current = null; cols.current = {}; prims.current = {} }
+  }, [])
+
+  useEffect(() => {   // basemap: Natural Earth II (bundled, works offline) always underneath, free online imagery on top
+    const v = viewer.current; if (!v) return
+    const L = v.imageryLayers; L.removeAll()
+    L.add(ImageryLayer.fromProviderAsync(TileMapServiceImageryProvider.fromUrl(buildModuleUrl('Assets/Textures/NaturalEarthII')), { brightness: .7 }))
+    if (basemap === 'satellite') L.add(new ImageryLayer(new UrlTemplateImageryProvider({ url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', maximumLevel: 18, credit: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community' }), { brightness: .82, saturation: .85 }))
+    if (basemap === 'map') L.add(new ImageryLayer(new OpenStreetMapImageryProvider({ url: 'https://tile.openstreetmap.org/', maximumLevel: 19 }), { brightness: .42, contrast: 1.25, saturation: .25, gamma: 1.1 }))
+  }, [basemap])
+
+  useEffect(() => {   // sensor modes as post-process stages
+    const v = viewer.current; if (!v) return
+    const st = v.scene.postProcessStages; st.removeAll()
+    if (sensor === 'Night-vision') st.add(PostProcessStageLibrary.createNightVisionStage())
+    if (sensor === 'Thermal') st.add(new PostProcessStage({ fragmentShader: THERMAL }))
+  }, [sensor])
+
+  useEffect(() => {   // points: update in place, add new, remove gone
+    if (!viewer.current) return
+    const want: Record<string, Map<string, GeoPt>> = {}
+    for (const g of Object.values(geo)) { if (!on[g.layer]) continue; if (!TRACKS.has(g.layer) && (g.ts > cutoff || g.ts < cutoff - 24 * 3600e3)) continue; (want[g.layer] ||= new Map()).set(g.id, g) }
+    for (const [k, col] of LAYERS) {
+      const c = cols.current[k], m = prims.current[k]; if (!c || !m) continue
+      const w = want[k] || new Map<string, GeoPt>(); const color = Color.fromCssColorString(col)
+      for (const [id, p] of m) if (!w.has(id)) { c.remove(p); m.delete(id) }
+      for (const [id, g] of w) {
+        const pos = Cartesian3.fromDegrees(g.lon, g.lat, g.alt || 0); const p = m.get(id)
+        if (p) p.position = pos
+        else m.set(id, c.add({ position: pos, color, pixelSize: TRACKS.has(k) ? (k === 'Satellites' ? 3 : 3.5) : 8, outlineColor: Color.fromCssColorString('#08080F'), outlineWidth: TRACKS.has(k) ? 0 : 1.5, scaleByDistance: new NearFarScalar(1.5e6, 1.6, 2.5e7, .8) }))
+      }
+    }
+  }, [geoV, on, cutoff])
+
+  useEffect(() => {   // market-impact markers with a short label
+    const pc = impactPts.current, lc = labels.current; if (!pc || !lc) return
+    pc.removeAll(); lc.removeAll()
+    impacts.filter(i => i.lat != null && i.lon != null).forEach(i => {
+      const pos = Cartesian3.fromDegrees(i.lon!, i.lat!, 0)
+      pc.add({ position: pos, pixelSize: 14, color: Color.TRANSPARENT, outlineColor: Color.fromCssColorString('#E8541A'), outlineWidth: 2 })
+      lc.add({ position: pos, text: i.title.split('·')[0].trim(), font: '10px "JetBrains Mono", monospace', fillColor: Color.fromCssColorString('#E8E8EC'), outlineColor: Color.fromCssColorString('#04050A'), outlineWidth: 3, style: LabelStyle.FILL_AND_OUTLINE, verticalOrigin: VerticalOrigin.BOTTOM, pixelOffset: new Cartesian2(0, -12), scaleByDistance: new NearFarScalar(1.5e6, 1.2, 2.5e7, .85) })
+    })
+  }, [impacts])
+
+  return <>
+    <div ref={box} className="nq-cesium" style={{ position: 'absolute', inset: 0 }} />
+    {err && <div className="empty" style={{ position: 'absolute', left: '50%', top: '45%', transform: 'translateX(-50%)', zIndex: 3, background: '#0A0B12' }}>{err}</div>}
+    <div ref={credits} className="nq-credits" />
+  </>
+}
+
 export default function GodsEye() {
-  const [tab, setTab] = useState<'globe' | 'alt'>('globe'); const [sensor, setSensor] = useState('Normal'); const [time, setTime] = useState(24)
+  const [tab, setTab] = useState<'globe' | 'alt'>('globe'); const [sensor, setSensor] = useState('Normal'); const [time, setTime] = useState(24); const [basemap, setBasemap] = useState<Basemap>('satellite')
   const [on, setOn] = useState<Record<string, boolean>>(Object.fromEntries(LAYERS.map(([k]) => [k, !['Weather', 'Launches'].includes(k)])))
+  const impacts = useS(s => s.impacts), demo = useS(s => s.demo), geo = useS(s => s.geo), geoV = useS(s => s.geoV)
+  const [now, setNow] = useState(Date.now()); useEffect(() => { const i = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(i) }, [])
+  const cutoff = useMemo(() => Math.floor(now / 60000) * 60000 - (24 - time) * 3600e3 + 59999, [Math.floor(now / 60000), time])
+  const counts = useMemo(() => { const c: Record<string, number> = {}; for (const g of Object.values(geo)) c[g.layer] = (c[g.layer] || 0) + 1; return c }, [geoV])
+  const attribution = [BASEMAPS[basemap].credit, ...LAYERS.filter(([k]) => on[k]).map(([k, , src]) => `${k}: ${src}`)]
   return <div className="page" style={{ padding: 0, position: 'relative', background: '#04050A' }}>
+    <style>{`.nq-cesium .cesium-viewer-bottom{display:none}.nq-cesium .cesium-widget canvas{outline:none}
+      .nq-credits{position:absolute;right:16px;bottom:4px;z-index:4;font:9px var(--mono);color:#5A5F6E;max-width:40%;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .nq-credits img{height:11px;vertical-align:middle;opacity:.6;filter:grayscale(1)} .nq-credits a{color:#5A5F6E}
+      .nq-credits .cesium-credit-lightbox-overlay{display:none} .nq-credits .cesium-credit-expand-link{display:none}`}</style>
     <div className="row" style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 5, gap: 4 }}>
       {(['globe', 'alt'] as const).map(t => <button key={t} onClick={() => setTab(t)} style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.12em', borderColor: tab === t ? 'var(--orange)' : undefined, background: '#0A0B12' }}>{t === 'globe' ? 'GLOBE' : 'ALT-DATA LAB'}</button>)}</div>
     {tab === 'globe' ? <>
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <R3F camera={{ position: [0, 0, 3.1], fov: 40 }} dpr={[1, 2]}><color attach="background" args={['#04050A']} /><ambientLight intensity={.6} /><directionalLight position={[3, 2, 4]} intensity={1.2} /><Globe on={on} sensor={sensor} /></R3F>
-      </div>
-      <div className="mono lo" style={{ position: 'absolute', top: 14, left: 16, fontSize: 10, lineHeight: 1.7, zIndex: 4 }}><div style={{ color: 'var(--hi)', letterSpacing: '.16em' }}>GOD'S EYE · NSKO QUANT</div>51.5072° N · 0.1276° W<br />{new Date().toISOString().slice(11, 19)} UTC · <span className="o">{sensor.toUpperCase()}</span> · DEMO LAYERS</div>
-      <div className="panel" style={{ position: 'absolute', left: 16, top: 90, width: 170, padding: 10, zIndex: 4, background: 'rgba(12,13,20,.85)' }}>
-        <div className="lbl" style={{ marginBottom: 6 }}>LAYERS</div>{LAYERS.map(([k, col]) => <label key={k} className="row" style={{ gap: 8, padding: '3px 0', fontSize: 12, cursor: 'pointer' }}><input type="checkbox" checked={!!on[k]} onChange={() => setOn({ ...on, [k]: !on[k] })} /><span className="dot" style={{ background: col }} />{k}</label>)}
+      <Globe on={on} sensor={sensor} basemap={basemap} cutoff={cutoff} />
+      <div className="mono lo" style={{ position: 'absolute', top: 14, left: 16, fontSize: 10, lineHeight: 1.7, zIndex: 4, pointerEvents: 'none' }}><div style={{ color: 'var(--hi)', letterSpacing: '.16em' }}>GOD'S EYE · NSKO QUANT</div>51.5072° N · 0.1276° W<br />{new Date(now).toISOString().slice(11, 19)} UTC · <span className="o">{sensor.toUpperCase()}</span> · {demo ? 'DEMO LAYERS' : 'LIVE LAYERS'}</div>
+      <div className="panel" style={{ position: 'absolute', left: 16, top: 90, width: 186, padding: 10, zIndex: 4, background: 'rgba(12,13,20,.88)' }}>
+        <div className="lbl" style={{ marginBottom: 6 }}>LAYERS</div>{LAYERS.map(([k, col]) => <label key={k} className="row" style={{ gap: 8, padding: '3px 0', fontSize: 12, cursor: 'pointer' }}><input type="checkbox" checked={!!on[k]} onChange={() => setOn({ ...on, [k]: !on[k] })} /><span className="dot" style={{ background: col }} />{k}<span className="lo num" style={{ marginLeft: 'auto', fontSize: 10 }}>{counts[k] || 0}</span></label>)}
         <div className="lbl" style={{ margin: '10px 0 6px' }}>SENSOR</div>{['Normal', 'Night-vision', 'Thermal'].map(s => <button key={s} onClick={() => setSensor(s)} style={{ display: 'block', width: '100%', marginBottom: 4, fontSize: 11, borderColor: sensor === s ? 'var(--orange)' : undefined }}>{s}</button>)}
-        <div className="lo" style={{ fontSize: 9, marginTop: 8, lineHeight: 1.5 }}>Stage 3 sources: adsb.lol · AISStream · CelesTrak · USGS · NASA FIRMS · Open-Meteo · Launch Library 2 · Sentinel-2</div></div>
+        <div className="lbl" style={{ margin: '10px 0 6px' }}>BASEMAP</div><div className="row" style={{ gap: 4 }}>{(Object.keys(BASEMAPS) as Basemap[]).map(b => <button key={b} onClick={() => setBasemap(b)} style={{ flex: 1, padding: '4px 0', fontSize: 10, borderColor: basemap === b ? 'var(--orange)' : undefined }}>{BASEMAPS[b].name}</button>)}</div>
+        <div className="lo" style={{ fontSize: 9, marginTop: 8, lineHeight: 1.5 }}>No Cesium ion. Free imagery only; terrain is the plain ellipsoid.</div></div>
       <div style={{ position: 'absolute', right: 16, top: 60, width: 320, zIndex: 4 }}><div className="lbl" style={{ marginBottom: 6 }}>MARKET IMPACT</div>
-        {IMPACT.map(([t, asset, note, col]) => <div key={t} className="panel" style={{ padding: 10, marginBottom: 8, borderLeft: `2px solid ${col}`, background: 'rgba(12,13,20,.9)' }}>
-          <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em' }}>{t}</div><div className="a" style={{ fontSize: 11.5, margin: '4px 0' }}>{asset}</div><div className="lo" style={{ fontSize: 11, lineHeight: 1.5 }}>{note}</div>
+        {impacts.length === 0 && <div className="empty" style={{ background: 'rgba(12,13,20,.9)' }}>No market-impact events yet.</div>}
+        {impacts.map(i => <div key={i.id} className="panel" style={{ padding: 10, marginBottom: 8, borderLeft: `2px solid ${TONE[i.tone] || 'var(--cyan)'}`, background: 'rgba(12,13,20,.9)' }}>
+          <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em' }}>{i.title}</div><div className="a" style={{ fontSize: 11.5, margin: '4px 0' }}>{i.asset}</div><div className="lo" style={{ fontSize: 11, lineHeight: 1.5 }}>{i.note}</div>
           <div className="row" style={{ marginTop: 8, gap: 6 }}><button style={{ fontSize: 10.5, padding: '3px 8px' }}>Send to Research</button><span className="lo" style={{ fontSize: 9.5 }}>never opens a trade by itself</span></div></div>)}</div>
-      <div className="panel" style={{ position: 'absolute', left: 200, right: 350, bottom: 16, padding: '8px 14px', zIndex: 4, background: 'rgba(12,13,20,.85)' }}>
-        <div className="row"><span className="lbl">24H TIMELINE</span><input type="range" min={0} max={24} value={time} onChange={e => setTime(+e.target.value)} style={{ flex: 1, accentColor: '#E8541A' }} /><span className="num">{time === 24 ? 'NOW' : `−${24 - time}h`}</span></div></div>
+      <div className="panel" style={{ position: 'absolute', left: 218, right: 350, bottom: 40, padding: '8px 14px', zIndex: 4, background: 'rgba(12,13,20,.88)' }}>
+        <div className="row"><span className="lbl">24H TIMELINE</span><input type="range" min={0} max={24} value={time} onChange={e => setTime(+e.target.value)} style={{ flex: 1, accentColor: '#E8541A' }} /><span className="num" style={{ width: 40, textAlign: 'right' }}>{time === 24 ? 'NOW' : `−${24 - time}h`}</span></div>
+        <div className="lo mono" style={{ fontSize: 9, marginTop: 4 }}>events up to {new Date(cutoff).toISOString().slice(11, 16)} UTC · flights, ships and satellites show their latest position</div></div>
+      <div className="mono" style={{ position: 'absolute', left: 16, right: '42%', bottom: 4, zIndex: 4, fontSize: 9, color: '#5A5F6E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={attribution.join(' · ')}>
+        {demo && <span className="a">DEMO POSITIONS · </span>}{attribution.join(' · ')}</div>
     </> : <AltData />}
   </div>
 }

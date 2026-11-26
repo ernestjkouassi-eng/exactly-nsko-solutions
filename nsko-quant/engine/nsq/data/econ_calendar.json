@@ -1,0 +1,18 @@
+{
+  "_note": "Fallback economic calendar (high-impact releases). Times are local to 'tz'. Recurring rules are approximate: agencies sometimes move a release (holidays, shutdowns). Check the official calendars (bls.gov/schedule, federalreserve.gov/monetarypolicy/fomccalendars.htm, eia.gov) and edit this file, or add your own file in the setting news.calendar_file, or events in news.events.",
+  "recurring": [
+    {"title": "US Non-Farm Payrolls", "currency": "USD", "impact": "high", "rule": "first_weekday", "weekday": 4, "time": "08:30", "tz": "America/New_York"},
+    {"title": "US Initial Jobless Claims", "currency": "USD", "impact": "medium", "rule": "weekly", "weekday": 3, "time": "08:30", "tz": "America/New_York"},
+    {"title": "EIA Weekly Petroleum Status Report", "currency": "USD", "impact": "medium", "rule": "weekly", "weekday": 2, "time": "10:30", "tz": "America/New_York", "markets": ["WTI", "BRENT"]}
+  ],
+  "fixed": [
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-01-28T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-03-18T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-04-29T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-06-17T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-07-29T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-09-16T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-10-28T14:00", "tz": "America/New_York"},
+    {"title": "FOMC rate decision", "currency": "USD", "impact": "high", "time": "2026-12-09T14:00", "tz": "America/New_York"}
+  ]
+}
