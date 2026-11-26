@@ -183,7 +183,7 @@ def ad_16x9():
     d = lens[4]; S.append(build_scene('h05_agents', W, H, d, [dict(src=P(REC, 'agents.mp4'), kf=[(0, 1044, 560, 1500), (d, 1044, 575, 1180)], dst=full)], [dm(d), kick(2, d)], src_t0=.5))
     d = lens[5]; S.append(build_scene('h06_godseye', W, H, d, [dict(src=P(STILLS, 'godseye@2x.png'), unit=2.0, kf=[(0, 1045, 570, 1560), (d, 1362, 455, 1110)], dst=full)], [dm(d), kick(3, d)]))
     d = lens[6]; S.append(build_scene('h07_lab', W, H, d, [dict(src=P(REC, 'lab.mp4'), kf=[(0, 960, 540, 1920), (4, 1044, 615, 1560), (d, 1250, 628, 1240)], dst=full)], [dm(d), kick(4, d)], src_t0=2.0))
-    d = lens[7]; S.append(build_scene('h08_tradecard', W, H, d, [dict(src=P(REC, 'tradecard.mp4'), kf=[(0, 1044, 520, 1820), (5, 1080, 540, 1700), (d, 1170, 600, 1500)], dst=full)], [dm(d), kick(5, d)], src_t0=0.25, src_max=10.45))
+    d = lens[7]; S.append(build_scene('h08_tradecard', W, H, d, [dict(src=P(REC, 'tradecard.mp4'), kf=[(0, 1044, 520, 1820), (5, 1080, 540, 1700), (d, 1170, 600, 1500)], dst=full)], [dm(d), kick(5, d)], src_t0=0.45, src_max=10.95))
     d = lens[8]; S.append(build_scene('h09_desk', W, H, d, [dict(src=P(REC, 'desk.mp4'), kf=[(0, 960, 540, 1920), (d, 1130, 440, 1520)], dst=full)],
                                       [dm(d), kick(6, d), dict(img=notif, x=W - 640 - 40, y=560, t_in=1.4, fin=.9, dy=40)], src_t0=2.0))
     S.append(card_clip('h10_end', P(CARDS, 'end.mp4'), lens[9]))
@@ -217,7 +217,7 @@ def ad_9x16():
         cx, cy = p[0] + p[2] / 2, p[1] + p[3] / 2
         layers.append(dict(src=P(REC, 'tradecard.mp4'), kf=[(0, cx, cy, p[2] + 4), (d, cx, cy, p[2] - 12)], dst=((W - w) // 2, y, w, h)))
         y += h + gap
-    S.append(build_scene('v04_tradecard', W, H, d, layers, [dm(d), kick(5, d)], src_t0=4.3, speed=(10.45 - 4.3) / (d - .9), src_max=10.45))
+    S.append(build_scene('v04_tradecard', W, H, d, layers, [dm(d), kick(5, d)], src_t0=4.4, speed=(10.95 - 4.4) / (d - .9), src_max=10.95))
     S.append(card_clip('v05_end', P(CARDS, 'end_v.mp4'), lens[4]))
     join(S, starts, total, P(WORK, 'assembled_9x16.mp4'), D)
 

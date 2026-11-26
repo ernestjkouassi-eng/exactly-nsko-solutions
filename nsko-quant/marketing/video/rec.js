@@ -19,7 +19,7 @@ const fs = require('fs'), path = require('path'), cp = require('child_process');
     try { localStorage.setItem('nq_onboarded', '1') } catch (e) { }
     window.__startScaled = () => {
       const si = window.setInterval.bind(window), st = window.setTimeout.bind(window);
-      window.setInterval = (f, d, ...a) => si(f, d === 50 ? 50 / ts : d, ...a);
+      window.setInterval = (f, d, ...a) => { if (d !== 50) return si(f, d, ...a); let acc = 0; return si(() => { acc += ts; while (acc >= 1) { f(); acc -= 1 } }, 50) };  // speed up the 50 ms step timer without rendering more often
       
     };
     if (ts !== 1) window.__startScaled();
@@ -36,6 +36,7 @@ const fs = require('fs'), path = require('path'), cp = require('child_process');
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
   await pg.waitForTimeout(parseFloat(dur) * 1000);
   await cdp.send('Page.stopScreencast');
+  if (process.env.RECTS) fs.writeFileSync(`rec/${name}_rects.json`, JSON.stringify(await pg.evaluate(() => [...document.querySelectorAll('canvas')].map(c => { const r = c.getBoundingClientRect(); return [r.x, r.y, r.width, r.height] }))));
   await b.close();
   // concat list with real durations
   let s = '';
